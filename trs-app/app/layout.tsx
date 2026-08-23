@@ -32,6 +32,13 @@ export const metadata: Metadata = {
     "A premium vegetarian food truck in Jodhpur serving handcrafted pizzas, pastas, fries, brownies, mocktails and chur-chur naan.",
   applicationName: "The Rolling Stove",
   category: "food",
+  icons: {
+    icon: [
+      { url: "/images/trs-logo.png", type: "image/png" },
+    ],
+    shortcut: "/images/trs-logo.png",
+    apple: "/images/trs-logo.png",
+  },
   keywords: [
     "The Rolling Stove",
     "TRS Jodhpur",
