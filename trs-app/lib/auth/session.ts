@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { ACCESS_COOKIE } from "@/lib/auth/cookies";
@@ -9,7 +10,7 @@ import { User } from "@/models/User";
 import { getRoleWithPermissions } from "@/services/rbac.service";
 import type { AuthenticatedUser, PermissionKey } from "@/types/auth";
 
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+async function readAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   const token = (await cookies()).get(ACCESS_COOKIE)?.value;
   if (!token) return null;
 
@@ -54,6 +55,13 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
     return null;
   }
 }
+
+/**
+ * Deduplicate repeated authentication checks made by a protected layout and
+ * its page during the same server render/navigation. Database-backed session
+ * and RBAC validation remain unchanged.
+ */
+export const getAuthenticatedUser = cache(readAuthenticatedUser);
 
 export async function requireAuthenticatedUser() {
   const user = await getAuthenticatedUser();
