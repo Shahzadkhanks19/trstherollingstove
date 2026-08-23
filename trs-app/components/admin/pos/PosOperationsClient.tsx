@@ -178,13 +178,31 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
     orderTakerName: string;
   }) {
     if (!selected) return;
+
+    // Open the print tab synchronously from the user's click so browsers do not
+    // treat the invoice as an async popup after the settlement request finishes.
+    const printWindow = window.open("", "_blank");
     setMessage("Settling order...");
-    const response = await fetch(`/api/v1/pos/running-orders/${selected.id}/settle`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
-    const json = await response.json() as ApiResponse<{ invoice: { _id: string }; order: { orderNumber: string } }>;
-    if (!response.ok) throw new Error(json.message);
-    setMessage(`${json.data.order.orderNumber} settled.`);
-    window.open(buildInvoicePrintUrl(json.data.invoice._id), "_blank", "noopener,noreferrer");
-    setSelectedId(""); await load();
+
+    try {
+      const response = await fetch(`/api/v1/pos/running-orders/${selected.id}/settle`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+      const json = await response.json() as ApiResponse<{ invoice: { _id: string }; order: { orderNumber: string } }>;
+      if (!response.ok) throw new Error(json.message);
+
+      if (printWindow) {
+        printWindow.opener = null;
+        printWindow.location.href = buildInvoicePrintUrl(json.data.invoice._id);
+        setMessage(`${json.data.order.orderNumber} settled. Invoice opened for printing.`);
+      } else {
+        setMessage(`${json.data.order.orderNumber} settled. Your browser blocked the invoice print tab; use Bill History to print it.`);
+      }
+
+      setSelectedId("");
+      await load();
+    } catch (error) {
+      printWindow?.close();
+      throw error;
+    }
   }
 
   async function createTable(input: { name: string; code: string; section: string; capacity: number }) {
