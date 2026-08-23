@@ -7,7 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CART_UPDATED_EVENT, fetchActiveCart } from "@/lib/cart-client";
+import { CART_UPDATED_EVENT } from "@/lib/cart-client";
+import { fetchSharedActiveCart } from "@/lib/customer-session-client";
 
 const links = [
   ["/", "Home"],
@@ -31,7 +32,7 @@ export function SiteHeader() {
 
   useEffect(() => {
     let active = true;
-    void fetchActiveCart()
+    void fetchSharedActiveCart()
       .then(({ cart }) => {
         if (active) setCartCount(cart.itemCount);
       })
