@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { adminNavigation } from "@/lib/admin/navigation";
@@ -14,6 +14,7 @@ type Props = {
 
 export function AdminSidebar({ open, onClose, permissions }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const allowed = (permission?: string) =>
     !permission || permissions.includes(permission);
@@ -28,6 +29,10 @@ export function AdminSidebar({ open, onClose, permissions }: Props) {
         pathname === item.href || pathname.startsWith(`${item.href}/`),
     )
     .sort((first, second) => second.href.length - first.href.length)[0]?.href;
+
+  const warmRoute = (href: string) => {
+    if (href !== activeHref) router.prefetch(href);
+  };
 
   return (
     <>
@@ -49,6 +54,8 @@ export function AdminSidebar({ open, onClose, permissions }: Props) {
           <Link
             href="/admin/dashboard"
             prefetch={false}
+            onMouseEnter={() => warmRoute("/admin/dashboard")}
+            onFocus={() => warmRoute("/admin/dashboard")}
             className="flex items-center gap-3"
             onClick={onClose}
           >
@@ -91,6 +98,8 @@ export function AdminSidebar({ open, onClose, permissions }: Props) {
                         key={item.href}
                         href={item.href}
                         prefetch={false}
+                        onMouseEnter={() => warmRoute(item.href)}
+                        onFocus={() => warmRoute(item.href)}
                         onClick={onClose}
                         aria-current={active ? "page" : undefined}
                         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-bold transition ${
