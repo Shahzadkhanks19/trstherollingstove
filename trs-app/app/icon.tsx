@@ -13,16 +13,16 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "50%",
           background: "#ffffff",
-          color: "#C8102E",
-          fontSize: 24,
-          fontWeight: 900,
-          letterSpacing: "-1px",
-          border: "4px solid #C8102E",
         }}
       >
-        TRS
+        <img
+          src="https://therollingstove.vercel.app/images/trs-logo.png"
+          width="64"
+          height="64"
+          alt="The Rolling Stove"
+          style={{ objectFit: "contain" }}
+        />
       </div>
     ),
     size,
