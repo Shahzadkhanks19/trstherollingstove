@@ -1,0 +1,9 @@
+import { z } from "zod";
+const objectId=z.string().regex(/^[a-f\d]{24}$/i,"Invalid identifier.");
+const tierKey=z.enum(["bronze","silver","gold","platinum"]);
+export const loyaltyTierSchema=z.object({key:tierKey,name:z.string().trim().min(2).max(60),rank:z.number().int().min(1).max(4),minimumLifetimeSpend:z.number().min(0),minimumAnnualSpend:z.number().min(0),minimumAnnualOrders:z.number().int().min(0),pointsMultiplier:z.number().min(1).max(10),birthdayBonusCoins:z.number().int().min(0),benefits:z.array(z.string().trim().min(2).max(160)).max(20),colorHex:z.string().regex(/^#[0-9A-F]{6}$/i),isActive:z.boolean()});
+export const loyaltyTierUpdateSchema=loyaltyTierSchema.partial().refine(v=>Object.keys(v).length>0,{message:"Provide at least one field."});
+export const rewardCatalogCreateSchema=z.object({name:z.string().trim().min(2).max(120),slug:z.string().trim().min(2).max(100).regex(/^[a-z0-9-]+$/),description:z.string().trim().max(600).default(""),rewardType:z.enum(["fixed_discount","percentage_discount","free_item","bonus_coins"]),coinCost:z.number().int().positive(),rewardValue:z.number().min(0),minimumOrderAmount:z.number().min(0).default(0),menuItemId:objectId.nullable().optional(),eligibleTierKeys:z.array(tierKey).min(1),inventoryLimit:z.number().int().min(0).nullable().optional(),startsAt:z.iso.datetime().nullable().optional(),expiresAt:z.iso.datetime().nullable().optional(),isActive:z.boolean().default(true),imageUrl:z.string().trim().max(500).default("")});
+export const rewardCatalogUpdateSchema=rewardCatalogCreateSchema.partial().refine(v=>Object.keys(v).length>0,{message:"Provide at least one field."});
+export const rewardRedeemSchema=z.object({rewardId:objectId});
+export const loyaltyEvaluateSchema=z.object({customerId:objectId.optional(),limit:z.number().int().min(1).max(10000).default(1000)});

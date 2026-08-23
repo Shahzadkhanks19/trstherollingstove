@@ -1,0 +1,29 @@
+Add to `PERMISSION_KEYS` in `types/auth.ts`:
+
+"cms.read",
+"cms.manage",
+
+Add to `PERMISSION_DEFINITIONS`:
+
+"cms.read": {
+  name: "View CMS content",
+  module: "cms",
+  description: "View banners, gallery items and testimonials.",
+},
+
+"cms.manage": {
+  name: "Manage CMS content",
+  module: "cms",
+  description: "Create, update, publish and delete website CMS content.",
+},
+
+Recommended role assignments:
+
+manager:
+"cms.read",
+"cms.manage",
+
+cashier:
+"cms.read",
+
+Super admin and admin receive them automatically through `allPermissions`.

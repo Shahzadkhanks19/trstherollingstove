@@ -1,0 +1,5 @@
+import { Schema,model,models,type InferSchemaType,type Model } from "mongoose";
+const RecommendationAffinitySchema=new Schema({sourceItemId:{type:Schema.Types.ObjectId,ref:"MenuItem",required:true,index:true},targetItemId:{type:Schema.Types.ObjectId,ref:"MenuItem",required:true,index:true},relationType:{type:String,enum:["frequently_bought_together","cross_sell","upsell"],required:true,index:true},coPurchaseCount:{type:Number,min:0,default:0},sourceOrderCount:{type:Number,min:0,default:0},confidence:{type:Number,min:0,max:1,default:0},lift:{type:Number,min:0,default:0},score:{type:Number,min:0,default:0,index:true},generatedAt:{type:Date,required:true,default:Date.now,index:true}},{timestamps:true,versionKey:false});
+RecommendationAffinitySchema.index({sourceItemId:1,targetItemId:1,relationType:1},{unique:true});
+export type RecommendationAffinityDocument=InferSchemaType<typeof RecommendationAffinitySchema>;
+export const RecommendationAffinity:Model<RecommendationAffinityDocument>=(models.RecommendationAffinity as Model<RecommendationAffinityDocument>)||model<RecommendationAffinityDocument>("RecommendationAffinity",RecommendationAffinitySchema);

@@ -1,0 +1,2 @@
+import {requirePermission} from "@/lib/auth/session";import {connectToDatabase} from "@/lib/db/mongoose";import {handleApiError} from "@/lib/errors/handleApiError";import {successResponse} from "@/lib/http/apiResponse";import {Permission} from "@/models/Permission";
+export async function GET(){try{await requirePermission("permissions.read");await connectToDatabase();return successResponse(await Permission.find().sort({module:1,name:1}).lean(),"Permissions loaded.")}catch(e){return handleApiError(e)}}

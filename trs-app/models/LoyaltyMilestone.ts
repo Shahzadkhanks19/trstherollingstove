@@ -1,0 +1,4 @@
+import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+const LoyaltyMilestoneSchema=new Schema({key:{type:String,required:true,unique:true,trim:true,maxlength:80},name:{type:String,required:true,trim:true,maxlength:120},description:{type:String,default:"",maxlength:500},metric:{type:String,required:true,enum:["lifetime_spend","annual_spend","annual_orders","lifetime_earned","referrals"]},threshold:{type:Number,required:true,min:1},rewardCoins:{type:Number,required:true,min:0},isActive:{type:Boolean,default:true,index:true},sortOrder:{type:Number,default:0}},{timestamps:true,versionKey:false});
+export type LoyaltyMilestoneDocument=InferSchemaType<typeof LoyaltyMilestoneSchema>;
+export const LoyaltyMilestone:Model<LoyaltyMilestoneDocument>=(models.LoyaltyMilestone as Model<LoyaltyMilestoneDocument>)||model<LoyaltyMilestoneDocument>("LoyaltyMilestone",LoyaltyMilestoneSchema);

@@ -1,0 +1,5 @@
+import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+const RewardRedemptionSchema=new Schema({customerId:{type:Schema.Types.ObjectId,ref:"User",required:true,index:true},rewardId:{type:Schema.Types.ObjectId,ref:"RewardCatalogItem",required:true,index:true},transactionId:{type:Schema.Types.ObjectId,ref:"CoinTransaction",required:true},code:{type:String,required:true,unique:true,index:true},status:{type:String,enum:["issued","used","cancelled","expired"],default:"issued",index:true},coinsSpent:{type:Number,required:true,min:1},rewardSnapshot:{type:Schema.Types.Mixed,required:true},issuedAt:{type:Date,default:Date.now},expiresAt:{type:Date,required:true,index:true},usedAt:{type:Date,default:null},orderId:{type:Schema.Types.ObjectId,ref:"Order",default:null}},{timestamps:true,versionKey:false});
+RewardRedemptionSchema.index({customerId:1,createdAt:-1});
+export type RewardRedemptionDocument=InferSchemaType<typeof RewardRedemptionSchema>;
+export const RewardRedemption:Model<RewardRedemptionDocument>=(models.RewardRedemption as Model<RewardRedemptionDocument>)||model<RewardRedemptionDocument>("RewardRedemption",RewardRedemptionSchema);

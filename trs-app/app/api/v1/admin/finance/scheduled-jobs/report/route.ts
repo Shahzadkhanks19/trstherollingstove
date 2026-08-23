@@ -1,0 +1,6 @@
+import { requirePermission } from "@/lib/auth/session";
+import { handleApiError } from "@/lib/errors/handleApiError";
+import { getFinanceJobsSummary } from "@/services/finance-scheduled-jobs.service";
+import { financeJobQuerySchema } from "@/validators/finance-scheduled-jobs";
+const esc=(value:unknown)=>`"${String(value??"").replaceAll('"','""')}"`;
+export async function GET(request:Request){try{await requirePermission("reports.read");const url=new URL(request.url);const{days}=financeJobQuerySchema.parse({days:url.searchParams.get("days")??30});const data=await getFinanceJobsSummary(days);const rows:unknown[][]=[["FINANCE JOB RUNS"],["Run","Job","Status","Source","Started","Completed","Duration ms","Attempts","Error"],...data.recentRuns.map(run=>[run.runNumber,run.jobType,run.status,run.source,run.startedAt,run.completedAt,run.durationMs,run.attempts,run.errorMessage]),[],["PERIOD CLOSES"],["Close","Type","Period","Status","Closed at","Closed by"],...data.periodCloses.map(close=>[close.closeNumber,close.closeType,close.periodKey,close.status,close.closedAt,close.closedByName])];return new Response(rows.map(row=>row.map(esc).join(",")).join("\n"),{headers:{"Content-Type":"text/csv; charset=utf-8","Content-Disposition":`attachment; filename="finance-job-history-${new Date().toISOString().slice(0,10)}.csv"`}});}catch(error){return handleApiError(error);}}

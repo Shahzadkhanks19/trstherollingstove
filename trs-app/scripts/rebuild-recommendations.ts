@@ -1,0 +1,2 @@
+import { connectToDatabase } from "../lib/db/mongoose";import { rebuildRecommendationIntelligence } from "../services/recommendation.service";
+async function main(){await connectToDatabase();const result=await rebuildRecommendationIntelligence({lookbackDays:Number(process.env.RECOMMENDATION_LOOKBACK_DAYS||180),customerLimit:Number(process.env.RECOMMENDATION_CUSTOMER_LIMIT||10000)});console.log(result);process.exit(0);}main().catch(error=>{console.error(error);process.exit(1);});

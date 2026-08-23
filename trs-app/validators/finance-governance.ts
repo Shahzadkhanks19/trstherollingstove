@@ -1,0 +1,5 @@
+import { z } from "zod";
+export const governanceQuerySchema = z.object({ days: z.coerce.number().int().min(1).max(3650).default(30) });
+export const approvalCreateSchema = z.object({ module: z.string().min(2).max(80), entityType: z.string().min(2).max(80), entityId: z.string().min(1).max(160), action: z.string().min(2).max(80), title: z.string().min(3).max(180), description: z.string().max(2000).default(""), amount: z.coerce.number().min(0).default(0), priority: z.enum(["low", "normal", "high", "critical"]).default("normal"), assignedRole: z.string().min(2).max(80).default("admin"), expiresAt: z.coerce.date().nullable().optional(), payload: z.record(z.string(), z.unknown()).default({}) });
+export const approvalDecisionSchema = z.object({ decision: z.enum(["approve", "reject", "cancel"]), note: z.string().min(2).max(1000) });
+export const governanceRebuildSchema = z.object({ days: z.coerce.number().int().min(1).max(3650).default(30), source: z.enum(["manual", "scheduled", "system"]).default("manual") });

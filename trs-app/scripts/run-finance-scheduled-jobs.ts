@@ -1,0 +1,2 @@
+import { runFinanceJob } from "@/services/finance-scheduled-jobs.service";
+async function main(){const jobType=(process.argv[2]??"nightly_reconciliation") as "nightly_reconciliation"|"overdue_refresh"|"snapshot_refresh";const days=Number(process.argv[3]??30);const result=await runFinanceJob({jobType,days,source:"scheduled",triggeredByName:"Scheduler"});console.log(`Finance job ${result.runNumber} finished with status ${result.status}.`);}main().catch(error=>{console.error(error);process.exitCode=1;});

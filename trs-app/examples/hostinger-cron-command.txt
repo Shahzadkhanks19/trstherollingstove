@@ -1,0 +1,2 @@
+curl -X POST "https://YOUR-DOMAIN.in/api/v1/cron/jobs" \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"

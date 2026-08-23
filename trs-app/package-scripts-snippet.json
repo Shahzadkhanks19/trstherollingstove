@@ -1,0 +1,1 @@
+{"scripts":{"seed:auth":"tsx scripts/seed-auth.ts"}}

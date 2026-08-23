@@ -1,0 +1,3 @@
+import { redirect } from "next/navigation";import { LoyaltyEngineClient } from "@/components/admin/loyalty/LoyaltyEngineClient";import { createAdminMetadata } from "@/lib/admin/metadata";import { getAuthenticatedUser } from "@/lib/auth/session";
+export const metadata=createAdminMetadata("Loyalty Engine 2.0","Membership tiers, points, expiry, milestones and reward catalog.");export const dynamic="force-dynamic";
+export default async function LoyaltyPage(){const user=await getAuthenticatedUser();if(!user)redirect("/admin/login?redirect=/admin/loyalty");if(!user.permissions.includes("reports.read"))redirect("/admin/dashboard?error=unauthorized");return <LoyaltyEngineClient canManage={user.permissions.includes("settings.manage")}/>;}

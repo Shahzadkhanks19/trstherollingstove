@@ -1,0 +1,7 @@
+import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+const Line = new Schema({ inventoryItemId:{type:Schema.Types.ObjectId,ref:"InventoryItem",required:true}, nameSnapshot:{type:String,required:true}, unitSnapshot:{type:String,required:true}, plannedQuantity:{type:Number,required:true,min:0}, actualQuantity:{type:Number,required:true,min:0}, unitCost:{type:Number,required:true,min:0,default:0} },{_id:true});
+const RunSchema = new Schema({
+ batchNumber:{type:String,required:true,unique:true,index:true}, recipeId:{type:Schema.Types.ObjectId,ref:"KitchenProductionRecipe",required:true,index:true}, recipeNameSnapshot:{type:String,required:true}, recipeVersion:{type:Number,required:true}, targetYield:{type:Number,required:true,min:0.0001}, actualYield:{type:Number,required:true,min:0.0001}, yieldUnit:{type:String,required:true}, inputs:{type:[Line],default:[]}, outputs:{type:[Line],default:[]}, actualWastageQuantity:{type:Number,min:0,default:0}, notes:{type:String,trim:true,maxlength:2000,default:""}, expiresAt:{type:Date,default:null,index:true}, status:{type:String,enum:["completed"],default:"completed"}, createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true}
+},{timestamps:true,versionKey:false});
+export type KitchenProductionRunDocument=InferSchemaType<typeof RunSchema>;
+export const KitchenProductionRun:Model<KitchenProductionRunDocument>=(models.KitchenProductionRun as Model<KitchenProductionRunDocument>)||model<KitchenProductionRunDocument>("KitchenProductionRun",RunSchema);

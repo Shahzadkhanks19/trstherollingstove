@@ -1,0 +1,4 @@
+import { z } from "zod";
+export const financeJobQuerySchema=z.object({days:z.coerce.number().int().min(1).max(730).default(30)});
+export const financeJobRunSchema=z.object({jobType:z.enum(["nightly_reconciliation","overdue_refresh","snapshot_refresh"]),days:z.coerce.number().int().min(1).max(730).default(30),source:z.enum(["manual","scheduled","system"]).default("manual")});
+export const financePeriodCloseSchema=z.object({closeType:z.enum(["month_end","year_end"]),fiscalYear:z.coerce.number().int().min(2020).max(2200),month:z.coerce.number().int().min(1).max(12).nullable().optional(),notes:z.string().trim().max(2000).default("")}).superRefine((value,ctx)=>{if(value.closeType==="month_end"&&!value.month)ctx.addIssue({code:"custom",path:["month"],message:"Month is required for month-end close."});});

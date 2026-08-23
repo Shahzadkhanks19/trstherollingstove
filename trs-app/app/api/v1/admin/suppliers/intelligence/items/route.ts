@@ -1,0 +1,8 @@
+import { requirePermission } from "@/lib/auth/session";
+import { connectToDatabase } from "@/lib/db/mongoose";
+import { handleApiError } from "@/lib/errors/handleApiError";
+import { successResponse } from "@/lib/http/apiResponse";
+import { SupplierIntelligenceSnapshot } from "@/models/SupplierIntelligenceSnapshot";
+import { getLatestSupplierIntelligenceRun } from "@/services/supplier-intelligence.service";
+import { supplierIntelligenceQuerySchema } from "@/validators/supplier-intelligence";
+export async function GET(request: Request) { try { await requirePermission("purchases.read"); const url=new URL(request.url); const input=supplierIntelligenceQuerySchema.parse(Object.fromEntries(url.searchParams.entries())); await connectToDatabase(); const run=input.runId ? { _id: input.runId } : await getLatestSupplierIntelligenceRun(); if(!run) return successResponse({ rows:[], pagination:{page:input.page,limit:input.limit,total:0,pages:0} }); const filter: Record<string,unknown>={ runId:run._id, ...(input.grade?{grade:input.grade}:{}), ...(input.preferredSupplier?{preferredSupplier:input.preferredSupplier==="true"}:{}), ...(input.isActive?{isActive:input.isActive==="true"}:{}) }; if(input.search) filter.$or=[{supplierName:{$regex:input.search,$options:"i"}},{supplierCode:{$regex:input.search,$options:"i"}}]; const skip=(input.page-1)*input.limit; const [rows,total]=await Promise.all([SupplierIntelligenceSnapshot.find(filter).sort({overallScore:-1,totalSpend:-1}).skip(skip).limit(input.limit).lean(), SupplierIntelligenceSnapshot.countDocuments(filter)]); return successResponse({rows,pagination:{page:input.page,limit:input.limit,total,pages:Math.ceil(total/input.limit)}}); } catch(error){ return handleApiError(error); } }

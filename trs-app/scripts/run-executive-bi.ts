@@ -1,0 +1,3 @@
+import { connectToDatabase } from "../lib/db/mongoose";
+import { generateExecutiveBI } from "../services/executive-bi.service";
+async function main(){await connectToDatabase();const result=await generateExecutiveBI({periodPreset:(process.env.EXECUTIVE_BI_PERIOD_PRESET as "today"|"week"|"month"|"quarter"|"year")??"month",carryingCostAnnualPercent:Number(process.env.EXECUTIVE_BI_CARRYING_COST_PERCENT??20),deadStockDays:Number(process.env.EXECUTIVE_BI_DEAD_STOCK_DAYS??60),source:"scheduled"});console.log(JSON.stringify(result,null,2));}main().catch(error=>{console.error(error);process.exitCode=1;});

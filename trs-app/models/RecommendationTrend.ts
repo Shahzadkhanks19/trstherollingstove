@@ -1,0 +1,5 @@
+import { Schema,model,models,type InferSchemaType,type Model } from "mongoose";
+const RecommendationTrendSchema=new Schema({menuItemId:{type:Schema.Types.ObjectId,ref:"MenuItem",required:true,index:true},windowKey:{type:String,enum:["24h","7d","30d","all_time"],required:true,index:true},orders:{type:Number,min:0,default:0},quantity:{type:Number,min:0,default:0},revenue:{type:Number,min:0,default:0},uniqueCustomers:{type:Number,min:0,default:0},velocity:{type:Number,min:0,default:0},score:{type:Number,min:0,default:0,index:true},generatedAt:{type:Date,required:true,default:Date.now,index:true}},{timestamps:true,versionKey:false});
+RecommendationTrendSchema.index({menuItemId:1,windowKey:1},{unique:true});
+export type RecommendationTrendDocument=InferSchemaType<typeof RecommendationTrendSchema>;
+export const RecommendationTrend:Model<RecommendationTrendDocument>=(models.RecommendationTrend as Model<RecommendationTrendDocument>)||model<RecommendationTrendDocument>("RecommendationTrend",RecommendationTrendSchema);

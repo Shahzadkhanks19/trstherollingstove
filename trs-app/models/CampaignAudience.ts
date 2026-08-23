@@ -1,0 +1,4 @@
+import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+const CampaignAudienceSchema=new Schema({name:{type:String,required:true,trim:true,maxlength:120,unique:true},description:{type:String,default:"",maxlength:500},segmentKeys:[{type:String,lowercase:true,trim:true}],riskLevels:[{type:String,enum:["low","medium","high"]}],minimumLifetimeValue:{type:Number,default:0,min:0},minimumOrders:{type:Number,default:0,min:0},maximumDaysSinceLastOrder:{type:Number,default:null,min:0},isActive:{type:Boolean,default:true,index:true},createdBy:{type:Schema.Types.ObjectId,ref:"User",required:true}},{timestamps:true,versionKey:false});
+export type CampaignAudienceDocument=InferSchemaType<typeof CampaignAudienceSchema>;
+export const CampaignAudience:Model<CampaignAudienceDocument>=(models.CampaignAudience as Model<CampaignAudienceDocument>)||model<CampaignAudienceDocument>("CampaignAudience",CampaignAudienceSchema);

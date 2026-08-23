@@ -1,0 +1,6 @@
+{
+  "validate:env": "node --env-file=.env.local --import tsx scripts/validate-production-env.ts",
+  "verify:db": "node --env-file=.env.local --import tsx scripts/verify-database.ts",
+  "smoke:test": "node --env-file=.env.local --import tsx scripts/smoke-test.ts",
+  "predeploy": "node --import tsx scripts/predeploy.ts"
+}
