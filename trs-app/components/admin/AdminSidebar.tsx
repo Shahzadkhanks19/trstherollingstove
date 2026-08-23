@@ -48,6 +48,7 @@ export function AdminSidebar({ open, onClose, permissions }: Props) {
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
           <Link
             href="/admin/dashboard"
+            prefetch={false}
             className="flex items-center gap-3"
             onClick={onClose}
           >
@@ -89,6 +90,7 @@ export function AdminSidebar({ open, onClose, permissions }: Props) {
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={false}
                         onClick={onClose}
                         aria-current={active ? "page" : undefined}
                         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-bold transition ${
