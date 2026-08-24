@@ -1,7 +1,7 @@
 "use client";
 
 type PrefetchRouter = {
-  prefetch: (href: string, options?: { onInvalidate?: () => void }) => void;
+  prefetch: (href: string) => void;
 };
 
 const PREFETCH_COOLDOWN_MS = 4 * 60 * 1000;
@@ -9,8 +9,8 @@ const prefetchedAt = new Map<string, number>();
 
 /**
  * Prevent duplicate hover/focus prefetches for the same admin route.
- * Next.js router.prefetch() already performs a full route prefetch; this helper
- * simply stops mouse-enter + focus from issuing the same request repeatedly.
+ * Next.js router.prefetch() performs the route prefetch; this helper simply
+ * stops mouse-enter + focus from issuing the same request repeatedly.
  */
 export function prefetchAdminRoute(router: PrefetchRouter, href: string) {
   const now = Date.now();
@@ -18,11 +18,7 @@ export function prefetchAdminRoute(router: PrefetchRouter, href: string) {
   if (now - lastPrefetch < PREFETCH_COOLDOWN_MS) return;
 
   prefetchedAt.set(href, now);
-  router.prefetch(href, {
-    onInvalidate: () => {
-      prefetchedAt.delete(href);
-    },
-  });
+  router.prefetch(href);
 }
 
 /**
