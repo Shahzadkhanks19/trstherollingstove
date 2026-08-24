@@ -28,7 +28,10 @@ export async function connectToDatabase(): Promise<Mongoose> {
   if (!cached.promise) {
     cached.promise = mongoose.connect(env.MONGODB_URI, {
       bufferCommands: false,
-      maxPoolSize: 10,
+      // TRS currently uses Atlas M0. A smaller per-function pool avoids dozens
+      // of warm Vercel instances reserving unnecessary connections while still
+      // leaving enough parallelism for the app's normal request workload.
+      maxPoolSize: 4,
       serverSelectionTimeoutMS: 10_000,
     });
   }
