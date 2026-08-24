@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { adminNavigation } from "@/lib/admin/navigation";
+import { prefetchAdminRoute } from "@/lib/admin/client-route-warmup";
 
 type Props = {
   open: boolean;
@@ -31,7 +32,7 @@ export function AdminSidebar({ open, onClose, permissions }: Props) {
     .sort((first, second) => second.href.length - first.href.length)[0]?.href;
 
   const warmRoute = (href: string) => {
-    if (href !== activeHref) router.prefetch(href);
+    if (href !== activeHref) prefetchAdminRoute(router, href);
   };
 
   return (
