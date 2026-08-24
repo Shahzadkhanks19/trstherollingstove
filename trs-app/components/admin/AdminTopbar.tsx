@@ -1,15 +1,23 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faBell, faChevronDown, faKey, faMagnifyingGlass, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 
 type Props = { name: string; role: string; onMenu: () => void };
 export function AdminTopbar({ name, role, onMenu }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   async function logout() {
     setLoggingOut(true);
-    try { await fetch("/api/v1/auth/logout", { method: "POST" }); } finally { window.location.assign("/admin/login"); }
+    try {
+      await fetch("/api/v1/auth/logout", { method: "POST" });
+    } finally {
+      // Avoid a full-document reload. The completed logout response has already
+      // cleared the auth cookies, so a client-side transition is sufficient.
+      router.replace("/admin/login");
+    }
   }
   return <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-[#eadfd5] bg-[#fffdf9]/95 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
     <div className="flex items-center gap-3">
