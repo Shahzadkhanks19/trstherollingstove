@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import { authConfig } from "@/config/auth";
 import { ACCESS_COOKIE, REFRESH_COOKIE, REMEMBER_COOKIE } from "@/lib/auth/cookies";
@@ -68,13 +68,21 @@ export async function POST(request: Request) {
       maxAge: authConfig.REFRESH_TOKEN_TTL_SECONDS,
     });
 
-    await writeAuditLog({
-      actorUserId: user.id,
-      action: "admin.login",
-      entityType: "auth_session",
-      entityId: session.session.id,
-      description: `${user.email} signed in to the admin dashboard.`,
-      metadata,
+    // Preserve the security audit trail without making the user wait for an
+    // additional MongoDB write before the successful login response is sent.
+    after(async () => {
+      try {
+        await writeAuditLog({
+          actorUserId: user.id,
+          action: "admin.login",
+          entityType: "auth_session",
+          entityId: session.session.id,
+          description: `${user.email} signed in to the admin dashboard.`,
+          metadata,
+        });
+      } catch (error) {
+        console.error("Unable to write admin login audit log.", error);
+      }
     });
 
     return response;
