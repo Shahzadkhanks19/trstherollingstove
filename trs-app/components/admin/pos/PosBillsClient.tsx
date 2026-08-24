@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { buildInvoicePrintUrl, buildKotPrintUrl } from "@/lib/pos/print-links";
 import type { PosCartState } from "@/types/pos";
 
-type Bill = {
+export type PosBillListItem = {
   _id: string;
   orderId: string;
   invoiceNumber: string;
@@ -18,7 +18,18 @@ type Bill = {
   orderStatus: string;
   paymentStatus: string;
 };
+type Bill = PosBillListItem;
 type ApiResponse<T> = { success: boolean; message: string; data: T };
+
+type BillsCacheEntry = {
+  bills: Bill[];
+  expiresAt: number;
+};
+
+// Keep recently viewed filter results in memory so revisiting a filter is
+// immediate, while every hit is still revalidated against the API below.
+const billsCache = new Map<string, BillsCacheEntry>();
+const BILLS_CACHE_TTL_MS = 30_000;
 
 async function readApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
   const contentType = response.headers.get("content-type") ?? "";
@@ -59,10 +70,10 @@ async function readApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
 }
 const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
-export function PosBillsClient() {
+export function PosBillsClient({ initialBills }: { initialBills: PosBillListItem[] }) {
   const [query, setQuery] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [bills, setBills] = useState<Bill[]>([]);
+  const [bills, setBills] = useState<Bill[]>(initialBills);
   const [message, setMessage] = useState("");
   const [cancelBill, setCancelBill] = useState<Bill | null>(null);
   const [cancelReason, setCancelReason] = useState("");
@@ -70,19 +81,40 @@ export function PosBillsClient() {
   const [busy, setBusy] = useState(false);
   const [customerBill, setCustomerBill] = useState<Bill | null>(null);
   const [customerForm, setCustomerForm] = useState({ name: "", phone: "", email: "" });
+  const initialLoadHandled = useRef(false);
 
   const load = useCallback(async (signal?: AbortSignal) => {
     const params = new URLSearchParams({ limit: "100" });
     if (query.trim()) params.set("q", query.trim());
     if (paymentMethod) params.set("paymentMethod", paymentMethod);
+
+    const cacheKey = params.toString();
+    const cached = billsCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      setBills(cached.bills);
+      setMessage("");
+    }
+
     const response = await fetch(`/api/v1/pos/bills?${params}`, { cache: "no-store", signal });
     const json = await response.json() as ApiResponse<Bill[]>;
     if (!response.ok) throw new Error(json.message);
+
+    billsCache.set(cacheKey, {
+      bills: json.data,
+      expiresAt: Date.now() + BILLS_CACHE_TTL_MS,
+    });
     setBills(json.data);
     setMessage("");
   }, [paymentMethod, query]);
 
   useEffect(() => {
+    // The route already loaded the unfiltered list on the server. Avoid the old
+    // mount-time second request (and its second auth/RBAC + DB round trip).
+    if (!initialLoadHandled.current) {
+      initialLoadHandled.current = true;
+      return;
+    }
+
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       void load(controller.signal).catch((error: unknown) => {
