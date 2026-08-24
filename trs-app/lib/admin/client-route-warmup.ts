@@ -1,6 +1,8 @@
 "use client";
 
-import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+type PrefetchRouter = {
+  prefetch: (href: string, options?: { onInvalidate?: () => void }) => void;
+};
 
 const PREFETCH_COOLDOWN_MS = 4 * 60 * 1000;
 const prefetchedAt = new Map<string, number>();
@@ -10,7 +12,7 @@ const prefetchedAt = new Map<string, number>();
  * Next.js router.prefetch() already performs a full route prefetch; this helper
  * simply stops mouse-enter + focus from issuing the same request repeatedly.
  */
-export function prefetchAdminRoute(router: AppRouterInstance, href: string) {
+export function prefetchAdminRoute(router: PrefetchRouter, href: string) {
   const now = Date.now();
   const lastPrefetch = prefetchedAt.get(href) ?? 0;
   if (now - lastPrefetch < PREFETCH_COOLDOWN_MS) return;
