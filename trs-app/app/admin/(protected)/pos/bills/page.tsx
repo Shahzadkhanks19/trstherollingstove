@@ -33,22 +33,23 @@ async function getInitialBills(): Promise<PosBillListItem[]> {
   return invoices.map((invoice) => {
     const orderId = String(invoice.orderId);
     const order = orderMap.get(orderId);
+    const customer = invoice.customerSnapshot;
 
     return {
       _id: String(invoice._id),
       orderId,
-      invoiceNumber: invoice.invoiceNumber,
-      orderNumber: invoice.orderNumber,
-      issuedAt: new Date(invoice.issuedAt).toISOString(),
+      invoiceNumber: String(invoice.invoiceNumber ?? ""),
+      orderNumber: String(invoice.orderNumber ?? ""),
+      issuedAt: new Date(invoice.issuedAt ?? Date.now()).toISOString(),
       customerSnapshot: {
-        name: invoice.customerSnapshot.name,
-        phone: invoice.customerSnapshot.phone || undefined,
+        name: String(customer?.name ?? "Walk-in Customer"),
+        phone: customer?.phone ? String(customer.phone) : undefined,
       },
-      paymentMethod: invoice.paymentMethod,
-      grandTotal: invoice.grandTotal,
-      printCount: invoice.printCount,
-      orderStatus: order?.status ?? "completed",
-      paymentStatus: order?.paymentStatus ?? "paid",
+      paymentMethod: String(invoice.paymentMethod ?? ""),
+      grandTotal: Number(invoice.grandTotal ?? 0),
+      printCount: Number(invoice.printCount ?? 0),
+      orderStatus: String(order?.status ?? "completed"),
+      paymentStatus: String(order?.paymentStatus ?? "paid"),
     };
   });
 }
