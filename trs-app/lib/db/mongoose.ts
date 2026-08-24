@@ -26,12 +26,16 @@ export async function connectToDatabase(): Promise<Mongoose> {
   }
 
   if (!cached.promise) {
+    const isVercel = Boolean(process.env.VERCEL);
+
     cached.promise = mongoose.connect(env.MONGODB_URI, {
       bufferCommands: false,
-      // TRS currently uses Atlas M0. A smaller per-function pool avoids dozens
-      // of warm Vercel instances reserving unnecessary connections while still
-      // leaving enough parallelism for the app's normal request workload.
-      maxPoolSize: 4,
+      // Vercel can create multiple warm function instances, so keep each pool
+      // deliberately small. A persistent VPS runs one long-lived app process
+      // and benefits from a slightly larger shared pool for concurrent POS,
+      // admin and public requests.
+      maxPoolSize: isVercel ? 4 : 10,
+      minPoolSize: isVercel ? 0 : 1,
       serverSelectionTimeoutMS: 10_000,
     });
   }
