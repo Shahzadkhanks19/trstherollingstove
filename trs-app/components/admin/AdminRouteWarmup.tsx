@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { warmAdminServerRoute } from "@/lib/admin/client-route-warmup";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  prefetchAdminRoute,
+  warmAdminServerRoute,
+} from "@/lib/admin/client-route-warmup";
 
 const ROUTES_TO_WARM = [
   "/admin/pos",
@@ -31,10 +35,12 @@ function sleep(ms: number, signal: AbortSignal) {
 
 /**
  * Quietly warms only the highest-frequency admin server routes one by one.
- * This replaces the old all-routes-at-once behavior that caused a request
- * storm, while hiding most serverless/database cold-start cost after refresh.
+ * After the server work is warm, prefetch the corresponding RSC payload so a
+ * subsequent click can render from the client router cache immediately.
  */
 export function AdminRouteWarmup() {
+  const pathname = usePathname();
+  const router = useRouter();
   const hiddenAt = useRef<number | null>(null);
   const activeController = useRef<AbortController | null>(null);
 
@@ -48,8 +54,13 @@ export function AdminRouteWarmup() {
         await sleep(250, controller.signal);
         for (const href of ROUTES_TO_WARM) {
           if (controller.signal.aborted || document.visibilityState !== "visible") return;
+          if (pathname === href || pathname.startsWith(`${href}/`)) continue;
+
           try {
             await warmAdminServerRoute(href, controller.signal);
+            if (!controller.signal.aborted) {
+              prefetchAdminRoute(router, href);
+            }
           } catch (error) {
             if ((error as Error).name !== "AbortError" && process.env.NODE_ENV !== "production") {
               console.debug(`[TRS admin warmup] ${href} failed`, error);
@@ -78,7 +89,7 @@ export function AdminRouteWarmup() {
       activeController.current?.abort();
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, []);
+  }, [pathname, router]);
 
   return null;
 }
