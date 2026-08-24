@@ -60,8 +60,10 @@ export function AdminLoginClient() {
         ? requestedRedirect
         : payload.data?.redirectTo || "/admin/dashboard";
 
+      // The successful response has already installed the auth cookies. A
+      // single client-side replacement is enough; an immediate router.refresh()
+      // used to issue a second protected-page render right after login.
       router.replace(destination);
-      router.refresh();
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Unable to sign in.",
