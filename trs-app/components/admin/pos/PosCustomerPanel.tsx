@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass, faPlus, faUser, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlass, faPhone, faUser, faUserPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { PosCustomer } from "@/types/pos";
 
 type CustomerApiResponse<T> = { success: boolean; message: string; data: T };
