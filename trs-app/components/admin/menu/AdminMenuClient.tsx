@@ -50,8 +50,8 @@ import {
   type ItemForm,
   type MenuItem,
   type ModifierGroup,
-  type VariantForm,
 } from "@/components/admin/menu/admin-menu.types";
+import { createNaanPortionVariants, createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
 
 export function AdminMenuClient({
   canCreate,
@@ -466,83 +466,10 @@ export function AdminMenuClient({
     }
   }
 
-  function categoryIdentity(value: string) {
-    const category = categories.find((item) => item._id === value);
-    return `${category?.name ?? ""} ${category?.slug ?? ""}`.toLowerCase();
-  }
-
-  function isPizzaCategoryId(value: string) {
-    return categoryIdentity(value).includes("pizza");
-  }
-
-  function isComboCategoryId(value: string) {
-    return categoryIdentity(value).includes("combo");
-  }
-
-  function isNaanCategoryId(value: string) {
-    const identity = categoryIdentity(value);
-    return identity.includes("chur") && identity.includes("naan");
-  }
-
-  function createPizzaVariants(): VariantForm[] {
-    return [
-      {
-        name: "Small 7 inch",
-        sku: "SMALL-7",
-        price: "",
-        compareAtPrice: "",
-        isDefault: true,
-        isActive: true,
-        sortOrder: "0",
-      },
-      {
-        name: "Medium 9 inch",
-        sku: "MEDIUM-9",
-        price: "",
-        compareAtPrice: "",
-        isDefault: false,
-        isActive: true,
-        sortOrder: "1",
-      },
-      {
-        name: "Large 12 inch",
-        sku: "LARGE-12",
-        price: "",
-        compareAtPrice: "",
-        isDefault: false,
-        isActive: true,
-        sortOrder: "2",
-      },
-    ];
-  }
-
-  function createNaanPortionVariants(): VariantForm[] {
-    return [
-      {
-        name: "Half Plate · 1 Naan",
-        sku: "HALF",
-        price: "",
-        compareAtPrice: "",
-        isDefault: true,
-        isActive: true,
-        sortOrder: "0",
-      },
-      {
-        name: "Full Plate · 2 Naans",
-        sku: "FULL",
-        price: "",
-        compareAtPrice: "",
-        isDefault: false,
-        isActive: true,
-        sortOrder: "1",
-      },
-    ];
-  }
-
   function handleCategoryChange(value: string) {
-    const pizzaSelected = isPizzaCategoryId(value);
-    const naanSelected = isNaanCategoryId(value);
-    const comboSelected = isComboCategoryId(value);
+    const pizzaSelected = categoryIsPizza(categories, value);
+    const naanSelected = categoryIsNaan(categories, value);
+    const comboSelected = categoryIsCombo(categories, value);
     setForm((current) => ({
       ...current,
       categoryId: value,
@@ -617,9 +544,9 @@ export function AdminMenuClient({
     });
   }
 
-  const isPizzaCategory = isPizzaCategoryId(form.categoryId);
-  const isNaanCategory = isNaanCategoryId(form.categoryId);
-  const isComboCategory = isComboCategoryId(form.categoryId);
+  const isPizzaCategory = categoryIsPizza(categories, form.categoryId);
+  const isNaanCategory = categoryIsNaan(categories, form.categoryId);
+  const isComboCategory = categoryIsCombo(categories, form.categoryId);
   const hasRequiredVariants = isPizzaCategory || isNaanCategory;
 
   const combinationGroup = modifierGroups.find(
