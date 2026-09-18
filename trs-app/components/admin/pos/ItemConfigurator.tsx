@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinus, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { isMediumPizzaVariant, thinCrustGroupId } from "@/lib/menu-special-config";
 import { MIXED_NAAN_GROUP_ID, MIXED_NAAN_GROUP_NAME, findMixedNaanPrice, isFullPortion } from "@/lib/mixed-naan";
-import type { PosCatalogItem, PosConfiguredItem, PosModifierGroup, PosModifierOption, PosVariant } from "@/types/pos";
+import type { PosCatalogItem, PosConfiguredItem, PosModifierGroup, PosModifierOption } from "@/types/pos";
 import { buildSelectedModifiers, createDefaultSelections, selectionHelper, validateModifierSelections, resolveModifierPrice } from "@/components/admin/pos/item-configurator.utils";
 
 const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
