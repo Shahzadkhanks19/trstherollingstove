@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -36,6 +37,7 @@ const initialSignupForm: SignupForm = {
 };
 
 export function SignupPageClient() {
+  const router = useRouter();
   const [form, setForm] = useState<SignupForm>(initialSignupForm);
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<
@@ -159,7 +161,7 @@ export function SignupPageClient() {
           "Account created successfully. Please verify your email before logging in.",
       );
       window.setTimeout(() => {
-        window.location.assign("/login");
+        router.replace("/login");
       }, 1200);
     } catch (error) {
       setStatus("error");
