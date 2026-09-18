@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export function AdminChangeEmailClient({ currentEmail }: Props) {
+  const router = useRouter();
   const [newEmail, setNewEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -74,11 +76,7 @@ export function AdminChangeEmailClient({ currentEmail }: Props) {
       setNotice(body.message || "Login email changed. Sign in again.");
 
       window.setTimeout(() => {
-        window.location.assign(
-          `/admin/login?message=email-changed&email=${encodeURIComponent(
-            normalizedNewEmail,
-          )}`,
-        );
+        router.replace(`/admin/login?message=email-changed&email=${encodeURIComponent(normalizedNewEmail)}`);
       }, 1200);
     } catch (cause) {
       setError(
