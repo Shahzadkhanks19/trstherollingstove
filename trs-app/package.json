@@ -36,7 +36,8 @@
     "finance:jobs": "node --env-file=.env.local --import tsx scripts/run-finance-scheduled-jobs.ts",
     "reports:jobs": "node --env-file=.env.local --import tsx scripts/run-report-jobs.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -70,6 +71,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "patch-package": "^8.0.1"
   }
 }
