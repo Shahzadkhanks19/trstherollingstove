@@ -38,6 +38,7 @@ export async function GET(
       action: "initial" as const,
       lineId: line.lineId,
       name: line.name,
+      categoryName: line.categoryName,
       variantName: line.variantName ?? undefined,
       specialInstructions: line.note,
       quantity: line.quantity,
@@ -48,6 +49,39 @@ export async function GET(
       })),
       changeSummary: [] as string[],
     }));
+
+    const normalize = (value: string | undefined) => (value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const isNaanCounterItem = (item: RunningOrderKotItem) => {
+      const category = normalize(item.categoryName);
+      const name = normalize(item.name);
+      if (name === "extra dip" || name === "water bottle") return false;
+      return category === "chur chur naan"
+        || category === "extra naans"
+        || category === "extra naan"
+        || category === "counter";
+    };
+
+    const naanItems = sourceItems.filter(isNaanCounterItem);
+    const mainItems = sourceItems.filter((item) => !isNaanCounterItem(item));
+    const requestedStation = url.searchParams.get("station");
+    const station = requestedStation === "naan" || requestedStation === "main"
+      ? requestedStation
+      : naanItems.length ? "naan" : "main";
+    const stationItems = station === "naan" ? naanItems : mainItems;
+
+    if (!stationItems.length) {
+      const fallbackStation = station === "naan" ? "main" : "naan";
+      const fallbackUrl = new URL(request.url);
+      fallbackUrl.searchParams.set("station", fallbackStation);
+      return Response.redirect(fallbackUrl, 307);
+    }
+
+    let nextPrintUrl = "";
+    if (!requestedStation && naanItems.length && mainItems.length && station === "naan") {
+      const nextUrl = new URL(request.url);
+      nextUrl.searchParams.set("station", "main");
+      nextPrintUrl = nextUrl.pathname + nextUrl.search;
+    }
 
     const html = renderKotHtml(
       {
@@ -66,7 +100,7 @@ export async function GET(
         kotType: revision?.type ?? "initial",
         kotOrderNote: revision?.orderNote ?? running.cart.orderNote,
         kotPreviousOrderNote: revision?.previousOrderNote ?? "",
-        items: sourceItems.map((item) => ({
+        items: stationItems.map((item) => ({
           name: item.name,
           variantName: item.variantName,
           specialInstructions: item.specialInstructions,
@@ -94,6 +128,7 @@ export async function GET(
         copies,
         showCustomer: url.searchParams.get("customer") === "true",
         showPrices: url.searchParams.get("prices") === "true",
+        nextPrintUrl,
       },
     );
 
