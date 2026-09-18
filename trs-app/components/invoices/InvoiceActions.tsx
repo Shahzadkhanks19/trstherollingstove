@@ -21,7 +21,7 @@ export function InvoiceActions({
   }
 
   function downloadInvoice() {
-    window.location.assign(`${endpoint}?download=true`);
+    void fetch(`${endpoint}?download=true`).then(async (response) => { if (!response.ok) throw new Error("Download failed"); const blob = await response.blob(); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "invoice.pdf"; anchor.click(); URL.revokeObjectURL(url); });
   }
 
   return (
