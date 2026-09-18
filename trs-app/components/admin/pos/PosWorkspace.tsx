@@ -10,6 +10,7 @@ import {
   faCashRegister,
   faClock,
   faReceipt,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { calculatePosCartTotals } from "@/lib/pos/cart";
 import { posCartActions, usePosCart } from "@/lib/pos/cart-store";
