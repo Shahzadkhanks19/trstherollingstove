@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   useEffect,
   useMemo,
@@ -115,6 +116,7 @@ export function PosWorkspace({
   defaultTaxRate: number;
   defaultTaxMode: PosTaxMode;
 }) {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("all");
   const [query, setQuery] = useState("");
   const cart = usePosCart();
@@ -326,7 +328,7 @@ export function PosWorkspace({
             : `${editingRunningOrder.ticketNumber} saved. No kitchen changes were detected.`,
         );
         window.setTimeout(
-          () => window.location.assign("/admin/pos/operations"),
+          () => router.push("/admin/pos/operations"),
           350,
         );
       } catch (error) {
@@ -410,7 +412,7 @@ export function PosWorkspace({
         `${json.data.order.ticketNumber} opened as Pay Later and initial KOT printed.`,
       );
       window.setTimeout(
-        () => window.location.assign("/admin/pos/operations"),
+        () => router.push("/admin/pos/operations"),
         350,
       );
     } catch (error) {
@@ -424,7 +426,7 @@ export function PosWorkspace({
     setEditingRunningOrder(null);
     posCartActions.clear();
     setStatusMessage("Running order modification cancelled.");
-    window.location.assign("/admin/pos/operations");
+    router.push("/admin/pos/operations");
   }
 
   async function loadHeldOrders() {
