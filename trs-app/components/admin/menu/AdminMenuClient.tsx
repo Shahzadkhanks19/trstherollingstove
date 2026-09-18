@@ -1471,7 +1471,7 @@ export function AdminMenuClient({
             <button
               type="button"
               onClick={() => {
-                window.location.href = "/api/v1/admin/menu/items/export";
+                void fetch("/api/v1/admin/menu/items/export").then(async (response) => { if (!response.ok) throw new Error("Export failed"); const blob = await response.blob(); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "menu-items.csv"; anchor.click(); URL.revokeObjectURL(url); });
               }}
               className="inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border border-[#e5d9cf] bg-white px-3 text-xs font-black text-[#122b3c] sm:px-4"
             >
