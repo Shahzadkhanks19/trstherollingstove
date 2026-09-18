@@ -60,6 +60,7 @@ const InvoiceItemSchema = new Schema(
       trim: true,
       maxlength: 160,
     },
+    categoryName: { type: String, trim: true, maxlength: 120, default: "" },
     variantName: {
       type: String,
       trim: true,
