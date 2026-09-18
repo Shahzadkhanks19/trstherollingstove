@@ -11,6 +11,7 @@ export type RunningOrderKotItem = {
   action: RunningOrderKotAction;
   lineId: string;
   name: string;
+  categoryName?: string;
   variantName?: string;
   specialInstructions?: string;
   quantity: number;
@@ -65,6 +66,7 @@ function kotItem(
     action,
     lineId: line.lineId,
     name: line.name,
+    categoryName: line.categoryName,
     variantName: line.variantName ?? undefined,
     specialInstructions: line.note.trim() || undefined,
     quantity,
