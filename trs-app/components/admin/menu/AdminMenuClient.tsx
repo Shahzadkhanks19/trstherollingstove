@@ -8,27 +8,20 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRotateRight,
-  faBoxOpen,
   faCheck,
   faChevronLeft,
   faChevronRight,
   faDownload,
-  faEye,
-  faEyeSlash,
   faFilter,
-  faFire,
   faFloppyDisk,
   faFolderTree,
   faImage,
   faIndianRupeeSign,
-  faPen,
   faPercent,
   faPlus,
   faSearch,
-  faStar,
   faTrash,
   faUpload,
-  faUtensils,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
