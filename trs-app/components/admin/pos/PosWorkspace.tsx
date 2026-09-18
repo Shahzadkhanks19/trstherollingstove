@@ -9,6 +9,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
+import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRotateLeft,
@@ -27,6 +28,8 @@ import {
   faUser,
   faUserPlus,
   faPhone,
+  faPlus,
+  faUtensils,
   faTableColumns,
 } from "@fortawesome/free-solid-svg-icons";
 import { calculatePosCartTotals } from "@/lib/pos/cart";
