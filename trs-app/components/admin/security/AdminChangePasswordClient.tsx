@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -43,6 +44,7 @@ const rules = [
 ];
 
 export function AdminChangePasswordClient() {
+  const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -100,7 +102,7 @@ export function AdminChangePasswordClient() {
       setNotice(body.message || "Password changed. Sign in again.");
 
       window.setTimeout(() => {
-        window.location.assign("/admin/login?message=password-changed");
+        router.replace("/admin/login?message=password-changed");
       }, 1200);
     } catch (cause) {
       setError(
