@@ -1,5 +1,6 @@
-import { useRouter } from "next/navigation";
 "use client";
+
+import { useRouter } from "next/navigation";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
