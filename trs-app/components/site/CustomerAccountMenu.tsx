@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 "use client";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -31,6 +32,7 @@ type Customer = {
 };
 
 export function CustomerAccountMenu() {
+  const router = useRouter();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -102,7 +104,7 @@ export function CustomerAccountMenu() {
       invalidateSharedCustomerSession();
       setCustomer(null);
       setOpen(false);
-      window.location.assign("/");
+      router.replace("/");
     } catch (error) {
       console.error("Logout failed:", error);
       setLoggingOut(false);
