@@ -22,7 +22,7 @@ import {
 import { calculatePosCartTotals } from "@/lib/pos/cart";
 import { posCartActions, usePosCart } from "@/lib/pos/cart-store";
 import { PosBillingModal } from "@/components/admin/pos/PosBillingModal";
-import { CategoryRail, NumberField, ProductCard, SelectField, SummaryRow } from "@/components/admin/pos/PosWorkspaceUi";
+import { CategoryRail, ProductCard } from "@/components/admin/pos/PosWorkspaceUi";
 import { PosCashDrawerControl } from "@/components/admin/pos/PosCashDrawerControl";
 import { PayLaterOrderModal, type PosTableChoice } from "@/components/admin/pos/PayLaterOrderModal";
 import { ItemConfigurator } from "@/components/admin/pos/ItemConfigurator";
