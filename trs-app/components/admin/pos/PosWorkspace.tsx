@@ -6,7 +6,6 @@ import {
   useMemo,
   useState,
   type Dispatch,
-  type ReactNode,
   type SetStateAction,
 } from "react";
 import Image from "next/image";
@@ -33,17 +32,6 @@ import {
   faTableColumns,
 } from "@fortawesome/free-solid-svg-icons";
 import { calculatePosCartTotals } from "@/lib/pos/cart";
-import { resolveVariantModifierPrice } from "@/lib/menu-pricing";
-import {
-  isMediumPizzaVariant,
-  thinCrustGroupId,
-} from "@/lib/menu-special-config";
-import {
-  MIXED_NAAN_GROUP_ID,
-  MIXED_NAAN_GROUP_NAME,
-  findMixedNaanPrice,
-  isFullPortion,
-} from "@/lib/mixed-naan";
 import { posCartActions, usePosCart } from "@/lib/pos/cart-store";
 import { PosBillingModal } from "@/components/admin/pos/PosBillingModal";
 import { CategoryRail, NumberField, ProductCard, SelectField, SummaryRow } from "@/components/admin/pos/PosWorkspaceUi";
@@ -64,15 +52,10 @@ import type {
   PosTaxMode,
   PosCatalogItem,
   PosCategory,
-  PosConfiguredItem,
-  PosModifierGroup,
-  PosModifierOption,
   PosOrderType,
   PosSaleType,
   PosInternalConsumption,
   PosCustomer,
-  PosSelectedModifier,
-  PosVariant,
 } from "@/types/pos";
 
 type HeldOrder = {
