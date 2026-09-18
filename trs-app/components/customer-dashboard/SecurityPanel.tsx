@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 type Session = {
   _id: string;
@@ -10,6 +11,7 @@ type Session = {
 };
 type SessionsResponse = { data: Session[] };
 export function SecurityPanel() {
+  const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -35,7 +37,7 @@ export function SecurityPanel() {
     const body = (await response.json()) as { message: string };
     setMessage(body.message);
     setSaving(false);
-    if (response.ok) window.location.href = "/login";
+    if (response.ok) router.replace("/login");
   }
   const input =
     "mt-2 w-full rounded-xl border border-black/10 px-4 py-3 outline-none focus:border-[#C8102E] focus:ring-4 focus:ring-[#C8102E]/10";
