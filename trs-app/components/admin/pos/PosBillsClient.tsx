@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { buildInvoicePrintUrl, buildKotPrintUrl } from "@/lib/pos/print-links";
@@ -83,6 +84,7 @@ export function PosBillsClient({
 }: {
   initialBills: PosBillListItem[];
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [bills, setBills] = useState<Bill[]>(initialBills);
@@ -169,7 +171,7 @@ export function PosBillsClient({
         "trs-pos-rebill-order",
         JSON.stringify(json.data),
       );
-      window.location.assign("/admin/pos");
+      router.push("/admin/pos");
     } catch (error) {
       setMessage(
         error instanceof Error
