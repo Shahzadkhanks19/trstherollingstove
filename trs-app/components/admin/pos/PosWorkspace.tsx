@@ -14,23 +14,16 @@ import { PosMobileCartDrawer, PosMobileCategoryDrawer } from "@/components/admin
 import { PayLaterOrderModal } from "@/components/admin/pos/PayLaterOrderModal";
 import { ItemConfigurator } from "@/components/admin/pos/ItemConfigurator";
 import { CartPanel } from "@/components/admin/pos/CartPanel";
-import { HeldOrdersModal, type HeldOrder } from "@/components/admin/pos/HeldOrdersModal";
+import { HeldOrdersModal } from "@/components/admin/pos/HeldOrdersModal";
 import { useHeldOrders } from "@/components/admin/pos/useHeldOrders";
 import { useRunningOrder } from "@/components/admin/pos/useRunningOrder";
 import { usePosWorkspaceRecovery } from "@/components/admin/pos/usePosWorkspaceRecovery";
-import { CustomActionModal } from "@/components/admin/CustomActionModal";
+import { PosPendingActionModal, type PendingPosAction } from "@/components/admin/pos/PosPendingActionModal";
 import type {
   PosTaxMode,
   PosCatalogItem,
   PosCategory,
 } from "@/types/pos";
-
-type PendingPosAction =
-  | { kind: "clear" }
-  | { kind: "hold" }
-  | { kind: "recall"; order: HeldOrder }
-  | { kind: "delete-held"; order: HeldOrder }
-  | null;
 
 export function PosWorkspace({
   categories,
@@ -222,50 +215,8 @@ export function PosWorkspace({
         onDelete={(order) => setPendingAction({ kind: "delete-held", order })}
       />
 
-      <CustomActionModal
-        open={Boolean(pendingAction)}
-        title={
-          pendingAction?.kind === "clear"
-            ? "Clear current POS order?"
-            : pendingAction?.kind === "hold"
-              ? "Hold current order"
-              : pendingAction?.kind === "recall"
-                ? "Replace current cart?"
-                : "Delete held order?"
-        }
-        description={
-          pendingAction?.kind === "clear"
-            ? "This removes every item, customer selection, discount and charge from the current cart."
-            : pendingAction?.kind === "hold"
-              ? "Give this held order a clear name so the cashier can find it later."
-              : pendingAction?.kind === "recall"
-                ? "The current cart will be replaced by the selected held order."
-                : "This permanently removes the held order."
-        }
-        confirmLabel={
-          pendingAction?.kind === "hold"
-            ? "Hold order"
-            : pendingAction?.kind === "recall"
-              ? "Replace cart"
-              : pendingAction?.kind === "clear"
-                ? "Clear order"
-                : "Delete"
-        }
-        tone={
-          pendingAction?.kind === "clear" ||
-          pendingAction?.kind === "delete-held"
-            ? "danger"
-            : "default"
-        }
-        inputLabel={
-          pendingAction?.kind === "hold" ? "Held order name" : undefined
-        }
-        inputRequired={pendingAction?.kind === "hold"}
-        initialValue={
-          pendingAction?.kind === "hold"
-            ? `Order ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-            : ""
-        }
+      <PosPendingActionModal
+        action={pendingAction}
         onClose={() => setPendingAction(null)}
         onConfirm={async (value) => {
           const action = pendingAction;
@@ -274,8 +225,7 @@ export function PosWorkspace({
           if (action.kind === "clear") posCartActions.clear();
           if (action.kind === "hold") await heldOrders.hold(value);
           if (action.kind === "recall") await heldOrders.recall(action.order);
-          if (action.kind === "delete-held")
-            await heldOrders.remove(action.order.id);
+          if (action.kind === "delete-held") await heldOrders.remove(action.order.id);
         }}
       />
 
