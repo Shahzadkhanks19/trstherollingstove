@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { PosRunningOrderView, PosTableView } from "@/types/pos-operations";
@@ -28,6 +29,7 @@ const money = new Intl.NumberFormat("en-IN", {
 });
 
 export function PosOperationsClient({ canManage }: { canManage: boolean }) {
+  const router = useRouter();
   const [tables, setTables] = useState<PosTableView[]>([]);
   const [orders, setOrders] = useState<PosRunningOrderView[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
@@ -236,7 +238,7 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
         orderNumber: selected.ticketNumber,
       }),
     );
-    window.location.assign("/admin/pos");
+    router.push("/admin/pos");
   }
 
   function modifySelectedOrder() {
@@ -250,7 +252,7 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
         guestCount: selected.guestCount,
       }),
     );
-    window.location.assign("/admin/pos");
+    router.push("/admin/pos");
   }
 
   async function cancelSelectedOrder(reason: string) {
