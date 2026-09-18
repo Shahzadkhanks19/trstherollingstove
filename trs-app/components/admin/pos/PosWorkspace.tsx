@@ -6,25 +6,18 @@ import {
   useMemo,
   useState,
 } from "react";
-import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowRotateLeft,
-  faBagShopping,
   faBars,
   faCashRegister,
-  faChevronRight,
   faClock,
   faMagnifyingGlass,
-  faMinus,
   faReceipt,
   faTrash,
   faPause,
   faFolderOpen,
   faXmark,
-  faPlus,
   faUtensils,
-  faTableColumns,
 } from "@fortawesome/free-solid-svg-icons";
 import { calculatePosCartTotals } from "@/lib/pos/cart";
 import { posCartActions, usePosCart } from "@/lib/pos/cart-store";
@@ -33,8 +26,6 @@ import { CategoryRail, NumberField, ProductCard, SelectField, SummaryRow } from 
 import { PosCashDrawerControl } from "@/components/admin/pos/PosCashDrawerControl";
 import { PayLaterOrderModal, type PosTableChoice } from "@/components/admin/pos/PayLaterOrderModal";
 import { ItemConfigurator } from "@/components/admin/pos/ItemConfigurator";
-import { InternalConsumptionPanel } from "@/components/admin/pos/InternalConsumptionPanel";
-import { PosCustomerPanel } from "@/components/admin/pos/PosCustomerPanel";
 import { CartPanel } from "@/components/admin/pos/CartPanel";
 import {
   flushPosSaleQueue,
@@ -43,16 +34,10 @@ import {
 import { readPosPrintSettings } from "@/lib/pos/print-settings";
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
 import type {
-  PosCartLine,
   PosCartState,
-  PosCartTotals,
-  PosDiscountType,
   PosTaxMode,
   PosCatalogItem,
   PosCategory,
-  PosOrderType,
-  PosInternalConsumption,
-  PosCustomer,
 } from "@/types/pos";
 
 type HeldOrder = {
