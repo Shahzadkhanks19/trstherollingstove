@@ -16,10 +16,11 @@ export default function Icon() {
           background: "#ffffff",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse renders OG/icon markup, not a Next.js page image. */}
         <img
           src="https://therollingstove.vercel.app/images/trs-logo.png"
-          width="64"
-          height="64"
+          width={64}
+          height={64}
           alt="The Rolling Stove"
           style={{ objectFit: "contain" }}
         />
