@@ -4,7 +4,7 @@ import type { MenuOptionGroup } from "@/types/menu";
 
 export type SelectedOptionState = Record<string, Record<string, number>>;
 
-type Tab = "description" | "ingredients" | "nutrition" | "reviews";
+export type Tab = "description" | "ingredients" | "nutrition" | "reviews";
 
 type TrustItem = {
   icon: IconDefinition;
