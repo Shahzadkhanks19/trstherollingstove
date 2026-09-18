@@ -42,6 +42,7 @@ export type ReceiptInvoice = {
   changeDue?: number;
   items: Array<{
     name: string;
+    categoryName?: string;
     variantName?: string;
     specialInstructions?: string;
     quantity: number;
