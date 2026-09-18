@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
   useEffect,
   useMemo,
@@ -21,16 +20,16 @@ import { posCartActions, usePosCart } from "@/lib/pos/cart-store";
 import { PosBillingModal } from "@/components/admin/pos/PosBillingModal";
 import { CategoryRail, ProductCard } from "@/components/admin/pos/PosWorkspaceUi";
 import { PosCashDrawerControl } from "@/components/admin/pos/PosCashDrawerControl";
-import { PayLaterOrderModal, type PosTableChoice } from "@/components/admin/pos/PayLaterOrderModal";
+import { PayLaterOrderModal } from "@/components/admin/pos/PayLaterOrderModal";
 import { ItemConfigurator } from "@/components/admin/pos/ItemConfigurator";
 import { CartPanel } from "@/components/admin/pos/CartPanel";
 import { HeldOrdersModal, type HeldOrder } from "@/components/admin/pos/HeldOrdersModal";
 import { useHeldOrders } from "@/components/admin/pos/useHeldOrders";
+import { useRunningOrder, type EditingRunningOrder } from "@/components/admin/pos/useRunningOrder";
 import {
   flushPosSaleQueue,
   queuedPosSaleCount,
 } from "@/lib/pos/sale-offline-queue";
-import { readPosPrintSettings } from "@/lib/pos/print-settings";
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
 import type {
   PosCartState,
@@ -39,13 +38,6 @@ import type {
   PosCategory,
 } from "@/types/pos";
 
-type ApiResponse<T> = { success: boolean; message: string; data: T };
-type EditingRunningOrder = {
-  id: string;
-  ticketNumber: string;
-  cart: PosCartState;
-  guestCount: number;
-};
 type PendingPosAction =
   | { kind: "clear" }
   | { kind: "hold" }
@@ -66,7 +58,6 @@ export function PosWorkspace({
   defaultTaxRate: number;
   defaultTaxMode: PosTaxMode;
 }) {
-  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("all");
   const [query, setQuery] = useState("");
   const cart = usePosCart();
@@ -77,13 +68,9 @@ export function PosWorkspace({
   );
   const [statusMessage, setStatusMessage] = useState("");
   const heldOrders = useHeldOrders({ cart, setStatusMessage });
+  const runningOrder = useRunningOrder({ cart, setStatusMessage });
   const [billingOpen, setBillingOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingPosAction>(null);
-  const [runningOrderOpen, setRunningOrderOpen] = useState(false);
-  const [runningTables, setRunningTables] = useState<PosTableChoice[]>([]);
-  const [runningShiftId, setRunningShiftId] = useState("");
-  const [editingRunningOrder, setEditingRunningOrder] =
-    useState<EditingRunningOrder | null>(null);
   const [queuedSales, setQueuedSales] = useState(0);
 
   useEffect(() => {
@@ -162,7 +149,7 @@ export function PosWorkspace({
           if (!parsed.id || !parsed.ticketNumber || !parsed.cart?.lines?.length)
             throw new Error("Invalid running order edit payload.");
           posCartActions.replace(parsed.cart);
-          setEditingRunningOrder(parsed);
+          runningOrder.setEditing(parsed);
           setStatusMessage(
             `${parsed.ticketNumber} loaded for modification. Save changes to regenerate the kitchen KOT.`,
           );
@@ -225,158 +212,6 @@ export function PosWorkspace({
     return () => window.clearTimeout(timer);
   }, [cart]);
 
-  async function openRunningOrder() {
-    if (!cart.lines.length) return;
-    if (editingRunningOrder) {
-      setStatusMessage("Saving running order changes...");
-      const printSettings = readPosPrintSettings();
-      const printWindow = printSettings.autoPrintKot
-        ? window.open("", "_blank")
-        : null;
-      try {
-        const response = await fetch(
-          `/api/v1/pos/running-orders/${editingRunningOrder.id}`,
-          {
-            method: "PATCH",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              cart,
-              guestCount: editingRunningOrder.guestCount,
-              sendToKitchen: true,
-            }),
-          },
-        );
-        const json = (await response.json()) as ApiResponse<{
-          kotRevision: { revision: number } | null;
-        }>;
-        if (!response.ok)
-          throw new Error(
-            json.message || "Unable to update the running order.",
-          );
-        if (printWindow) {
-          if (json.data.kotRevision) {
-            const query = new URLSearchParams({
-              revision: String(json.data.kotRevision.revision),
-              paper: printSettings.kotPaper,
-              copies: String(printSettings.kotCopies),
-              customer: String(printSettings.showCustomerOnKot),
-              prices: String(printSettings.showPricesOnKot),
-            });
-            printWindow.location.href = `/api/v1/pos/running-orders/${editingRunningOrder.id}/kot?${query.toString()}`;
-          } else {
-            printWindow.close();
-          }
-        }
-        window.localStorage.removeItem("trs-pos-edit-running-order");
-        setEditingRunningOrder(null);
-        posCartActions.clear();
-        setStatusMessage(
-          json.data.kotRevision
-            ? `${editingRunningOrder.ticketNumber} updated. Revision KOT #${json.data.kotRevision.revision} contains only kitchen changes.`
-            : `${editingRunningOrder.ticketNumber} saved. No kitchen changes were detected.`,
-        );
-        window.setTimeout(
-          () => router.push("/admin/pos/operations"),
-          350,
-        );
-      } catch (error) {
-        printWindow?.close();
-        setStatusMessage(
-          error instanceof Error
-            ? error.message
-            : "Unable to update the running order.",
-        );
-      }
-      return;
-    }
-    setStatusMessage("Loading available tables...");
-    try {
-      const [shiftResponse, tablesResponse] = await Promise.all([
-        fetch("/api/v1/pos/shifts/current", { cache: "no-store" }),
-        fetch("/api/v1/pos/tables", { cache: "no-store" }),
-      ]);
-      const shiftJson = (await shiftResponse.json()) as ApiResponse<{
-        _id: string;
-      } | null>;
-      const tablesJson = (await tablesResponse.json()) as ApiResponse<
-        PosTableChoice[]
-      >;
-      if (!shiftResponse.ok || !shiftJson.data?._id)
-        throw new Error("Open a POS shift before creating a pay-later order.");
-      if (!tablesResponse.ok)
-        throw new Error(tablesJson.message || "Unable to load tables.");
-      setRunningShiftId(shiftJson.data._id);
-      setRunningTables(
-        tablesJson.data.filter(
-          (table) =>
-            table.status === "available" || table.status === "reserved",
-        ),
-      );
-      setRunningOrderOpen(true);
-      setStatusMessage("");
-    } catch (error) {
-      setStatusMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to open pay-later order.",
-      );
-    }
-  }
-
-  async function createPayLaterOrder(input: {
-    tableId: string | null;
-    tableName: string;
-    guestCount: number;
-  }) {
-    const printSettings = readPosPrintSettings();
-    const printWindow = printSettings.autoPrintKot
-      ? window.open("", "_blank")
-      : null;
-    try {
-      const response = await fetch("/api/v1/pos/running-orders", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ shiftId: runningShiftId, ...input, cart }),
-      });
-      const json = (await response.json()) as ApiResponse<{
-        order: { _id: string; ticketNumber: string };
-        kotRevision: { revision: number };
-      }>;
-      if (!response.ok)
-        throw new Error(json.message || "Unable to open pay-later order.");
-      if (printWindow) {
-        const query = new URLSearchParams({
-          revision: String(json.data.kotRevision.revision),
-          paper: printSettings.kotPaper,
-          copies: String(printSettings.kotCopies),
-          customer: String(printSettings.showCustomerOnKot),
-          prices: String(printSettings.showPricesOnKot),
-        });
-        printWindow.location.href = `/api/v1/pos/running-orders/${json.data.order._id}/kot?${query.toString()}`;
-      }
-      posCartActions.clear();
-      setRunningOrderOpen(false);
-      setStatusMessage(
-        `${json.data.order.ticketNumber} opened as Pay Later and initial KOT printed.`,
-      );
-      window.setTimeout(
-        () => router.push("/admin/pos/operations"),
-        350,
-      );
-    } catch (error) {
-      printWindow?.close();
-      throw error;
-    }
-  }
-
-  function cancelRunningOrderEdit() {
-    window.localStorage.removeItem("trs-pos-edit-running-order");
-    setEditingRunningOrder(null);
-    posCartActions.clear();
-    setStatusMessage("Running order modification cancelled.");
-    router.push("/admin/pos/operations");
-  }
-
   const cartPanel = (
     <CartPanel
       cart={cart.lines}
@@ -407,9 +242,9 @@ export function PosWorkspace({
         setMobileCartOpen(false);
         setBillingOpen(true);
       }}
-      onRunningOrder={openRunningOrder}
+      onRunningOrder={runningOrder.begin}
       runningOrderLabel={
-        editingRunningOrder
+        runningOrder.editing
           ? "Save changes & print revision KOT"
           : "Pay later / running order"
       }
@@ -505,20 +340,20 @@ export function PosWorkspace({
           </p>
         )}
 
-        {editingRunningOrder && (
+        {runningOrder.editing && (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
             <div>
               <p className="text-xs font-black uppercase tracking-[.16em] text-blue-700">
                 Modifying running order
               </p>
               <p className="text-sm font-black text-blue-950">
-                {editingRunningOrder.ticketNumber} · Add, remove or change
+                {runningOrder.editing.ticketNumber} · Add, remove or change
                 items, then save and regenerate the KOT.
               </p>
             </div>
             <button
               type="button"
-              onClick={cancelRunningOrderEdit}
+              onClick={runningOrder.cancelEdit}
               className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-black text-blue-800"
             >
               Cancel modification
@@ -722,11 +557,11 @@ export function PosWorkspace({
       />
 
       <PayLaterOrderModal
-        open={runningOrderOpen}
+        open={runningOrder.open}
         orderType={cart.orderType}
-        tables={runningTables}
-        onClose={() => setRunningOrderOpen(false)}
-        onConfirm={createPayLaterOrder}
+        tables={runningOrder.tables}
+        onClose={() => runningOrder.setOpen(false)}
+        onConfirm={runningOrder.create}
       />
 
       {mobileCategoriesOpen && (
