@@ -35,6 +35,7 @@ import { PayLaterOrderModal, type PosTableChoice } from "@/components/admin/pos/
 import { ItemConfigurator } from "@/components/admin/pos/ItemConfigurator";
 import { InternalConsumptionPanel } from "@/components/admin/pos/InternalConsumptionPanel";
 import { PosCustomerPanel } from "@/components/admin/pos/PosCustomerPanel";
+import { CartPanel } from "@/components/admin/pos/CartPanel";
 import {
   flushPosSaleQueue,
   queuedPosSaleCount,
@@ -1008,36 +1009,7 @@ export function PosWorkspace({
   );
 }
 
-function CartPanel({
-  cart,
-  itemCount,
-  totals,
-  adjustments,
-  defaultTaxRate,
-  defaultTaxMode,
-  orderType,
-  orderNote,
-  customer,
-  internalConsumption,
-  cashierName,
-  onOrderTypeChange,
-  onChangeQuantity,
-  onSetQuantity,
-  onRemove,
-  onLineNoteChange,
-  onOrderNoteChange,
-  onCustomerChange,
-  onInternalConsumptionChange,
-  onAdjustmentsChange,
-  onHold,
-  onOpenHeld,
-  heldCount,
-  statusMessage,
-  onBilling,
-  onRunningOrder,
-  runningOrderLabel,
-  onClear,
-}: {
+: {
   cart: PosCartLine[];
   itemCount: number;
   totals: PosCartTotals;
