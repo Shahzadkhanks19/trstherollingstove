@@ -13,9 +13,6 @@ import {
   faClock,
   faMagnifyingGlass,
   faReceipt,
-  faTrash,
-  faPause,
-  faFolderOpen,
   faXmark,
   faUtensils,
 } from "@fortawesome/free-solid-svg-icons";
@@ -54,12 +51,6 @@ type PendingPosAction =
   | { kind: "recall"; order: HeldOrder }
   | { kind: "delete-held"; order: HeldOrder }
   | null;
-
-const money = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
 
 export function PosWorkspace({
   categories,
