@@ -25,6 +25,7 @@ import { PayLaterOrderModal, type PosTableChoice } from "@/components/admin/pos/
 import { ItemConfigurator } from "@/components/admin/pos/ItemConfigurator";
 import { CartPanel } from "@/components/admin/pos/CartPanel";
 import { HeldOrdersModal, type HeldOrder } from "@/components/admin/pos/HeldOrdersModal";
+import { useHeldOrders } from "@/components/admin/pos/useHeldOrders";
 import {
   flushPosSaleQueue,
   queuedPosSaleCount,
@@ -74,10 +75,8 @@ export function PosWorkspace({
   const [configuringItem, setConfiguringItem] = useState<PosCatalogItem | null>(
     null,
   );
-  const [heldOrders, setHeldOrders] = useState<HeldOrder[]>([]);
-  const [heldOrdersOpen, setHeldOrdersOpen] = useState(false);
-  const [heldLoading, setHeldLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const heldOrders = useHeldOrders({ cart, setStatusMessage });
   const [billingOpen, setBillingOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingPosAction>(null);
   const [runningOrderOpen, setRunningOrderOpen] = useState(false);
@@ -378,71 +377,6 @@ export function PosWorkspace({
     router.push("/admin/pos/operations");
   }
 
-  async function loadHeldOrders() {
-    setHeldLoading(true);
-    setStatusMessage("");
-    try {
-      const response = await fetch("/api/v1/pos/cart-records", {
-        cache: "no-store",
-      });
-      const json = (await response.json()) as ApiResponse<HeldOrder[]>;
-      if (!response.ok)
-        throw new Error(json.message || "Unable to load held orders.");
-      setHeldOrders(json.data);
-    } catch (error) {
-      setStatusMessage(
-        error instanceof Error ? error.message : "Unable to load held orders.",
-      );
-    } finally {
-      setHeldLoading(false);
-    }
-  }
-
-  async function holdCurrentOrder(title: string) {
-    if (!cart.lines.length) return;
-    setStatusMessage("Holding order...");
-    try {
-      const response = await fetch("/api/v1/pos/cart-records", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title, cart }),
-      });
-      const json = (await response.json()) as ApiResponse<{ id: string }>;
-      if (!response.ok)
-        throw new Error(json.message || "Unable to hold order.");
-      posCartActions.clear();
-      setStatusMessage("Order held successfully.");
-      await loadHeldOrders();
-    } catch (error) {
-      setStatusMessage(
-        error instanceof Error ? error.message : "Unable to hold order.",
-      );
-    }
-  }
-
-  async function recallHeldOrder(order: HeldOrder) {
-    posCartActions.replace(order.cart);
-    await deleteHeldOrder(order.id);
-    setHeldOrdersOpen(false);
-    setStatusMessage(`Recalled ${order.title}.`);
-  }
-
-  async function deleteHeldOrder(id: string) {
-    try {
-      const response = await fetch(`/api/v1/pos/cart-records/${id}`, {
-        method: "DELETE",
-      });
-      const json = (await response.json()) as ApiResponse<unknown>;
-      if (!response.ok)
-        throw new Error(json.message || "Unable to delete held order.");
-      setHeldOrders((orders) => orders.filter((order) => order.id !== id));
-    } catch (error) {
-      setStatusMessage(
-        error instanceof Error ? error.message : "Unable to delete held order.",
-      );
-    }
-  }
-
   const cartPanel = (
     <CartPanel
       cart={cart.lines}
@@ -466,11 +400,8 @@ export function PosWorkspace({
       onInternalConsumptionChange={posCartActions.setInternalConsumption}
       onAdjustmentsChange={posCartActions.updateAdjustments}
       onHold={() => setPendingAction({ kind: "hold" })}
-      onOpenHeld={async () => {
-        setHeldOrdersOpen(true);
-        await loadHeldOrders();
-      }}
-      heldCount={heldOrders.length}
+      onOpenHeld={heldOrders.show}
+      heldCount={heldOrders.orders.length}
       statusMessage={statusMessage}
       onBilling={() => {
         setMobileCartOpen(false);
@@ -720,15 +651,15 @@ export function PosWorkspace({
         }}
       />
       <HeldOrdersModal
-        open={heldOrdersOpen}
-        loading={heldLoading}
-        orders={heldOrders}
+        open={heldOrders.open}
+        loading={heldOrders.loading}
+        orders={heldOrders.orders}
         hasCurrentCart={cart.lines.length > 0}
-        onClose={() => setHeldOrdersOpen(false)}
+        onClose={() => heldOrders.setOpen(false)}
         onRecall={(order) =>
           cart.lines.length
             ? setPendingAction({ kind: "recall", order })
-            : void recallHeldOrder(order)
+            : void heldOrders.recall(order)
         }
         onDelete={(order) => setPendingAction({ kind: "delete-held", order })}
       />
@@ -783,10 +714,10 @@ export function PosWorkspace({
           setPendingAction(null);
           if (!action) return;
           if (action.kind === "clear") posCartActions.clear();
-          if (action.kind === "hold") await holdCurrentOrder(value);
-          if (action.kind === "recall") await recallHeldOrder(action.order);
+          if (action.kind === "hold") await heldOrders.hold(value);
+          if (action.kind === "recall") await heldOrders.recall(action.order);
           if (action.kind === "delete-held")
-            await deleteHeldOrder(action.order.id);
+            await heldOrders.remove(action.order.id);
         }}
       />
 
