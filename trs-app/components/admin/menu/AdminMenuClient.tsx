@@ -50,6 +50,7 @@ import {
   type ItemForm,
   type MenuItem,
   type ModifierGroup,
+  type VariantForm,
 } from "@/components/admin/menu/admin-menu.types";
 import { createNaanPortionVariants, createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
 
