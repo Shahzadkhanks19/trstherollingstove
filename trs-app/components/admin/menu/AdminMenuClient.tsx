@@ -46,7 +46,8 @@ import {
   type VariantForm,
 } from "@/components/admin/menu/admin-menu.types";
 import { createNaanPortionVariants, createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
-import { BulkButton, Field, FilterSelect, Toggle } from "@/components/admin/menu/AdminMenuUi";
+import { Field, Toggle } from "@/components/admin/menu/AdminMenuUi";
+import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuCatalogList } from "@/components/admin/menu/AdminMenuCatalogList";
 
 export function AdminMenuClient({
@@ -1158,157 +1159,37 @@ export function AdminMenuClient({
       )}
 
       <section className="min-w-0 overflow-hidden rounded-[20px] sm:rounded-[24px] border border-[#e8ddd3] bg-[#fffdf9] shadow-[0_10px_32px_rgba(30,35,40,.05)]">
-        <div className="border-b border-[#eee4dc] p-4 sm:p-5">
-          <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-[minmax(260px,1fr)_auto_auto_auto] lg:items-center">
-            <label className="relative col-span-2 min-w-0 lg:col-span-1">
-              <FontAwesomeIcon
-                icon={faSearch}
-                className="absolute left-4 top-1/2 h-4 -translate-y-1/2 text-[#9b8e85]"
-              />
-              <input
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Search name, description or tags"
-                className="h-11 w-full rounded-2xl border border-[#e5d9cf] bg-white pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[#C8102E]"
-              />
-            </label>
-            <button
-              onClick={() => setShowFilters((value) => !value)}
-              className="inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border border-[#e5d9cf] bg-white px-3 text-xs font-black text-[#122b3c] sm:px-4"
-            >
-              <FontAwesomeIcon icon={faFilter} /> Filters
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                void fetch("/api/v1/admin/menu/items/export").then(async (response) => { if (!response.ok) throw new Error("Export failed"); const blob = await response.blob(); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "menu-items.csv"; anchor.click(); URL.revokeObjectURL(url); });
-              }}
-              className="inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-2xl border border-[#e5d9cf] bg-white px-3 text-xs font-black text-[#122b3c] sm:px-4"
-            >
-              <FontAwesomeIcon icon={faDownload} /> Export CSV
-            </button>
-            <button
-              onClick={() => void loadItems()}
-              aria-label="Refresh menu"
-              className="col-span-2 grid h-11 w-full place-items-center rounded-2xl border border-[#e5d9cf] bg-white text-[#122b3c] sm:col-span-1 sm:w-11"
-            >
-              <FontAwesomeIcon icon={faArrowRotateRight} spin={loading} />
-            </button>
-          </div>
-
-          <AnimatePresence initial={false}>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="grid min-w-0 gap-3 pt-4 sm:grid-cols-2 2xl:grid-cols-4">
-                  <FilterSelect
-                    label="Category"
-                    value={categoryId}
-                    onChange={(value) => {
-                      setCategoryId(value);
-                      setPage(1);
-                    }}
-                    options={[
-                      { value: "", label: "All categories" },
-                      ...categories.map((category) => ({
-                        value: category._id,
-                        label: category.name,
-                      })),
-                    ]}
-                  />
-                  <FilterSelect
-                    label="Status"
-                    value={status}
-                    onChange={(value) => {
-                      setStatus(value);
-                      setPage(1);
-                    }}
-                    options={[
-                      { value: "all", label: "All statuses" },
-                      { value: "active", label: "Active" },
-                      { value: "inactive", label: "Inactive" },
-                      { value: "available", label: "Available" },
-                      { value: "unavailable", label: "Unavailable" },
-                    ]}
-                  />
-                  <FilterSelect
-                    label="Featured"
-                    value={featured}
-                    onChange={(value) => {
-                      setFeatured(value);
-                      setPage(1);
-                    }}
-                    options={[
-                      { value: "all", label: "All items" },
-                      { value: "true", label: "Featured" },
-                      { value: "false", label: "Not featured" },
-                    ]}
-                  />
-                  <FilterSelect
-                    label="Bestseller"
-                    value={bestseller}
-                    onChange={(value) => {
-                      setBestseller(value);
-                      setPage(1);
-                    }}
-                    options={[
-                      { value: "all", label: "All items" },
-                      { value: "true", label: "Bestsellers" },
-                      { value: "false", label: "Not bestseller" },
-                    ]}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {selected.length > 0 && canUpdate && (
-          <div className="flex items-center gap-2 overflow-x-auto border-b border-[#eee4dc] bg-[#fff8f2] px-4 py-3 text-xs font-bold">
-            <span className="mr-2 shrink-0 text-[#6d625a]">
-              {selected.length} selected
-            </span>
-            <BulkButton
-              label="Activate"
-              onClick={() => void bulkAction("activate")}
-            />
-            <BulkButton
-              label="Deactivate"
-              onClick={() => void bulkAction("deactivate")}
-            />
-            <BulkButton
-              label="Available"
-              onClick={() => void bulkAction("mark_available")}
-            />
-            <BulkButton
-              label="Unavailable"
-              onClick={() => void bulkAction("mark_unavailable")}
-            />
-            <BulkButton
-              label="Feature"
-              onClick={() => void bulkAction("feature")}
-            />
-            <BulkButton
-              label="Bestseller"
-              onClick={() => void bulkAction("mark_bestseller")}
-            />
-            <BulkButton
-              label="Apply discount"
-              onClick={() => {
-                setBulkDiscountError("");
-                setBulkDiscountOpen(true);
-              }}
-            />
-            <BulkButton
-              label="Remove discount"
-              onClick={() => void applyBulkDiscount("remove_discount")}
-            />
-          </div>
-        )}
+        <AdminMenuCatalogControls
+          categories={categories}
+          searchInput={searchInput}
+          showFilters={showFilters}
+          categoryId={categoryId}
+          status={status}
+          featured={featured}
+          bestseller={bestseller}
+          loading={loading}
+          selectedCount={selected.length}
+          canUpdate={canUpdate}
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          itemCount={items.length}
+          onSearchInputChange={setSearchInput}
+          onToggleFilters={() => setShowFilters((value) => !value)}
+          onCategoryChange={(value) => { setCategoryId(value); setPage(1); }}
+          onStatusChange={(value) => { setStatus(value); setPage(1); }}
+          onFeaturedChange={(value) => { setFeatured(value); setPage(1); }}
+          onBestsellerChange={(value) => { setBestseller(value); setPage(1); }}
+          onRefresh={() => void loadItems()}
+          onBulkAction={(action) => {
+            if (action === "remove_discount") void applyBulkDiscount(action);
+            else void bulkAction(action);
+          }}
+          onOpenBulkDiscount={() => { setBulkDiscountError(""); setBulkDiscountOpen(true); }}
+          onPageChange={setPage}
+          onLimitChange={(value) => { setLimit(value); setPage(1); }}
+        />
 
         <AdminMenuCatalogList
           items={items}
@@ -1338,44 +1219,7 @@ export function AdminMenuClient({
           }
         />
 
-        <div className="flex min-w-0 flex-col gap-3 border-t border-[#eee4dc] px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <p className="text-xs font-bold text-[#81746b]">
-            Showing {items.length} of {total} items
-          </p>
-          <div className="grid w-full grid-cols-[minmax(72px,1fr)_36px_minmax(64px,auto)_36px] items-center gap-2 sm:flex sm:w-auto">
-            <select
-              value={limit}
-              onChange={(event) => {
-                setLimit(Number(event.target.value));
-                setPage(1);
-              }}
-              className="h-9 rounded-xl border border-[#e5d9cf] bg-white px-3 text-xs font-bold"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage((value) => Math.max(1, value - 1))}
-              className="grid h-9 w-9 place-items-center rounded-xl border border-[#e5d9cf] disabled:opacity-40"
-            >
-              <FontAwesomeIcon icon={faChevronLeft} />
-            </button>
-            <span className="min-w-20 text-center text-xs font-black text-[#122b3c]">
-              {page} / {totalPages}
-            </span>
-            <button
-              disabled={page >= totalPages}
-              onClick={() =>
-                setPage((value) => Math.min(totalPages, value + 1))
-              }
-              className="grid h-9 w-9 place-items-center rounded-xl border border-[#e5d9cf] disabled:opacity-40"
-            >
-              <FontAwesomeIcon icon={faChevronRight} />
-            </button>
-          </div>
-        </div>
+
       </section>
 
       <AnimatePresence>
