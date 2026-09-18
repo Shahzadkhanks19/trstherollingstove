@@ -1087,7 +1087,7 @@ export function AdminMenuClient({
     }
   }
 
-  const comboCalculation = useMemo(() => {
+  const comboCalculation = (() => {
     if (!isComboCategory) return { originalPrice: 0, savings: 0, discount: 0 };
     const originalPrice = form.comboComponents.reduce((sum, entry) => {
       const item = comboCatalogItems.find(
@@ -1107,12 +1107,7 @@ export function AdminMenuClient({
       savings,
       discount: originalPrice > 0 ? (savings / originalPrice) * 100 : 0,
     };
-  }, [
-    form.comboComponents,
-    form.basePrice,
-    isComboCategory,
-    comboCatalogItems,
-  ]);
+  })();
 
   const allSelected =
     items.length > 0 && items.every((item) => selected.includes(item._id));
