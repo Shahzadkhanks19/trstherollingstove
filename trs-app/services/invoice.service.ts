@@ -3,6 +3,8 @@ import { Types } from "mongoose";
 import { DEFAULT_SETTINGS } from "@/config/defaultSettings";
 import { AppError } from "@/lib/errors/AppError";
 import { Invoice } from "@/models/Invoice";
+import { MenuItem } from "@/models/MenuItem";
+import { MenuCategory } from "@/models/MenuCategory";
 import { Order } from "@/models/Order";
 import { OrderCounter } from "@/models/OrderCounter";
 import { SystemSetting } from "@/models/SystemSetting";
@@ -110,6 +112,19 @@ export async function getOrCreateInvoice(
       },
     ).lean();
 
+  const menuItemIds = order.items.flatMap((item) => item.menuItemId ? [item.menuItemId] : []);
+  const menuItems = menuItemIds.length
+    ? await MenuItem.find({ _id: { $in: menuItemIds } }).select("_id categoryId").lean()
+    : [];
+  const categoryIds = [...new Set(menuItems.flatMap((item) => item.categoryId ? [String(item.categoryId)] : []))];
+  const menuCategories = categoryIds.length
+    ? await MenuCategory.find({ _id: { $in: categoryIds } }).select("_id name").lean()
+    : [];
+  const categoryNameById = new Map(menuCategories.map((category) => [String(category._id), category.name]));
+  const categoryNameByMenuItemId = new Map(
+    menuItems.map((item) => [String(item._id), item.categoryId ? categoryNameById.get(String(item.categoryId)) ?? "" : ""]),
+  );
+
   const businessData = {
     ...DEFAULT_SETTINGS.business.data,
     ...((businessSetting?.data as
@@ -176,6 +191,7 @@ export async function getOrCreateInvoice(
       changeDue: order.changeDue ?? 0,
       items: order.items.map((item) => ({
         name: item.name,
+        categoryName: item.menuItemId ? categoryNameByMenuItemId.get(String(item.menuItemId)) ?? "" : "",
         variantName: item.variantName ?? "",
         specialInstructions: item.specialInstructions ?? "",
         modifiers: item.modifiers.map(
