@@ -37,6 +37,7 @@ import {
 } from "@/lib/mixed-naan";
 
 import {
+  canonicalVariantLabel,
   formatPrice,
   getChoicePrice,
   initialiseOptions,
