@@ -7,18 +7,14 @@ import {
 } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBars,
   faCashRegister,
   faClock,
-  faMagnifyingGlass,
   faReceipt,
-  faXmark,
-  faUtensils,
 } from "@fortawesome/free-solid-svg-icons";
 import { calculatePosCartTotals } from "@/lib/pos/cart";
 import { posCartActions, usePosCart } from "@/lib/pos/cart-store";
 import { PosBillingModal } from "@/components/admin/pos/PosBillingModal";
-import { CategoryRail, ProductCard } from "@/components/admin/pos/PosWorkspaceUi";
+import { PosCatalogPanel } from "@/components/admin/pos/PosCatalogPanel";
 import { PosCashDrawerControl } from "@/components/admin/pos/PosCashDrawerControl";
 import { PayLaterOrderModal } from "@/components/admin/pos/PayLaterOrderModal";
 import { ItemConfigurator } from "@/components/admin/pos/ItemConfigurator";
@@ -270,101 +266,23 @@ export function PosWorkspace({
       </header>
 
       <div className="grid min-h-0 flex-1 min-[1400px]:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px]">
-        <main className="min-h-0 min-w-0 overflow-y-auto overscroll-contain p-3 sm:p-5 lg:p-6">
-          <div className="mb-4 flex gap-3">
-            <label className="relative block min-w-0 flex-1">
-              <span className="sr-only">Search menu</span>
-              <FontAwesomeIcon
-                icon={faMagnifyingGlass}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9a8e85]"
-              />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search food, category or item..."
-                className="h-12 w-full rounded-2xl border border-[#e5d9cf] bg-white pl-11 pr-11 text-sm font-semibold text-[#122b3c] outline-none transition focus:border-[#C8102E] focus:ring-4 focus:ring-[#C8102E]/10"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-[#8b7f76] hover:bg-[#f3ece5]"
-                  aria-label="Clear search"
-                >
-                  <FontAwesomeIcon icon={faXmark} />
-                </button>
-              )}
-            </label>
-            <button
-              type="button"
-              onClick={() => setMobileCategoriesOpen(true)}
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-[#e5d9cf] bg-white text-[#122b3c] transition hover:border-[#C8102E]/40 hover:text-[#C8102E] lg:hidden"
-              aria-label="Browse categories"
-              aria-haspopup="dialog"
-              aria-expanded={mobileCategoriesOpen}
-            >
-              <FontAwesomeIcon icon={faBars} />
-            </button>
-          </div>
-
-          <div className="hidden lg:block">
-            <CategoryRail
-              categories={categories}
-              activeCategory={activeCategory}
-              onSelect={setActiveCategory}
-            />
-          </div>
-
-          <div className="mb-4 mt-5 flex items-end justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-black tracking-[-.03em] text-[#122b3c]">
-                {activeCategory === "all"
-                  ? "All items"
-                  : (categories.find(
-                      (category) => category.id === activeCategory,
-                    )?.name ?? "Menu")}
-              </h2>
-              <p className="mt-1 text-xs font-medium text-[#8b7e75]">
-                {filteredItems.length} items available in this view
-              </p>
-            </div>
-          </div>
-
-          {filteredItems.length ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 min-[1800px]:grid-cols-5">
-              {filteredItems.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  item={item}
-                  onAdd={(selectedItem) => {
-                    const needsConfiguration =
-                      selectedItem.variants.length > 1 ||
-                      selectedItem.modifierGroups.length > 0;
-                    if (needsConfiguration) {
-                      setConfiguringItem(selectedItem);
-                    } else {
-                      posCartActions.addItem(selectedItem);
-                    }
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="grid min-h-72 place-items-center rounded-[26px] border border-dashed border-[#d9ccc2] bg-white/60 p-8 text-center">
-              <div>
-                <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#f3ece5] text-[#C8102E]">
-                  <FontAwesomeIcon icon={faUtensils} />
-                </span>
-                <h3 className="mt-4 text-base font-black text-[#122b3c]">
-                  No matching items
-                </h3>
-                <p className="mt-1 text-sm text-[#8b7e75]">
-                  Try a different search or category.
-                </p>
-              </div>
-            </div>
-          )}
-        </main>
+        <PosCatalogPanel
+          categories={categories}
+          items={filteredItems}
+          activeCategory={activeCategory}
+          query={query}
+          mobileCategoriesOpen={mobileCategoriesOpen}
+          onCategoryChange={setActiveCategory}
+          onQueryChange={setQuery}
+          onOpenCategories={() => setMobileCategoriesOpen(true)}
+          onAddItem={(selectedItem) => {
+            const needsConfiguration =
+              selectedItem.variants.length > 1 ||
+              selectedItem.modifierGroups.length > 0;
+            if (needsConfiguration) setConfiguringItem(selectedItem);
+            else posCartActions.addItem(selectedItem);
+          }}
+        />
 
         <aside className="hidden min-h-0 border-l border-[#e4d8ce] bg-[#fffdf9] min-[1400px]:block">
           <div className="h-full min-h-0">{cartPanel}</div>
