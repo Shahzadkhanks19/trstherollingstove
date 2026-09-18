@@ -29,7 +29,6 @@ import { useRunningOrder } from "@/components/admin/pos/useRunningOrder";
 import { usePosWorkspaceRecovery } from "@/components/admin/pos/usePosWorkspaceRecovery";
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
 import type {
-  PosCartState,
   PosTaxMode,
   PosCatalogItem,
   PosCategory,
