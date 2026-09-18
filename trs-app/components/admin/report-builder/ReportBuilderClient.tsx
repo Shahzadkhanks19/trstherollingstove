@@ -320,9 +320,7 @@ export function ReportBuilderClient() {
 
   function exportReport(format: "csv" | "xlsx" | "pdf") {
     if (!selectedId) return;
-    window.location.assign(
-      `/api/v1/admin/report-builder/definitions/${selectedId}/export/${format}`,
-    );
+    void fetch(`/api/v1/admin/report-builder/definitions/${selectedId}/export/${format}`).then(async (response) => { if (!response.ok) throw new Error("Export failed"); const blob = await response.blob(); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = `report.${format}`; anchor.click(); URL.revokeObjectURL(url); });
   }
 
   return (
