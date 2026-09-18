@@ -24,17 +24,15 @@ function belongsTo(item: MenuItemSummary, group: BestsellerGroup): boolean {
     return category.includes("pizza");
   }
 
-  return (
-    category.includes("chur") ||
-    category.includes("naan")
-  );
+  return category.includes("chur") || category.includes("naan");
 }
 
 export function HomeBestsellers({ items }: { items: MenuItemSummary[] }) {
   const groups = useMemo(
     () => ({
       pizza: items.filter(
-        (item) => item.isAvailable && item.isBestseller && belongsTo(item, "pizza"),
+        (item) =>
+          item.isAvailable && item.isBestseller && belongsTo(item, "pizza"),
       ),
       "chur-chur-naan": items.filter(
         (item) =>
@@ -81,9 +79,10 @@ export function HomeBestsellers({ items }: { items: MenuItemSummary[] }) {
       {visibleItems.length > 0 ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {visibleItems.slice(0, 5).map((product) => {
-            const pricingOptions = product.pricingOptions?.filter(
-              (option) => option.isAvailable !== false,
-            ) ?? [];
+            const pricingOptions =
+              product.pricingOptions?.filter(
+                (option) => option.isAvailable !== false,
+              ) ?? [];
 
             return (
               <article

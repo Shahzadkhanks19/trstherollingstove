@@ -18,18 +18,35 @@ async function getCurrentTimestamp(): Promise<number> {
 }
 
 export default async function MenuPage() {
-  const [items, user] = await Promise.all([getPublicMenuItems(), getAuthenticatedUser()]);
+  const [items, user] = await Promise.all([
+    getPublicMenuItems(),
+    getAuthenticatedUser(),
+  ]);
   await connectToDatabase();
-  const membership = user?.roleKey === "customer" ? await LoyaltyMembership.findOne({ customerId: user.id }).select("tierKey").lean() : null;
-  const tierKey = (membership?.tierKey ?? "bronze") as "bronze" | "silver" | "gold" | "platinum";
+  const membership =
+    user?.roleKey === "customer"
+      ? await LoyaltyMembership.findOne({ customerId: user.id })
+          .select("tierKey")
+          .lean()
+      : null;
+  const tierKey = (membership?.tierKey ?? "bronze") as
+    "bronze" | "silver" | "gold" | "platinum";
   const now = await getCurrentTimestamp();
   const visibleItems = items.filter((item) => {
     if (!item.isCombo) return true;
     const eligible = item.eligibleTierKeys?.includes(tierKey) ?? true;
     if (!eligible || item.publishComboOnMenuPage === false) return false;
     if (item.comboOfferType === "limited") {
-      if (item.comboOfferStartsAt && new Date(item.comboOfferStartsAt).getTime() > now) return false;
-      if (item.comboOfferExpiresAt && new Date(item.comboOfferExpiresAt).getTime() <= now) return false;
+      if (
+        item.comboOfferStartsAt &&
+        new Date(item.comboOfferStartsAt).getTime() > now
+      )
+        return false;
+      if (
+        item.comboOfferExpiresAt &&
+        new Date(item.comboOfferExpiresAt).getTime() <= now
+      )
+        return false;
     }
     return true;
   });

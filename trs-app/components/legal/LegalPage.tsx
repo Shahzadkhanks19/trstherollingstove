@@ -10,12 +10,7 @@ type LegalPageProps = {
   sections: Section[];
 };
 
-export function LegalPage({
-  eyebrow,
-  title,
-  intro,
-  sections,
-}: LegalPageProps) {
+export function LegalPage({ eyebrow, title, intro, sections }: LegalPageProps) {
   return (
     <section className="legal-page">
       <div className="container legal-layout">

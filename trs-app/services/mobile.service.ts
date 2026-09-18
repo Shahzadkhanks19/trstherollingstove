@@ -79,10 +79,7 @@ export async function revokeMobileDevice(
   });
 }
 
-export async function revokeMobileSession(
-  userId: string,
-  sessionId: string,
-) {
+export async function revokeMobileSession(userId: string, sessionId: string) {
   const session = await AuthSession.findOne({
     _id: sessionId,
     userId,
@@ -159,13 +156,12 @@ export async function getMobileAppConfig() {
   const operationsData =
     operationsSetting?.publicData &&
     typeof operationsSetting.publicData === "object"
-      ? operationsSetting.publicData as Record<string, unknown>
+      ? (operationsSetting.publicData as Record<string, unknown>)
       : {};
 
   const configured =
-    operationsData.mobile &&
-    typeof operationsData.mobile === "object"
-      ? operationsData.mobile as Record<string, unknown>
+    operationsData.mobile && typeof operationsData.mobile === "object"
+      ? (operationsData.mobile as Record<string, unknown>)
       : {};
 
   return {

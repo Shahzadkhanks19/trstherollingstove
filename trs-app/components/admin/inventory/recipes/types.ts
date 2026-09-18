@@ -36,7 +36,8 @@ export type CatalogResponse = {
 };
 
 export type PopulatedInventoryItem = InventoryItemOption | string;
-export type PopulatedMenuItem = Pick<MenuItemOption, "_id" | "name" | "basePrice" | "variants"> | string;
+export type PopulatedMenuItem =
+  Pick<MenuItemOption, "_id" | "name" | "basePrice" | "variants"> | string;
 
 export type MenuIngredientForm = {
   inventoryItemId: string;

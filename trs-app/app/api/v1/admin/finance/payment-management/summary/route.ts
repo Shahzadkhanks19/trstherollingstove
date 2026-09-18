@@ -8,7 +8,9 @@ export async function GET(request: Request) {
   try {
     await requirePermission("payments.read");
     const url = new URL(request.url);
-    const { days } = paymentManagementRangeSchema.parse({ days: url.searchParams.get("days") ?? 30 });
+    const { days } = paymentManagementRangeSchema.parse({
+      days: url.searchParams.get("days") ?? 30,
+    });
     return successResponse(await getPaymentManagementSummary(days));
   } catch (error) {
     return handleApiError(error);

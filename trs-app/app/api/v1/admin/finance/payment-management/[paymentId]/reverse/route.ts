@@ -11,7 +11,10 @@ export async function POST(request: Request, context: Context) {
     const actor = await requirePermission("payments.manage");
     const { paymentId } = await context.params;
     const input = await validateRequestBody(request, paymentReverseSchema);
-    return successResponse(await reverseManagedPayment(paymentId, input, actor.id), "Payment reversed.");
+    return successResponse(
+      await reverseManagedPayment(paymentId, input, actor.id),
+      "Payment reversed.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

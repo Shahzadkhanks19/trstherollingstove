@@ -8,8 +8,15 @@ import { paymentReconciliationSchema } from "@/validators/payment-management";
 export async function POST(request: Request) {
   try {
     const actor = await requirePermission("payments.manage");
-    const input = await validateRequestBody(request, paymentReconciliationSchema);
-    return successResponse(await reconcileManagedPayment(input, actor.id), "Payment reconciled.", 201);
+    const input = await validateRequestBody(
+      request,
+      paymentReconciliationSchema,
+    );
+    return successResponse(
+      await reconcileManagedPayment(input, actor.id),
+      "Payment reconciled.",
+      201,
+    );
   } catch (error) {
     return handleApiError(error);
   }

@@ -1,8 +1,22 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const PageHeroSchema = new Schema(
   {
-    pageKey: { type: String, required: true, trim: true, lowercase: true, unique: true, index: true, maxlength: 80 },
+    pageKey: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      unique: true,
+      index: true,
+      maxlength: 80,
+    },
     pageName: { type: String, required: true, trim: true, maxlength: 120 },
     desktopImageUrl: { type: String, trim: true, maxlength: 1000, default: "" },
     mobileImageUrl: { type: String, trim: true, maxlength: 1000, default: "" },
@@ -18,4 +32,5 @@ const PageHeroSchema = new Schema(
 
 export type PageHeroDocument = InferSchemaType<typeof PageHeroSchema>;
 export const PageHero: Model<PageHeroDocument> =
-  (models.PageHero as Model<PageHeroDocument>) || model<PageHeroDocument>("PageHero", PageHeroSchema);
+  (models.PageHero as Model<PageHeroDocument>) ||
+  model<PageHeroDocument>("PageHero", PageHeroSchema);

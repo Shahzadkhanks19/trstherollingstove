@@ -14,19 +14,15 @@ async function main() {
   await connectToDatabase();
 
   const activeModifierIds = new Set(
-    (
-      await ModifierGroup.find({ isActive: true })
-        .select("_id")
-        .lean()
-    ).map((group) => String(group._id)),
+    (await ModifierGroup.find({ isActive: true }).select("_id").lean()).map(
+      (group) => String(group._id),
+    ),
   );
 
   const liveItemIds = new Set(
-    (
-      await MenuItem.find({ deletedAt: null })
-        .select("_id")
-        .lean()
-    ).map((item) => String(item._id)),
+    (await MenuItem.find({ deletedAt: null }).select("_id").lean()).map(
+      (item) => String(item._id),
+    ),
   );
 
   const items = await MenuItem.find({});
@@ -60,7 +56,8 @@ async function main() {
     if (!modifierChanged && !relatedChanged && !missingArrays) continue;
 
     removedModifierLinks += currentModifierIds.length - nextModifierIds.length;
-    removedRecommendationLinks += currentRelatedIds.length - nextRelatedIds.length;
+    removedRecommendationLinks +=
+      currentRelatedIds.length - nextRelatedIds.length;
 
     item.set(
       "modifierGroupIds",

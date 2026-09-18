@@ -35,7 +35,8 @@ export async function PATCH(request: Request, context: Context) {
     }
 
     order.paymentStatus = input.paymentStatus;
-    if (input.paymentMethod !== undefined) order.paymentMethod = input.paymentMethod;
+    if (input.paymentMethod !== undefined)
+      order.paymentMethod = input.paymentMethod;
     order.updatedBy = new Types.ObjectId(actor.id);
     await order.save();
 

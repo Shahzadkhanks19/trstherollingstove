@@ -1,2 +1,17 @@
-import { requirePermission } from "@/lib/auth/session";import { connectToDatabase } from "@/lib/db/mongoose";import { handleApiError } from "@/lib/errors/handleApiError";import { successResponse } from "@/lib/http/apiResponse";import { getRecommendationAdminSummary } from "@/services/recommendation.service";
-export async function GET(){try{await requirePermission("reports.read");await connectToDatabase();return successResponse(await getRecommendationAdminSummary(),"Recommendation summary loaded.");}catch(error){return handleApiError(error);}}
+import { requirePermission } from "@/lib/auth/session";
+import { connectToDatabase } from "@/lib/db/mongoose";
+import { handleApiError } from "@/lib/errors/handleApiError";
+import { successResponse } from "@/lib/http/apiResponse";
+import { getRecommendationAdminSummary } from "@/services/recommendation.service";
+export async function GET() {
+  try {
+    await requirePermission("reports.read");
+    await connectToDatabase();
+    return successResponse(
+      await getRecommendationAdminSummary(),
+      "Recommendation summary loaded.",
+    );
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

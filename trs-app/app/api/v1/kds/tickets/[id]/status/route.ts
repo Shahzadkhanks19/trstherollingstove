@@ -10,30 +10,17 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
     const actor = await requirePermission("kds.use");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      updateTicketStatusSchema,
-    );
+    const input = await validateRequestBody(request, updateTicketStatusSchema);
 
     await connectToDatabase();
 
-    const ticket = await updateKitchenTicketStatus(
-      id,
-      input.status,
-      actor.id,
-    );
+    const ticket = await updateKitchenTicketStatus(id, input.status, actor.id);
 
-    return successResponse(
-      ticket,
-      "Kitchen ticket status updated.",
-    );
+    return successResponse(ticket, "Kitchen ticket status updated.");
   } catch (error) {
     return handleApiError(error);
   }

@@ -112,9 +112,9 @@ export function ForgotPasswordPageClient() {
         ),
       });
 
-      const data = (await response.json().catch(() => null)) as
-        | { message?: string }
-        | null;
+      const data = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
 
       if (!response.ok) {
         throw new Error(
@@ -237,10 +237,7 @@ export function ForgotPasswordPageClient() {
                     : "border-transparent text-[#655E57]"
                 }`}
               >
-                <FontAwesomeIcon
-                  icon={faMobileScreenButton}
-                  className="h-4"
-                />
+                <FontAwesomeIcon icon={faMobileScreenButton} className="h-4" />
                 Mobile Number
               </button>
             </div>
@@ -290,7 +287,9 @@ export function ForgotPasswordPageClient() {
                       className="h-12 w-full min-w-0 rounded-xl border border-[#E5D9CD] bg-[#FFFDF9] pl-11 pr-4 text-sm font-medium normal-case outline-none transition focus:border-[#C8102E] focus:ring-2 focus:ring-[#C8102E]/10"
                     />
                   </div>
-                  <span className="mt-2 block text-[9px] font-medium normal-case leading-4 text-[#655E57]">Enter exactly 10 digits without +91, spaces or dashes.</span>
+                  <span className="mt-2 block text-[9px] font-medium normal-case leading-4 text-[#655E57]">
+                    Enter exactly 10 digits without +91, spaces or dashes.
+                  </span>
                 </label>
               )}
 

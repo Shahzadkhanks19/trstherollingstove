@@ -6,10 +6,7 @@ import {
   type Model,
 } from "mongoose";
 
-import {
-  BACKGROUND_JOB_KEYS,
-  BACKGROUND_JOB_STATUSES,
-} from "@/types/jobs";
+import { BACKGROUND_JOB_KEYS, BACKGROUND_JOB_STATUSES } from "@/types/jobs";
 
 const BackgroundJobSchema = new Schema(
   {
@@ -126,14 +123,8 @@ BackgroundJobSchema.index(
   },
 );
 
-export type BackgroundJobDocument =
-  InferSchemaType<typeof BackgroundJobSchema>;
+export type BackgroundJobDocument = InferSchemaType<typeof BackgroundJobSchema>;
 
-export const BackgroundJob:
-  Model<BackgroundJobDocument> =
-    (models.BackgroundJob as
-      Model<BackgroundJobDocument>) ||
-    model<BackgroundJobDocument>(
-      "BackgroundJob",
-      BackgroundJobSchema,
-    );
+export const BackgroundJob: Model<BackgroundJobDocument> =
+  (models.BackgroundJob as Model<BackgroundJobDocument>) ||
+  model<BackgroundJobDocument>("BackgroundJob", BackgroundJobSchema);

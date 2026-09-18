@@ -1,18 +1,10 @@
-export const DATA_EXPORT_FORMATS = [
-  "json",
-  "csv",
-] as const;
+export const DATA_EXPORT_FORMATS = ["json", "csv"] as const;
 
-export type DataExportFormat =
-  (typeof DATA_EXPORT_FORMATS)[number];
+export type DataExportFormat = (typeof DATA_EXPORT_FORMATS)[number];
 
-export const RESTORE_MODES = [
-  "insert",
-  "upsert",
-] as const;
+export const RESTORE_MODES = ["insert", "upsert"] as const;
 
-export type RestoreMode =
-  (typeof RESTORE_MODES)[number];
+export type RestoreMode = (typeof RESTORE_MODES)[number];
 
 export type BackupCollectionManifest = {
   name: string;

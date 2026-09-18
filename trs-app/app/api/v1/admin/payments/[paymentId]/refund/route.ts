@@ -35,7 +35,6 @@ export async function POST(request: Request, context: Context) {
       },
     });
 
-
     return successResponse(payment, "Refund initiated successfully.");
   } catch (error) {
     return handleApiError(error);

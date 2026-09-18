@@ -49,7 +49,12 @@ type Coupon = {
   isActive: boolean;
 };
 
-type MenuItemOption = { _id: string; name: string; isActive: boolean; isAvailable: boolean };
+type MenuItemOption = {
+  _id: string;
+  name: string;
+  isActive: boolean;
+  isAvailable: boolean;
+};
 
 type ApiErrorDetail = {
   field?: string;
@@ -126,7 +131,9 @@ export function AdminCouponsOffersClient() {
       if (!response.ok) throw new Error(json.message);
       setRows(json.data.coupons);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to load coupons.");
+      setMessage(
+        error instanceof Error ? error.message : "Unable to load coupons.",
+      );
     } finally {
       setLoading(false);
     }
@@ -148,14 +155,18 @@ export function AdminCouponsOffersClient() {
         if (!response.ok) throw new Error(json.message);
         setMenuItems(json.data);
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Unable to load menu items.");
+        setMessage(
+          error instanceof Error ? error.message : "Unable to load menu items.",
+        );
       }
     }
     void loadMenuItems();
   }, []);
 
   const active = useMemo(
-    () => rows.filter((row) => row.isActive && new Date(row.expiresAt) > new Date()).length,
+    () =>
+      rows.filter((row) => row.isActive && new Date(row.expiresAt) > new Date())
+        .length,
     [rows],
   );
 
@@ -234,8 +245,10 @@ export function AdminCouponsOffersClient() {
       code: normalizeCouponCode(form.code),
       name: form.name.trim(),
       description: form.description.trim(),
-      discountValue: form.discountType === "free_item" ? 0 : Number(form.discountValue),
-      freeMenuItemId: form.discountType === "free_item" ? form.freeMenuItemId : null,
+      discountValue:
+        form.discountType === "free_item" ? 0 : Number(form.discountValue),
+      freeMenuItemId:
+        form.discountType === "free_item" ? form.freeMenuItemId : null,
       minimumOrderAmount: Number(form.minimumOrderAmount),
       usageLimitPerCustomer: Number(form.usageLimitPerCustomer),
       startsAt,
@@ -250,7 +263,9 @@ export function AdminCouponsOffersClient() {
     setSaving(true);
     try {
       const response = await fetch(
-        editingId ? `/api/v1/admin/coupons/${editingId}` : "/api/v1/admin/coupons",
+        editingId
+          ? `/api/v1/admin/coupons/${editingId}`
+          : "/api/v1/admin/coupons",
         {
           method: editingId ? "PATCH" : "POST",
           headers: { "content-type": "application/json" },
@@ -323,7 +338,9 @@ export function AdminCouponsOffersClient() {
       <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border bg-white p-4">
           <p className="text-xs font-black text-slate-500">Total campaigns</p>
-          <p className="mt-2 text-3xl font-black text-[#173044]">{rows.length}</p>
+          <p className="mt-2 text-3xl font-black text-[#173044]">
+            {rows.length}
+          </p>
         </div>
         <div className="rounded-2xl border bg-white p-4">
           <p className="text-xs font-black text-slate-500">Active now</p>
@@ -339,186 +356,208 @@ export function AdminCouponsOffersClient() {
 
       {showForm && (
         <div id="coupon-campaign-editor" className="scroll-mt-28">
-          <SectionCard title={editingId ? "Edit coupon or offer" : "Create coupon or offer"}>
-          <div className="grid gap-3 md:grid-cols-2">
-            {(
-              [
-                "code",
-                "name",
-                "description",
-                "minimumOrderAmount",
-                "startsAt",
-                "expiresAt",
-              ] as const
-            ).map((key) => (
-              <label key={key} className={key === "description" ? "md:col-span-2" : ""}>
-                <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
-                  {key.replaceAll(/([A-Z])/g, " $1")}
-                </span>
-                <input
-                  type={
-                    key.includes("At")
-                      ? "datetime-local"
-                      : key.includes("Value") || key.includes("Amount")
-                        ? "number"
-                        : "text"
-                  }
-                  required
-                  min={key.includes("At") ? localDateTimeInputValue() : undefined}
-                  value={String(form[key])}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      [key]:
-                        key === "code"
-                          ? normalizeCouponCode(event.target.value)
-                          : event.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border px-3 py-2.5"
-                />
-              </label>
-            ))}
+          <SectionCard
+            title={
+              editingId ? "Edit coupon or offer" : "Create coupon or offer"
+            }
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              {(
+                [
+                  "code",
+                  "name",
+                  "description",
+                  "minimumOrderAmount",
+                  "startsAt",
+                  "expiresAt",
+                ] as const
+              ).map((key) => (
+                <label
+                  key={key}
+                  className={key === "description" ? "md:col-span-2" : ""}
+                >
+                  <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
+                    {key.replaceAll(/([A-Z])/g, " $1")}
+                  </span>
+                  <input
+                    type={
+                      key.includes("At")
+                        ? "datetime-local"
+                        : key.includes("Value") || key.includes("Amount")
+                          ? "number"
+                          : "text"
+                    }
+                    required
+                    min={
+                      key.includes("At") ? localDateTimeInputValue() : undefined
+                    }
+                    value={String(form[key])}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        [key]:
+                          key === "code"
+                            ? normalizeCouponCode(event.target.value)
+                            : event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border px-3 py-2.5"
+                  />
+                </label>
+              ))}
 
-
-            <label>
-              <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
-                Coupon type
-              </span>
-              <select
-                value={form.couponChannel}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    couponChannel: event.target.value as
-                      | "spin_wheel_only"
-                      | "public_offer",
-                  }))
-                }
-                className="w-full rounded-xl border px-3 py-2.5"
-              >
-                <option value="public_offer">Public offer</option>
-                <option value="spin_wheel_only">Spin Wheel only</option>
-              </select>
-              <p className="mt-1 text-[10px] font-semibold text-slate-500">
-                {form.couponChannel === "public_offer"
-                  ? "Published on the Offers page while active and within its schedule."
-                  : "Available only as a Spin Wheel reward and hidden from the Offers page."}
-              </p>
-            </label>
-
-            {form.couponChannel === "public_offer" && (
               <label>
                 <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
-                  Offers page section
+                  Coupon type
                 </span>
                 <select
-                  value={form.publicOfferPlacement}
+                  value={form.couponChannel}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      publicOfferPlacement: event.target.value as
-                        | "permanent"
-                        | "everyday",
+                      couponChannel: event.target.value as
+                        "spin_wheel_only" | "public_offer",
                     }))
                   }
                   className="w-full rounded-xl border px-3 py-2.5"
                 >
-                  <option value="permanent">Permanent offer — More Exciting Offers</option>
-                  <option value="everyday">Everyday offer — Today&apos;s Hot Offers</option>
+                  <option value="public_offer">Public offer</option>
+                  <option value="spin_wheel_only">Spin Wheel only</option>
                 </select>
                 <p className="mt-1 text-[10px] font-semibold text-slate-500">
-                  Choose where this public coupon will appear on the Offers page.
+                  {form.couponChannel === "public_offer"
+                    ? "Published on the Offers page while active and within its schedule."
+                    : "Available only as a Spin Wheel reward and hidden from the Offers page."}
                 </p>
               </label>
-            )}
 
-            {form.discountType === "free_item" ? (
+              {form.couponChannel === "public_offer" && (
+                <label>
+                  <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
+                    Offers page section
+                  </span>
+                  <select
+                    value={form.publicOfferPlacement}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        publicOfferPlacement: event.target.value as
+                          "permanent" | "everyday",
+                      }))
+                    }
+                    className="w-full rounded-xl border px-3 py-2.5"
+                  >
+                    <option value="permanent">
+                      Permanent offer — More Exciting Offers
+                    </option>
+                    <option value="everyday">
+                      Everyday offer — Today&apos;s Hot Offers
+                    </option>
+                  </select>
+                  <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                    Choose where this public coupon will appear on the Offers
+                    page.
+                  </p>
+                </label>
+              )}
+
+              {form.discountType === "free_item" ? (
+                <label>
+                  <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
+                    Free menu item
+                  </span>
+                  <select
+                    required
+                    value={form.freeMenuItemId}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        freeMenuItemId: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border px-3 py-2.5"
+                  >
+                    <option value="">Select an item</option>
+                    {menuItems.map((item) => (
+                      <option key={item._id} value={item._id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                    The customer must add this item to the cart; one unit will
+                    become free. Paid variants and add-ons remain protected by
+                    the existing cart pricing rules.
+                  </p>
+                </label>
+              ) : (
+                <label>
+                  <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
+                    Discount value
+                  </span>
+                  <input
+                    type="number"
+                    required
+                    min="0.01"
+                    max={form.discountType === "percentage" ? 100 : undefined}
+                    value={form.discountValue}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        discountValue: Number(event.target.value),
+                      }))
+                    }
+                    className="w-full rounded-xl border px-3 py-2.5"
+                  />
+                </label>
+              )}
+
               <label>
                 <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
-                  Free menu item
+                  Discount type
                 </span>
                 <select
-                  required
-                  value={form.freeMenuItemId}
+                  value={form.discountType}
                   onChange={(event) =>
-                    setForm((current) => ({ ...current, freeMenuItemId: event.target.value }))
+                    setForm((current) => ({
+                      ...current,
+                      discountType: event.target.value as
+                        "percentage" | "fixed" | "free_item",
+                    }))
                   }
                   className="w-full rounded-xl border px-3 py-2.5"
                 >
-                  <option value="">Select an item</option>
-                  {menuItems.map((item) => (
-                    <option key={item._id} value={item._id}>{item.name}</option>
-                  ))}
+                  <option value="percentage">Percentage</option>
+                  <option value="fixed">Fixed amount</option>
+                  <option value="free_item">Free item</option>
                 </select>
-                <p className="mt-1 text-[10px] font-semibold text-slate-500">
-                  The customer must add this item to the cart; one unit will become free. Paid variants and add-ons remain protected by the existing cart pricing rules.
-                </p>
               </label>
-            ) : (
-              <label>
-                <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
-                  Discount value
-                </span>
-                <input
-                  type="number"
-                  required
-                  min="0.01"
-                  max={form.discountType === "percentage" ? 100 : undefined}
-                  value={form.discountValue}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, discountValue: Number(event.target.value) }))
-                  }
-                  className="w-full rounded-xl border px-3 py-2.5"
-                />
-              </label>
-            )}
 
-            <label>
-              <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
-                Discount type
-              </span>
-              <select
-                value={form.discountType}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    discountType: event.target.value as "percentage" | "fixed" | "free_item",
-                  }))
-                }
-                className="w-full rounded-xl border px-3 py-2.5"
-              >
-                <option value="percentage">Percentage</option>
-                <option value="fixed">Fixed amount</option>
-                <option value="free_item">Free item</option>
-              </select>
-            </label>
-
-            <div className="flex flex-wrap items-end gap-2">
-              <button
-                type="button"
-                onClick={() => void save()}
-                disabled={saving}
-                className="rounded-xl bg-[#C8102E] px-4 py-3 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saving
-                  ? "Saving…"
-                  : editingId
-                    ? "Update campaign"
-                    : "Create campaign"}
-              </button>
-              {editingId && (
+              <div className="flex flex-wrap items-end gap-2">
                 <button
                   type="button"
-                  onClick={closeEditor}
+                  onClick={() => void save()}
                   disabled={saving}
-                  className="rounded-xl border px-4 py-3 text-xs font-black text-[#173044] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl bg-[#C8102E] px-4 py-3 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Cancel edit
+                  {saving
+                    ? "Saving…"
+                    : editingId
+                      ? "Update campaign"
+                      : "Create campaign"}
                 </button>
-              )}
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={closeEditor}
+                    disabled={saving}
+                    className="rounded-xl border px-4 py-3 text-xs font-black text-[#173044] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Cancel edit
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
           </SectionCard>
         </div>
       )}
@@ -533,7 +572,10 @@ export function AdminCouponsOffersClient() {
         />
       </div>
 
-      <SectionCard title="All campaigns" subtitle={loading ? "Loading…" : `${rows.length} campaigns`}>
+      <SectionCard
+        title="All campaigns"
+        subtitle={loading ? "Loading…" : `${rows.length} campaigns`}
+      >
         <div className="space-y-3">
           {rows.map((row) => (
             <article
@@ -560,7 +602,8 @@ export function AdminCouponsOffersClient() {
                     ? `${row.discountValue}% off`
                     : row.discountType === "fixed"
                       ? `₹${row.discountValue} off`
-                      : `Free ${menuItems.find((item) => item._id === row.freeMenuItemId)?.name ?? "item"}`} · Min ₹{row.minimumOrderAmount} · {row.usedCount} uses
+                      : `Free ${menuItems.find((item) => item._id === row.freeMenuItemId)?.name ?? "item"}`}{" "}
+                  · Min ₹{row.minimumOrderAmount} · {row.usedCount} uses
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">

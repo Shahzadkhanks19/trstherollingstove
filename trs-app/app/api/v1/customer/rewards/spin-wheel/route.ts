@@ -34,11 +34,16 @@ async function getActiveCampaign() {
 export async function GET() {
   try {
     const actor = await requireAuthenticatedUser();
-    if (actor.roleKey !== "customer") throw new AppError("Customer access required.", 403);
+    if (actor.roleKey !== "customer")
+      throw new AppError("Customer access required.", 403);
     await connectToDatabase();
 
     const campaign = await getActiveCampaign();
-    if (!campaign) return successResponse({ campaign: null, remainingSpins: 0 }, "No active spin campaign.");
+    if (!campaign)
+      return successResponse(
+        { campaign: null, remainingSpins: 0 },
+        "No active spin campaign.",
+      );
 
     const used = await SpinWheelSpin.countDocuments({
       campaignId: campaign._id,
@@ -46,15 +51,20 @@ export async function GET() {
       spinDateKey: indiaDateKey(),
     });
 
-    return successResponse({
-      campaign: {
-        id: String(campaign._id),
-        name: campaign.name,
-        description: campaign.description,
-        prizes: campaign.prizes.filter((prize) => prize.isActive).map((prize) => ({ id: String(prize._id), label: prize.label })),
+    return successResponse(
+      {
+        campaign: {
+          id: String(campaign._id),
+          name: campaign.name,
+          description: campaign.description,
+          prizes: campaign.prizes
+            .filter((prize) => prize.isActive)
+            .map((prize) => ({ id: String(prize._id), label: prize.label })),
+        },
+        remainingSpins: Math.max(0, campaign.dailySpinLimit - used),
       },
-      remainingSpins: Math.max(0, campaign.dailySpinLimit - used),
-    }, "Spin campaign loaded.");
+      "Spin campaign loaded.",
+    );
   } catch (error) {
     return handleApiError(error);
   }
@@ -63,29 +73,51 @@ export async function GET() {
 export async function POST() {
   try {
     const actor = await requireAuthenticatedUser();
-    if (actor.roleKey !== "customer") throw new AppError("Customer access required.", 403);
+    if (actor.roleKey !== "customer")
+      throw new AppError("Customer access required.", 403);
     await connectToDatabase();
 
     const campaign = await getActiveCampaign();
-    if (!campaign) throw new AppError("No active spin campaign is available.", 404);
+    if (!campaign)
+      throw new AppError("No active spin campaign is available.", 404);
 
     const dateKey = indiaDateKey();
-    const used = await SpinWheelSpin.countDocuments({ campaignId: campaign._id, customerId: actor.id, spinDateKey: dateKey });
-    if (used >= campaign.dailySpinLimit) throw new AppError("You have used today’s spin limit.", 429);
+    const used = await SpinWheelSpin.countDocuments({
+      campaignId: campaign._id,
+      customerId: actor.id,
+      spinDateKey: dateKey,
+    });
+    if (used >= campaign.dailySpinLimit)
+      throw new AppError("You have used today’s spin limit.", 429);
 
-    const prizes = campaign.prizes.filter((prize) => prize.isActive && prize.weight > 0);
-    if (prizes.length === 0) throw new AppError("This campaign has no available prizes.", 409);
+    const prizes = campaign.prizes.filter(
+      (prize) => prize.isActive && prize.weight > 0,
+    );
+    if (prizes.length === 0)
+      throw new AppError("This campaign has no available prizes.", 409);
 
     const totalWeight = prizes.reduce((sum, prize) => sum + prize.weight, 0);
     let cursor = randomInt(totalWeight);
-    const selected = prizes.find((prize) => {
-      cursor -= prize.weight;
-      return cursor < 0;
-    }) ?? prizes[prizes.length - 1];
+    const selected =
+      prizes.find((prize) => {
+        cursor -= prize.weight;
+        return cursor < 0;
+      }) ?? prizes[prizes.length - 1];
 
     if (selected.type === "coupon") {
-      const coupon = await Coupon.findOne({ code: selected.couponCode, couponChannel: "spin_wheel_only", isActive: true, deletedAt: null, startsAt: { $lte: new Date() }, expiresAt: { $gte: new Date() } }).lean();
-      if (!coupon) throw new AppError("The selected coupon prize is currently unavailable. Please spin again.", 409);
+      const coupon = await Coupon.findOne({
+        code: selected.couponCode,
+        couponChannel: "spin_wheel_only",
+        isActive: true,
+        deletedAt: null,
+        startsAt: { $lte: new Date() },
+        expiresAt: { $gte: new Date() },
+      }).lean();
+      if (!coupon)
+        throw new AppError(
+          "The selected coupon prize is currently unavailable. Please spin again.",
+          409,
+        );
     }
 
     if (selected.type === "coins" && selected.value > 0) {
@@ -126,7 +158,10 @@ export async function POST() {
         eventKey: `spin-wheel:${spinId}`,
         category: "rewards",
         type: "reward",
-        title: selected.type === "try_again" ? "Spin completed" : "Spin reward granted",
+        title:
+          selected.type === "try_again"
+            ? "Spin completed"
+            : "Spin reward granted",
         message: `${selected.label}. ${rewardMessage}`,
         actionUrl: selected.type === "coupon" ? "/menu" : "/rewards",
         metadata: {
@@ -143,19 +178,22 @@ export async function POST() {
       // Reward delivery must not fail because an optional notification could not be created.
     }
 
-    return successResponse({
-      spinId,
-      prize: {
-        id: String(selected._id),
-        label: selected.label,
-        type: selected.type,
-        value: selected.value,
-        couponCode: selected.couponCode,
+    return successResponse(
+      {
+        spinId,
+        prize: {
+          id: String(selected._id),
+          label: selected.label,
+          type: selected.type,
+          value: selected.value,
+          couponCode: selected.couponCode,
+        },
+        rewardGranted,
+        rewardMessage,
+        remainingSpins: Math.max(0, campaign.dailySpinLimit - used - 1),
       },
-      rewardGranted,
-      rewardMessage,
-      remainingSpins: Math.max(0, campaign.dailySpinLimit - used - 1),
-    }, "Spin completed and reward processed.");
+      "Spin completed and reward processed.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

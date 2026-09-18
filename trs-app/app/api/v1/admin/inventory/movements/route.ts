@@ -14,8 +14,7 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const inventoryItemId =
-      url.searchParams.get("inventoryItemId");
+    const inventoryItemId = url.searchParams.get("inventoryItemId");
     const type = url.searchParams.get("type");
     const from = url.searchParams.get("from");
     const to = url.searchParams.get("to");
@@ -35,20 +34,17 @@ export async function GET(request: Request) {
 
       if (from) createdAt.$gte = parseDateParameter(from, "From date");
       if (to) createdAt.$lte = parseDateParameter(to, "To date");
-      if (createdAt.$gte && createdAt.$lte) assertDateRange(createdAt.$gte, createdAt.$lte);
+      if (createdAt.$gte && createdAt.$lte)
+        assertDateRange(createdAt.$gte, createdAt.$lte);
       filter.createdAt = createdAt;
     }
 
-    const movements =
-      await InventoryMovement.find(filter)
-        .populate(
-          "inventoryItemId",
-          "name sku unit",
-        )
-        .populate("performedBy", "name email")
-        .sort({ createdAt: -1 })
-        .limit(500)
-        .lean();
+    const movements = await InventoryMovement.find(filter)
+      .populate("inventoryItemId", "name sku unit")
+      .populate("performedBy", "name email")
+      .sort({ createdAt: -1 })
+      .limit(500)
+      .lean();
 
     return successResponse(movements);
   } catch (error) {
@@ -58,9 +54,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const actor = await requirePermission(
-      "inventory.manage",
-    );
+    const actor = await requirePermission("inventory.manage");
     const input = await validateRequestBody(
       request,
       createInventoryMovementSchema,
@@ -73,11 +67,7 @@ export async function POST(request: Request) {
       actorId: actor.id,
     });
 
-    return successResponse(
-      movement,
-      "Inventory movement recorded.",
-      201,
-    );
+    return successResponse(movement, "Inventory movement recorded.", 201);
   } catch (error) {
     return handleApiError(error);
   }

@@ -19,7 +19,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { addGuestCartItem, getCurrentCustomer, publishCartUpdated } from "@/lib/cart-client";
+import {
+  addGuestCartItem,
+  getCurrentCustomer,
+  publishCartUpdated,
+} from "@/lib/cart-client";
 import type {
   AddToCartPayload,
   MenuItemDetails,
@@ -83,7 +87,8 @@ function isMongoObjectId(value: string | undefined): value is string {
 
 function canonicalVariantLabel(value: string): string {
   const normalized = value.trim().toLowerCase();
-  if (normalized.includes("small") || normalized.includes("regular")) return "regular";
+  if (normalized.includes("small") || normalized.includes("regular"))
+    return "regular";
   if (normalized.includes("medium")) return "medium";
   if (normalized.includes("large")) return "large";
   if (normalized.includes("half")) return "half";
@@ -122,11 +127,7 @@ function initialiseOptions(groups: MenuOptionGroup[]): SelectedOptionState {
   }, {});
 }
 
-export function MenuItemDetailsClient({
-  item,
-}: {
-  item: MenuItemDetails;
-}) {
+export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
   const configuredGroups = useMemo(
     () => getCustomerVisibleOptionGroups(item),
     [item],
@@ -155,9 +156,12 @@ export function MenuItemDetailsClient({
     ) ?? defaultPriceOption;
 
   const visibleGroups = useMemo(
-    () => configuredGroups.filter(
-      (group) => group.code !== "crust" || canonicalVariantLabel(selectedPriceOption?.label ?? "") === "medium",
-    ),
+    () =>
+      configuredGroups.filter(
+        (group) =>
+          group.code !== "crust" ||
+          canonicalVariantLabel(selectedPriceOption?.label ?? "") === "medium",
+      ),
     [configuredGroups, selectedPriceOption?.label],
   );
 
@@ -187,7 +191,11 @@ export function MenuItemDetailsClient({
     const pricing = item.combinationPricing;
     const selectedVariantLabel = selectedPriceOption?.label;
 
-    if (!pricing?.enabled || !pricing.modifierGroupId || !selectedVariantLabel) {
+    if (
+      !pricing?.enabled ||
+      !pricing.modifierGroupId ||
+      !selectedVariantLabel
+    ) {
       return null;
     }
 
@@ -208,7 +216,8 @@ export function MenuItemDetailsClient({
     return entry?.price ?? null;
   })();
 
-  const basePrice = configuredCombinationPrice ?? selectedPriceOption?.price ?? item.priceFrom;
+  const basePrice =
+    configuredCombinationPrice ?? selectedPriceOption?.price ?? item.priceFrom;
   const selectedPlatterOption = (() => {
     const groupId = item.combinationPricing?.modifierGroupId;
     if (!groupId) return null;
@@ -217,7 +226,9 @@ export function MenuItemDetailsClient({
     )?.[0];
     if (!selectedId) return null;
     const group = visibleGroups.find((candidate) => candidate.id === groupId);
-    const choice = group?.choices.find((candidate) => candidate.id === selectedId);
+    const choice = group?.choices.find(
+      (candidate) => candidate.id === selectedId,
+    );
     return choice ? { id: selectedId, name: choice.name } : null;
   })();
   const selectedMixedNaan = item.mixedNaanOptions?.find(
@@ -278,7 +289,11 @@ export function MenuItemDetailsClient({
       const groupMaximum = group.maxSelections ?? Number.POSITIVE_INFINITY;
       const safeQuantity = Math.max(
         0,
-        Math.min(calculatedQuantity, optionMaximum, groupMaximum - selectedInGroup),
+        Math.min(
+          calculatedQuantity,
+          optionMaximum,
+          groupMaximum - selectedInGroup,
+        ),
       );
 
       return {
@@ -330,11 +345,13 @@ export function MenuItemDetailsClient({
           })),
       ),
       ...(mixedSecondNaanId
-        ? [{
-            groupId: MIXED_NAAN_GROUP_ID,
-            choiceId: mixedSecondNaanId,
-            quantity: 1,
-          }]
+        ? [
+            {
+              groupId: MIXED_NAAN_GROUP_ID,
+              choiceId: mixedSecondNaanId,
+              quantity: 1,
+            },
+          ]
         : []),
     ],
     specialInstructions: specialInstructions.trim() || undefined,
@@ -353,29 +370,40 @@ export function MenuItemDetailsClient({
 
     try {
       const authenticated = await getCurrentCustomer();
-      const selectedModifierLines = payload.selectedOptions.flatMap((selection) => {
-        if (selection.groupId === MIXED_NAAN_GROUP_ID) {
-          const alternate = item.mixedNaanOptions?.find(
-            (entry) => entry.menuItemId === selection.choiceId,
+      const selectedModifierLines = payload.selectedOptions.flatMap(
+        (selection) => {
+          if (selection.groupId === MIXED_NAAN_GROUP_ID) {
+            const alternate = item.mixedNaanOptions?.find(
+              (entry) => entry.menuItemId === selection.choiceId,
+            );
+            if (!alternate) return [];
+            return [
+              {
+                groupId: MIXED_NAAN_GROUP_ID,
+                optionId: alternate.menuItemId,
+                optionName: alternate.name,
+                unitPrice: mixedNaanAdjustment,
+              },
+            ];
+          }
+          const group = visibleGroups.find(
+            (entry) => entry.id === selection.groupId,
           );
-          if (!alternate) return [];
-          return [{
-            groupId: MIXED_NAAN_GROUP_ID,
-            optionId: alternate.menuItemId,
-            optionName: alternate.name,
-            unitPrice: mixedNaanAdjustment,
-          }];
-        }
-        const group = visibleGroups.find((entry) => entry.id === selection.groupId);
-        const choice = group?.choices.find((entry) => entry.id === selection.choiceId);
-        if (!group || !choice) return [];
-        return Array.from({ length: Math.max(1, selection.quantity) }, () => ({
-          groupId: selection.groupId,
-          optionId: selection.choiceId,
-          optionName: choice.name,
-          unitPrice: getChoicePrice(choice, selectedPriceOption?.label),
-        }));
-      });
+          const choice = group?.choices.find(
+            (entry) => entry.id === selection.choiceId,
+          );
+          if (!group || !choice) return [];
+          return Array.from(
+            { length: Math.max(1, selection.quantity) },
+            () => ({
+              groupId: selection.groupId,
+              optionId: selection.choiceId,
+              optionName: choice.name,
+              unitPrice: getChoicePrice(choice, selectedPriceOption?.label),
+            }),
+          );
+        },
+      );
 
       if (!authenticated) {
         const guestCart = addGuestCartItem({
@@ -406,15 +434,21 @@ export function MenuItemDetailsClient({
             specialInstructions: payload.specialInstructions ?? "",
           }),
         });
-        const body = (await response.json()) as { message?: string; data?: { itemCount?: number } };
-        if (!response.ok) throw new Error(body.message || "Unable to add item to cart.");
+        const body = (await response.json()) as {
+          message?: string;
+          data?: { itemCount?: number };
+        };
+        if (!response.ok)
+          throw new Error(body.message || "Unable to add item to cart.");
         publishCartUpdated(body.data?.itemCount ?? quantity);
       }
 
       setFeedback("Item added to cart.");
       if (orderNow) window.location.assign("/cart");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Unable to add item to cart.");
+      setFeedback(
+        error instanceof Error ? error.message : "Unable to add item to cart.",
+      );
     }
   };
 
@@ -424,7 +458,10 @@ export function MenuItemDetailsClient({
     <main className="overflow-x-hidden bg-[#FFFDF9] text-[#172536]">
       <section className="border-b border-[#EDE3D8] py-5">
         <div className="mx-auto flex w-[min(100%-2rem,1320px)] items-center gap-3 text-[10px] font-bold text-[#655E57]">
-          <Link href="/menu" className="inline-flex items-center gap-2 text-[#C8102E]">
+          <Link
+            href="/menu"
+            className="inline-flex items-center gap-2 text-[#C8102E]"
+          >
             <FontAwesomeIcon icon={faArrowLeft} className="h-3" />
             Back to Menu
           </Link>
@@ -480,25 +517,30 @@ export function MenuItemDetailsClient({
 
             <div className="mt-8">
               <div className="flex gap-5 overflow-x-auto border-b border-[#EDE3D8]">
-                {(["description", "ingredients", "nutrition", "reviews"] as Tab[]).map(
-                  (tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={`shrink-0 border-b-2 pb-3 text-[10px] font-black uppercase ${
-                        activeTab === tab
-                          ? "border-[#C8102E] text-[#C8102E]"
-                          : "border-transparent text-[#655E57]"
-                      }`}
-                    >
-                      {tab}
-                      {tab === "reviews" && item.reviewSummary
-                        ? ` (${item.reviewSummary.totalReviews})`
-                        : ""}
-                    </button>
-                  ),
-                )}
+                {(
+                  [
+                    "description",
+                    "ingredients",
+                    "nutrition",
+                    "reviews",
+                  ] as Tab[]
+                ).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={`shrink-0 border-b-2 pb-3 text-[10px] font-black uppercase ${
+                      activeTab === tab
+                        ? "border-[#C8102E] text-[#C8102E]"
+                        : "border-transparent text-[#655E57]"
+                    }`}
+                  >
+                    {tab}
+                    {tab === "reviews" && item.reviewSummary
+                      ? ` (${item.reviewSummary.totalReviews})`
+                      : ""}
+                  </button>
+                ))}
               </div>
 
               <div className="min-h-[130px] py-6 text-sm leading-7 text-[#625B55]">
@@ -537,7 +579,10 @@ export function MenuItemDetailsClient({
                         </div>
                       ))
                     ) : (
-                      <p>Nutrition details will be maintained from the admin dashboard.</p>
+                      <p>
+                        Nutrition details will be maintained from the admin
+                        dashboard.
+                      </p>
                     )}
                   </div>
                 )}
@@ -545,7 +590,10 @@ export function MenuItemDetailsClient({
                 {activeTab === "reviews" && (
                   <div className="rounded-2xl border border-[#EDE3D8] bg-white p-5">
                     <div className="flex items-center gap-3">
-                      <FontAwesomeIcon icon={faStar} className="h-5 text-[#E8A53A]" />
+                      <FontAwesomeIcon
+                        icon={faStar}
+                        className="h-5 text-[#E8A53A]"
+                      />
                       <strong className="text-2xl">
                         {item.reviewSummary?.averageRating ?? "New"}
                       </strong>
@@ -574,7 +622,10 @@ export function MenuItemDetailsClient({
               </div>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {(item.frequentlyOrderedWith?.length ? item.frequentlyOrderedWith : item.relatedItems ?? [])
+                {(item.frequentlyOrderedWith?.length
+                  ? item.frequentlyOrderedWith
+                  : (item.relatedItems ?? [])
+                )
                   .slice(0, 6)
                   .map((related) => (
                     <Link
@@ -633,7 +684,10 @@ export function MenuItemDetailsClient({
               {item.reviewSummary && (
                 <div className="mt-4 flex items-center gap-3 text-[10px]">
                   <span className="flex items-center gap-1 font-black">
-                    <FontAwesomeIcon icon={faStar} className="h-3 text-[#E8A53A]" />
+                    <FontAwesomeIcon
+                      icon={faStar}
+                      className="h-3 text-[#E8A53A]"
+                    />
                     {item.reviewSummary.averageRating}
                   </span>
                   <span className="text-[#8A8179]">
@@ -653,7 +707,12 @@ export function MenuItemDetailsClient({
                         {formatPrice(selectedPriceOption.compareAtPrice)}
                       </span>
                       <span className="mb-1 rounded-full bg-[#173044] px-2.5 py-1 text-[9px] font-black uppercase text-white">
-                        {Math.round(((selectedPriceOption.compareAtPrice - basePrice) / selectedPriceOption.compareAtPrice) * 100)}% off
+                        {Math.round(
+                          ((selectedPriceOption.compareAtPrice - basePrice) /
+                            selectedPriceOption.compareAtPrice) *
+                            100,
+                        )}
+                        % off
                       </span>
                     </>
                   )}
@@ -671,9 +730,7 @@ export function MenuItemDetailsClient({
                     <h3 className="text-[10px] font-black uppercase">
                       Select Size / Portion
                     </h3>
-                    <span className="text-[8px] text-[#8A8179]">
-                      Required
-                    </span>
+                    <span className="text-[8px] text-[#8A8179]">Required</span>
                   </div>
 
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -687,9 +744,10 @@ export function MenuItemDetailsClient({
                             key={option.id}
                             type="button"
                             onClick={() => {
-                      setSelectedPriceOptionId(option.id);
-                      if (!isFullPortion(option.label)) setMixedSecondNaanId("");
-                    }}
+                              setSelectedPriceOptionId(option.id);
+                              if (!isFullPortion(option.label))
+                                setMixedSecondNaanId("");
+                            }}
                             className={`relative rounded-xl border p-3 text-center transition ${
                               selected
                                 ? "border-[#C8102E] bg-[#FFF3F3]"
@@ -698,7 +756,10 @@ export function MenuItemDetailsClient({
                           >
                             {selected && (
                               <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-[#C8102E] text-white">
-                                <FontAwesomeIcon icon={faCheck} className="h-2" />
+                                <FontAwesomeIcon
+                                  icon={faCheck}
+                                  className="h-2"
+                                />
                               </span>
                             )}
                             <span className="block text-[9px] font-black">
@@ -755,7 +816,10 @@ export function MenuItemDetailsClient({
                                 }`}
                                 aria-label={`Select ${choice.name}`}
                               >
-                                <FontAwesomeIcon icon={faCheck} className="h-2" />
+                                <FontAwesomeIcon
+                                  icon={faCheck}
+                                  className="h-2"
+                                />
                               </button>
 
                               <button
@@ -773,10 +837,17 @@ export function MenuItemDetailsClient({
                                 )}
                               </button>
 
-                              {getChoicePrice(choice, selectedPriceOption?.label) > 0 && (
+                              {getChoicePrice(
+                                choice,
+                                selectedPriceOption?.label,
+                              ) > 0 && (
                                 <span className="shrink-0 text-[10px] font-black">
-                                  +{formatPrice(
-                                    getChoicePrice(choice, selectedPriceOption?.label),
+                                  +
+                                  {formatPrice(
+                                    getChoicePrice(
+                                      choice,
+                                      selectedPriceOption?.label,
+                                    ),
                                   )}
                                 </span>
                               )}
@@ -794,7 +865,10 @@ export function MenuItemDetailsClient({
                                     }
                                     className="grid h-7 w-7 place-items-center rounded-lg border border-[#E5D9CD]"
                                   >
-                                    <FontAwesomeIcon icon={faMinus} className="h-2" />
+                                    <FontAwesomeIcon
+                                      icon={faMinus}
+                                      className="h-2"
+                                    />
                                   </button>
                                   <span className="w-4 text-center text-[10px] font-black">
                                     {selectedQuantity}
@@ -810,7 +884,10 @@ export function MenuItemDetailsClient({
                                     }
                                     className="grid h-7 w-7 place-items-center rounded-lg border border-[#E5D9CD]"
                                   >
-                                    <FontAwesomeIcon icon={faPlus} className="h-2" />
+                                    <FontAwesomeIcon
+                                      icon={faPlus}
+                                      className="h-2"
+                                    />
                                   </button>
                                 </div>
                               )}
@@ -823,32 +900,41 @@ export function MenuItemDetailsClient({
               </div>
 
               {isFullPortion(selectedPriceOption?.label ?? "") &&
-            (item.mixedNaanOptions?.length ?? 0) > 0 && (
-              <section className="rounded-[1.5rem] border border-[#E8D8C9] bg-white p-5">
-                <h3 className="text-sm font-black text-[#172536]">Choose a different second naan</h3>
-                <p className="mt-1 text-[10px] font-semibold leading-5 text-[#655E57]">
-                  Optional. A Full platter includes two naans. Keep the default for two {item.name},
-                  or choose another naan below. The higher Full-platter price applies.
-                </p>
-                <select
-                  value={mixedSecondNaanId}
-                  onChange={(event) => setMixedSecondNaanId(event.currentTarget.value)}
-                  className="mt-4 h-12 w-full rounded-xl border border-[#DCCEC1] bg-white px-4 text-sm font-bold outline-none focus:border-[#C8102E]"
-                >
-                  <option value="">Two {item.name}</option>
-                  {item.mixedNaanOptions?.map((option) => (
-                    <option key={option.menuItemId} value={option.menuItemId}>
-                      1 {item.name} + 1 {option.name}
-                    </option>
-                  ))}
-                </select>
-                {selectedMixedNaan && mixedNaanPrice != null ? (
-                  <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-900">
-                    Mixed Full platter price: {formatPrice(Math.max(basePrice, mixedNaanPrice))}
-                  </p>
-                ) : null}
-              </section>
-            )}
+                (item.mixedNaanOptions?.length ?? 0) > 0 && (
+                  <section className="rounded-[1.5rem] border border-[#E8D8C9] bg-white p-5">
+                    <h3 className="text-sm font-black text-[#172536]">
+                      Choose a different second naan
+                    </h3>
+                    <p className="mt-1 text-[10px] font-semibold leading-5 text-[#655E57]">
+                      Optional. A Full platter includes two naans. Keep the
+                      default for two {item.name}, or choose another naan below.
+                      The higher Full-platter price applies.
+                    </p>
+                    <select
+                      value={mixedSecondNaanId}
+                      onChange={(event) =>
+                        setMixedSecondNaanId(event.currentTarget.value)
+                      }
+                      className="mt-4 h-12 w-full rounded-xl border border-[#DCCEC1] bg-white px-4 text-sm font-bold outline-none focus:border-[#C8102E]"
+                    >
+                      <option value="">Two {item.name}</option>
+                      {item.mixedNaanOptions?.map((option) => (
+                        <option
+                          key={option.menuItemId}
+                          value={option.menuItemId}
+                        >
+                          1 {item.name} + 1 {option.name}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedMixedNaan && mixedNaanPrice != null ? (
+                      <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-900">
+                        Mixed Full platter price:{" "}
+                        {formatPrice(Math.max(basePrice, mixedNaanPrice))}
+                      </p>
+                    ) : null}
+                  </section>
+                )}
 
               {item.customerNotice && (
                 <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#F0D79D] bg-[#FFF7E6] p-4">
@@ -904,7 +990,9 @@ export function MenuItemDetailsClient({
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                      onClick={() =>
+                        setQuantity((value) => Math.max(1, value - 1))
+                      }
                       className="grid h-9 w-9 place-items-center rounded-lg border border-[#E5D9CD]"
                     >
                       <FontAwesomeIcon icon={faMinus} className="h-3" />
@@ -914,7 +1002,9 @@ export function MenuItemDetailsClient({
                     </span>
                     <button
                       type="button"
-                      onClick={() => setQuantity((value) => Math.min(20, value + 1))}
+                      onClick={() =>
+                        setQuantity((value) => Math.min(20, value + 1))
+                      }
                       className="grid h-9 w-9 place-items-center rounded-lg border border-[#E5D9CD]"
                     >
                       <FontAwesomeIcon icon={faPlus} className="h-3" />
@@ -987,7 +1077,9 @@ export function MenuItemDetailsClient({
               </span>
               <div className="min-w-0">
                 <h2 className="text-[8px] font-black uppercase">{title}</h2>
-                <p className="mt-1 text-[7px] leading-3 text-[#655E57]">{text}</p>
+                <p className="mt-1 text-[7px] leading-3 text-[#655E57]">
+                  {text}
+                </p>
               </div>
             </article>
           ))}

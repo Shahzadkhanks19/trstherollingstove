@@ -7,8 +7,7 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    const settings =
-      await getAllPublicSettings();
+    const settings = await getAllPublicSettings();
 
     return successResponse(settings);
   } catch (error) {

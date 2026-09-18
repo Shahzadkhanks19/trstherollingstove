@@ -123,8 +123,6 @@ const trustItems: {
   },
 ];
 
-
-
 function getReadyCopy(orderType: OrderType): {
   title: string;
   description: string;
@@ -216,9 +214,7 @@ export function TrackOrderPageClient() {
     [result],
   );
 
-  const currentStatusIndex = result
-    ? statusOrder.indexOf(result.status)
-    : -1;
+  const currentStatusIndex = result ? statusOrder.indexOf(result.status) : -1;
 
   const loadTrackedOrder = useCallback(async () => {
     const response = await fetch("/api/v1/public/orders/track", {
@@ -227,18 +223,32 @@ export function TrackOrderPageClient() {
       body: JSON.stringify({ orderId: orderId.trim(), phone: phone.trim() }),
       cache: "no-store",
     });
-    const payload = (await response.json()) as { success?: boolean; message?: string; data?: TrackingResult };
-    if (!response.ok || !payload.data) throw new Error(payload.message || "Order not found");
+    const payload = (await response.json()) as {
+      success?: boolean;
+      message?: string;
+      data?: TrackingResult;
+    };
+    if (!response.ok || !payload.data)
+      throw new Error(payload.message || "Order not found");
     setResult(payload.data);
     return payload.data;
   }, [orderId, phone]);
 
   useRealtimeRefresh({
-    events: ["order.updated", "order.status_changed", "order.cancelled", "order.payment_updated", "payment.updated"],
+    events: [
+      "order.updated",
+      "order.status_changed",
+      "order.cancelled",
+      "order.payment_updated",
+      "payment.updated",
+    ],
     enabled: Boolean(result),
     onEvent: async (event) => {
       const eventOrderId = String(event.data.orderId ?? event.entityId ?? "");
-      if (result && (eventOrderId === result.entityId || eventOrderId === result.orderId)) {
+      if (
+        result &&
+        (eventOrderId === result.entityId || eventOrderId === result.orderId)
+      ) {
         await loadTrackedOrder();
       }
     },
@@ -395,10 +405,7 @@ export function TrackOrderPageClient() {
                 WhatsApp +91 91666 94786
               </a>
               or
-              <a
-                href="tel:+917300052777"
-                className="font-black text-[#C8102E]"
-              >
+              <a href="tel:+917300052777" className="font-black text-[#C8102E]">
                 call +91 73000 52777
               </a>
             </span>
@@ -483,9 +490,7 @@ export function TrackOrderPageClient() {
                     <div className="min-w-0">
                       <p className="text-sm font-black">
                         Estimated{" "}
-                        {result.orderType === "takeaway"
-                          ? "Pickup"
-                          : "Serving"}{" "}
+                        {result.orderType === "takeaway" ? "Pickup" : "Serving"}{" "}
                         Time:{" "}
                         <span className="text-[#C8102E]">
                           {result.estimatedReadyWindow}

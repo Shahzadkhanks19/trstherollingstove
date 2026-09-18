@@ -39,8 +39,12 @@ export async function PATCH(request: Request, context: Context) {
     const order = await Order.findById(orderId);
     if (!order) throw new AppError("Order not found.", 404);
 
-    const isEtaOnlyUpdate = input.status === order.status && input.estimatedReadyAt !== undefined;
-    if (!isEtaOnlyUpdate && !allowedTransitions[order.status]?.includes(input.status)) {
+    const isEtaOnlyUpdate =
+      input.status === order.status && input.estimatedReadyAt !== undefined;
+    if (
+      !isEtaOnlyUpdate &&
+      !allowedTransitions[order.status]?.includes(input.status)
+    ) {
       throw new AppError(
         `Order cannot move from ${order.status} to ${input.status}.`,
         409,
@@ -59,7 +63,9 @@ export async function PATCH(request: Request, context: Context) {
     });
 
     if (input.estimatedReadyAt !== undefined) {
-      order.estimatedReadyAt = input.estimatedReadyAt ? new Date(input.estimatedReadyAt) : null;
+      order.estimatedReadyAt = input.estimatedReadyAt
+        ? new Date(input.estimatedReadyAt)
+        : null;
       await KitchenTicket.updateMany(
         { orderId: order._id, status: { $nin: ["served", "cancelled"] } },
         { $set: { estimatedReadyAt: order.estimatedReadyAt } },
@@ -74,7 +80,10 @@ export async function PATCH(request: Request, context: Context) {
       order.completedAt = now;
 
       if (order.paymentStatus !== "paid") {
-        throw new AppError("TRS Coins can only be awarded after payment is confirmed as paid.", 409);
+        throw new AppError(
+          "TRS Coins can only be awarded after payment is confirmed as paid.",
+          409,
+        );
       }
 
       if (order.customerId && !order.coinsAwardedAt) {

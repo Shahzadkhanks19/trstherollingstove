@@ -10,11 +10,31 @@ type RecommendedIndex = {
 };
 
 const RECOMMENDED_INDEXES: RecommendedIndex[] = [
-  { collection: "orders", name: "customerId_1_createdAt_-1", keys: { customerId: 1, createdAt: -1 } },
-  { collection: "orders", name: "status_1_createdAt_-1", keys: { status: 1, createdAt: -1 } },
-  { collection: "reservations", name: "customerId_1_createdAt_-1", keys: { customerId: 1, createdAt: -1 } },
-  { collection: "notifications", name: "userId_1_createdAt_-1", keys: { userId: 1, createdAt: -1 } },
-  { collection: "menuitems", name: "isActive_1_isAvailable_1_sortOrder_1", keys: { isActive: 1, isAvailable: 1, sortOrder: 1 } },
+  {
+    collection: "orders",
+    name: "customerId_1_createdAt_-1",
+    keys: { customerId: 1, createdAt: -1 },
+  },
+  {
+    collection: "orders",
+    name: "status_1_createdAt_-1",
+    keys: { status: 1, createdAt: -1 },
+  },
+  {
+    collection: "reservations",
+    name: "customerId_1_createdAt_-1",
+    keys: { customerId: 1, createdAt: -1 },
+  },
+  {
+    collection: "notifications",
+    name: "userId_1_createdAt_-1",
+    keys: { userId: 1, createdAt: -1 },
+  },
+  {
+    collection: "menuitems",
+    name: "isActive_1_isAvailable_1_sortOrder_1",
+    keys: { isActive: 1, isAvailable: 1, sortOrder: 1 },
+  },
 ];
 
 function normalizeKeys(index: IndexDescriptionInfo) {
@@ -65,7 +85,11 @@ export async function auditDatabaseIndexes() {
         continue;
       }
 
-      for (let rightIndex = leftIndex + 1; rightIndex < indexes.length; rightIndex += 1) {
+      for (
+        let rightIndex = leftIndex + 1;
+        rightIndex < indexes.length;
+        rightIndex += 1
+      ) {
         const right = indexes[rightIndex];
 
         if (!right || right.name === "_id_") {

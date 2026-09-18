@@ -10,9 +10,12 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const input = executiveFinanceQuerySchema.parse({
       days: url.searchParams.get("days") ?? 30,
-      fiscalYear: url.searchParams.get("fiscalYear") ?? new Date().getUTCFullYear(),
+      fiscalYear:
+        url.searchParams.get("fiscalYear") ?? new Date().getUTCFullYear(),
       scenario: url.searchParams.get("scenario") ?? "base",
     });
     return successResponse(await getExecutiveFinanceSummary(input));
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

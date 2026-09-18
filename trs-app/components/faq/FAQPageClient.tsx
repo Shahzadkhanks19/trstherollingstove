@@ -166,11 +166,11 @@ const faqSections: FAQSection[] = [
       },
       {
         question: "Is the menu completely vegetarian?",
-        answer:
-          "Yes. TRS serves a 100% vegetarian menu.",
+        answer: "Yes. TRS serves a 100% vegetarian menu.",
       },
       {
-        question: "Can I request arrangements for birthdays or small celebrations?",
+        question:
+          "Can I request arrangements for birthdays or small celebrations?",
         answer:
           "You can contact the TRS team in advance to discuss a request, but decorations, reserved seating and special arrangements are not guaranteed and depend on operational feasibility.",
       },
@@ -528,9 +528,7 @@ export function FAQPageClient() {
             </section>
 
             <section className="rounded-3xl border border-[#EDE3D8] bg-white p-5 shadow-[0_18px_42px_rgba(50,30,15,.06)] sm:p-6">
-              <h2 className="text-lg font-black uppercase">
-                Helpful Policies
-              </h2>
+              <h2 className="text-lg font-black uppercase">Helpful Policies</h2>
               <p className="mt-2 text-[10px] leading-5 text-[#655E57]">
                 Review the website policies for further details.
               </p>
@@ -547,10 +545,7 @@ export function FAQPageClient() {
                     className="flex h-11 items-center justify-between rounded-xl border border-[#EDE3D8] px-4 text-[9px] font-black uppercase text-[#172536] transition hover:border-[#C8102E] hover:text-[#C8102E]"
                   >
                     {label}
-                    <FontAwesomeIcon
-                      icon={faArrowRight}
-                      className="h-3"
-                    />
+                    <FontAwesomeIcon icon={faArrowRight} className="h-3" />
                   </Link>
                 ))}
               </div>

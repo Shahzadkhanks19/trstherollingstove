@@ -1,9 +1,22 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const TaxClassSchema = new Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 80 },
-    code: { type: String, required: true, unique: true, uppercase: true, trim: true, index: true },
+    code: {
+      type: String,
+      required: true,
+      unique: true,
+      uppercase: true,
+      trim: true,
+      index: true,
+    },
     percentage: { type: Number, required: true, min: 0, max: 100 },
     isInclusive: { type: Boolean, default: true },
     isActive: { type: Boolean, default: true, index: true },

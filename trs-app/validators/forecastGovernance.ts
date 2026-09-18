@@ -6,6 +6,14 @@ export const forecastGovernanceQuerySchema = z.object({
 
 export const forecastGovernanceActionSchema = z.object({
   runId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid forecast run ID."),
-  action: z.enum(["approve", "publish", "unpublish", "archive", "restore", "recalculate_accuracy", "update_notes"]),
+  action: z.enum([
+    "approve",
+    "publish",
+    "unpublish",
+    "archive",
+    "restore",
+    "recalculate_accuracy",
+    "update_notes",
+  ]),
   notes: z.string().trim().max(1000).default(""),
 });

@@ -11,11 +11,7 @@ const DEFAULT_TTL_SECONDS = 15 * 60;
 function stable(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(stable);
 
-  if (
-    value &&
-    typeof value === "object" &&
-    !(value instanceof Date)
-  ) {
+  if (value && typeof value === "object" && !(value instanceof Date)) {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .sort(([a], [b]) => a.localeCompare(b))
@@ -42,10 +38,7 @@ export async function getCachedInventoryReport(
   reportType: InventoryReportType,
   filters: InventoryReportFilters,
 ) {
-  const cacheKey = createInventoryReportCacheKey(
-    reportType,
-    filters,
-  );
+  const cacheKey = createInventoryReportCacheKey(reportType, filters);
 
   const cache = await InventoryReportCache.findOneAndUpdate(
     {
@@ -90,25 +83,19 @@ export async function generateCachedInventoryReport(input: {
   }
 
   const startedAt = Date.now();
-  const rows = await generateInventoryReport(
-    input.reportType,
-    input.filters,
-  );
+  const rows = await generateInventoryReport(input.reportType, input.filters);
   const generatedAt = new Date();
   const ttlSeconds = Math.max(
     60,
     Math.min(
       input.ttlSeconds ??
         Number(
-          process.env.INVENTORY_REPORT_CACHE_TTL_SECONDS ??
-            DEFAULT_TTL_SECONDS,
+          process.env.INVENTORY_REPORT_CACHE_TTL_SECONDS ?? DEFAULT_TTL_SECONDS,
         ),
       86_400,
     ),
   );
-  const expiresAt = new Date(
-    generatedAt.getTime() + ttlSeconds * 1000,
-  );
+  const expiresAt = new Date(generatedAt.getTime() + ttlSeconds * 1000);
   const cacheKey = createInventoryReportCacheKey(
     input.reportType,
     input.filters,

@@ -33,9 +33,7 @@ export const metadata: Metadata = {
   applicationName: "The Rolling Stove",
   category: "food",
   icons: {
-    icon: [
-      { url: "/images/trs-logo.png", type: "image/png" },
-    ],
+    icon: [{ url: "/images/trs-logo.png", type: "image/png" }],
     shortcut: "/images/trs-logo.png",
     apple: "/images/trs-logo.png",
   },
@@ -87,7 +85,10 @@ export default function RootLayout({
       className={`${manrope.variable} ${cormorant.variable}`}
     >
       <body className="min-h-screen bg-[#FFF8F2] font-[family-name:var(--font-manrope)] text-[#1F1F1F] antialiased">
-        <a className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-full bg-[#A50E27] px-5 py-3 text-sm font-bold text-white transition-transform focus:translate-y-0" href="#main-content">
+        <a
+          className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-full bg-[#A50E27] px-5 py-3 text-sm font-bold text-white transition-transform focus:translate-y-0"
+          href="#main-content"
+        >
           Skip to content
         </a>
         <SiteHeader />

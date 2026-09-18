@@ -10,7 +10,9 @@ export async function GET() {
   try {
     await requirePermission("cms.read");
     await connectToDatabase();
-    return successResponse(await SiteBanner.find().sort({ placement: 1, sortOrder: 1 }).lean());
+    return successResponse(
+      await SiteBanner.find().sort({ placement: 1, sortOrder: 1 }).lean(),
+    );
   } catch (error) {
     return handleApiError(error);
   }

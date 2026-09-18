@@ -11,10 +11,7 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(
-  _request: Request,
-  context: Context,
-) {
+export async function GET(_request: Request, context: Context) {
   try {
     await requirePermission("suppliers.read");
     const { id } = await context.params;
@@ -33,19 +30,11 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
-    const actor = await requirePermission(
-      "suppliers.manage",
-    );
+    const actor = await requirePermission("suppliers.manage");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      updateSupplierSchema,
-    );
+    const input = await validateRequestBody(request, updateSupplierSchema);
 
     await connectToDatabase();
 
@@ -54,9 +43,7 @@ export async function PATCH(
       {
         $set: {
           ...input,
-          ...(input.code
-            ? { code: input.code.toUpperCase() }
-            : {}),
+          ...(input.code ? { code: input.code.toUpperCase() } : {}),
           updatedBy: actor.id,
         },
       },
@@ -69,19 +56,13 @@ export async function PATCH(
       throw new AppError("Supplier not found.", 404);
     }
 
-    return successResponse(
-      supplier,
-      "Supplier updated.",
-    );
+    return successResponse(supplier, "Supplier updated.");
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  context: Context,
-) {
+export async function DELETE(_request: Request, context: Context) {
   try {
     await requirePermission("suppliers.manage");
     const { id } = await context.params;
@@ -96,7 +77,10 @@ export async function DELETE(
       SupplierPayment.countDocuments({ supplierId: id }),
     ]);
     if (orderCount > 0 || paymentCount > 0) {
-      throw new AppError("This vendor has purchasing records and cannot be deleted. Deactivate it instead.", 409);
+      throw new AppError(
+        "This vendor has purchasing records and cannot be deleted. Deactivate it instead.",
+        409,
+      );
     }
 
     const supplier = await Supplier.findByIdAndDelete(id);

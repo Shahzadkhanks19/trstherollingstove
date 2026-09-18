@@ -115,13 +115,13 @@ InventoryMovementSchema.index({
   type: 1,
 });
 
-export type InventoryMovementDocument =
-  InferSchemaType<typeof InventoryMovementSchema>;
+export type InventoryMovementDocument = InferSchemaType<
+  typeof InventoryMovementSchema
+>;
 
-export const InventoryMovement:
-  Model<InventoryMovementDocument> =
-    (models.InventoryMovement as Model<InventoryMovementDocument>) ||
-    model<InventoryMovementDocument>(
-      "InventoryMovement",
-      InventoryMovementSchema,
-    );
+export const InventoryMovement: Model<InventoryMovementDocument> =
+  (models.InventoryMovement as Model<InventoryMovementDocument>) ||
+  model<InventoryMovementDocument>(
+    "InventoryMovement",
+    InventoryMovementSchema,
+  );

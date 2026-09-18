@@ -3,10 +3,7 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
 import { SecurityEvent } from "@/models/SecurityEvent";
-import type {
-  AuditSeverity,
-  SecurityEventType,
-} from "@/types/audit";
+import type { AuditSeverity, SecurityEventType } from "@/types/audit";
 import { securityEventQuerySchema } from "@/validators/audit";
 
 type DateRangeFilter = {
@@ -38,12 +35,9 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const parsed =
-      securityEventQuerySchema.parse(
-        Object.fromEntries(
-          url.searchParams.entries(),
-        ),
-      );
+    const parsed = securityEventQuerySchema.parse(
+      Object.fromEntries(url.searchParams.entries()),
+    );
 
     const filter: SecurityEventFilter = {};
 
@@ -77,36 +71,29 @@ export async function GET(request: Request) {
       filter.createdAt = {};
 
       if (parsed.dateFrom) {
-        filter.createdAt.$gte =
-          parsed.dateFrom;
+        filter.createdAt.$gte = parsed.dateFrom;
       }
 
       if (parsed.dateTo) {
-        filter.createdAt.$lte =
-          parsed.dateTo;
+        filter.createdAt.$lte = parsed.dateTo;
       }
     }
 
-    const skip =
-      (parsed.page - 1) * parsed.limit;
+    const skip = (parsed.page - 1) * parsed.limit;
 
-    const [events, total] =
-      await Promise.all([
-        SecurityEvent.find(filter)
-          .populate(
-            "resolvedBy",
-            "name email",
-          )
-          .sort({
-            resolved: 1,
-            severity: -1,
-            createdAt: -1,
-          })
-          .skip(skip)
-          .limit(parsed.limit)
-          .lean(),
-        SecurityEvent.countDocuments(filter),
-      ]);
+    const [events, total] = await Promise.all([
+      SecurityEvent.find(filter)
+        .populate("resolvedBy", "name email")
+        .sort({
+          resolved: 1,
+          severity: -1,
+          createdAt: -1,
+        })
+        .skip(skip)
+        .limit(parsed.limit)
+        .lean(),
+      SecurityEvent.countDocuments(filter),
+    ]);
 
     return successResponse({
       items: events,
@@ -114,9 +101,7 @@ export async function GET(request: Request) {
         page: parsed.page,
         limit: parsed.limit,
         total,
-        totalPages: Math.ceil(
-          total / parsed.limit,
-        ),
+        totalPages: Math.ceil(total / parsed.limit),
       },
     });
   } catch (error) {

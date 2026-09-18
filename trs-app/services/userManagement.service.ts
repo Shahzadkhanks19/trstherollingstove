@@ -1,7 +1,4 @@
-import {
-  Types,
-  type HydratedDocument,
-} from "mongoose";
+import { Types, type HydratedDocument } from "mongoose";
 import type { UserDocument } from "@/models/User";
 import { AppError } from "@/lib/errors/AppError";
 import { AuthSession } from "@/models/AuthSession";
@@ -16,7 +13,11 @@ export async function getCustomerRoleId() {
   return role._id;
 }
 export async function assertStaffRole(roleId: string) {
-  const role = await Role.findOne({ _id: roleId, key: { $ne: "customer" }, isActive: true }).lean();
+  const role = await Role.findOne({
+    _id: roleId,
+    key: { $ne: "customer" },
+    isActive: true,
+  }).lean();
   if (!role) throw new AppError("Select a valid active staff role.", 400);
   return role;
 }
@@ -26,13 +27,21 @@ export async function assertCanRemoveSuperAdminAccess(
   nextRoleId?: string,
   nextIsActive?: boolean,
 ) {
-  const superAdminRole = await Role.findOne({ key: "super_admin" }).select("_id").lean();
+  const superAdminRole = await Role.findOne({ key: "super_admin" })
+    .select("_id")
+    .lean();
   if (!superAdminRole) return;
 
   const user = await User.findById(userId).select("roleId isActive").lean();
-  if (!user || String(user.roleId) !== String(superAdminRole._id) || !user.isActive) return;
+  if (
+    !user ||
+    String(user.roleId) !== String(superAdminRole._id) ||
+    !user.isActive
+  )
+    return;
 
-  const removesRole = nextRoleId !== undefined && nextRoleId !== String(superAdminRole._id);
+  const removesRole =
+    nextRoleId !== undefined && nextRoleId !== String(superAdminRole._id);
   const deactivates = nextIsActive === false;
   if (!removesRole && !deactivates) return;
 
@@ -41,11 +50,17 @@ export async function assertCanRemoveSuperAdminAccess(
     isActive: true,
   });
   if (activeSuperAdmins <= 1) {
-    throw new AppError("At least one active Super Admin account must remain.", 409);
+    throw new AppError(
+      "At least one active Super Admin account must remain.",
+      409,
+    );
   }
 }
 export async function revokeUserSessions(userId: string, reason: string) {
-  await AuthSession.updateMany({ userId, revokedAt: null }, { $set: { revokedAt: new Date(), revokeReason: reason } });
+  await AuthSession.updateMany(
+    { userId, revokedAt: null },
+    { $set: { revokedAt: new Date(), revokeReason: reason } },
+  );
 }
 export function applyActivationState(
   user: HydratedDocument<UserDocument>,
@@ -74,14 +89,16 @@ export function applyActivationState(
 }
 export async function serializeCustomer(userId: string) {
   const [user, profile] = await Promise.all([
-    User.findById(userId).populate("roleId", "key name").lean(), CustomerProfile.findOne({ userId }).lean(),
+    User.findById(userId).populate("roleId", "key name").lean(),
+    CustomerProfile.findOne({ userId }).lean(),
   ]);
   if (!user) throw new AppError("Customer not found.", 404);
   return { user, profile };
 }
 export async function serializeStaff(userId: string) {
   const [user, profile] = await Promise.all([
-    User.findById(userId).populate("roleId", "key name").lean(), StaffProfile.findOne({ userId }).lean(),
+    User.findById(userId).populate("roleId", "key name").lean(),
+    StaffProfile.findOne({ userId }).lean(),
   ]);
   if (!user) throw new AppError("Staff member not found.", 404);
   return { user, profile };

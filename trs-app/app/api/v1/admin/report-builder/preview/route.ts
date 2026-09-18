@@ -12,5 +12,7 @@ export async function POST(request: Request) {
     await connectToDatabase();
     const result = await executeReportPreview(input, actor.id, input.reportId);
     return successResponse(result, "Report preview generated.");
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

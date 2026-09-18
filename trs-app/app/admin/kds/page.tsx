@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { KitchenDisplayClient } from "@/components/admin/kds/KitchenDisplayClient";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
-export const metadata = createAdminMetadata("Kitchen Display", "Run the real-time kitchen production queue.");
+export const metadata = createAdminMetadata(
+  "Kitchen Display",
+  "Run the real-time kitchen production queue.",
+);
 
 export const dynamic = "force-dynamic";
 

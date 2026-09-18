@@ -16,7 +16,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-
 type GalleryFilter =
   | "all"
   | "food"
@@ -135,11 +134,16 @@ export function GalleryPageClient() {
         cache: "no-store",
       });
       const json = (await response.json()) as GalleryResponse;
-      if (!response.ok) throw new Error(json.message || "Unable to load gallery.");
+      if (!response.ok)
+        throw new Error(json.message || "Unable to load gallery.");
       setItems(Array.isArray(json.data?.items) ? json.data.items : []);
       setError("");
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Unable to load gallery.");
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Unable to load gallery.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -192,7 +196,8 @@ export function GalleryPageClient() {
               Good Food. Great Memories.
             </h2>
             <p className="mt-6 max-w-[590px] text-base leading-7 text-[#4F4943]">
-              Browse food, food-truck, ambience, customer, video and event media published by TRS.
+              Browse food, food-truck, ambience, customer, video and event media
+              published by TRS.
             </p>
           </div>
 
@@ -201,7 +206,9 @@ export function GalleryPageClient() {
               pageKey="gallery"
               label="TRS gallery hero image"
               fallbackSrc={heroImage?.mediaUrl}
-              fallbackAlt={heroImage ? heroImage.altText || heroImage.title : ""}
+              fallbackAlt={
+                heroImage ? heroImage.altText || heroImage.title : ""
+              }
               priority
               sizes="(max-width: 1024px) 100vw, 55vw"
               className="absolute inset-0 rounded-[2rem] border-0 bg-[linear-gradient(135deg,#FFF4E3,#F5D5B3)]"
@@ -254,7 +261,10 @@ export function GalleryPageClient() {
         {isLoading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }, (_, index) => (
-              <div key={index} className="aspect-square animate-pulse rounded-2xl bg-[#F3E9DF]" />
+              <div
+                key={index}
+                className="aspect-square animate-pulse rounded-2xl bg-[#F3E9DF]"
+              />
             ))}
           </div>
         ) : error ? (
@@ -282,7 +292,8 @@ export function GalleryPageClient() {
                 No published media yet
               </h3>
               <p className="mt-2 text-sm text-[#655E57]">
-                Upload and publish media from the admin gallery under this category.
+                Upload and publish media from the admin gallery under this
+                category.
               </p>
             </div>
           </div>

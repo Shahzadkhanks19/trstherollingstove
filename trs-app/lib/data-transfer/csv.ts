@@ -1,6 +1,4 @@
-function serializeValue(
-  value: unknown,
-): string {
+function serializeValue(value: unknown): string {
   if (value === null || value === undefined) {
     return "";
   }
@@ -9,18 +7,14 @@ function serializeValue(
     return value.toISOString();
   }
 
-  if (
-    typeof value === "object"
-  ) {
+  if (typeof value === "object") {
     return JSON.stringify(value);
   }
 
   return String(value);
 }
 
-function escapeCsvCell(
-  value: unknown,
-): string {
+function escapeCsvCell(value: unknown): string {
   const serialized = serializeValue(value);
 
   if (
@@ -29,18 +23,13 @@ function escapeCsvCell(
     serialized.includes("\n") ||
     serialized.includes("\r")
   ) {
-    return `"${serialized.replaceAll(
-      '"',
-      '""',
-    )}"`;
+    return `"${serialized.replaceAll('"', '""')}"`;
   }
 
   return serialized;
 }
 
-export function documentsToCsv(
-  documents: Record<string, unknown>[],
-): string {
+export function documentsToCsv(documents: Record<string, unknown>[]): string {
   if (documents.length === 0) {
     return "";
   }
@@ -55,17 +44,11 @@ export function documentsToCsv(
 
   const headers = Array.from(headerSet);
 
-  const lines = [
-    headers.map(escapeCsvCell).join(","),
-  ];
+  const lines = [headers.map(escapeCsvCell).join(",")];
 
   for (const document of documents) {
     lines.push(
-      headers
-        .map((header) =>
-          escapeCsvCell(document[header]),
-        )
-        .join(","),
+      headers.map((header) => escapeCsvCell(document[header])).join(","),
     );
   }
 

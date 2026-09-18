@@ -10,6 +10,9 @@ export function parseDateParameter(value: string, label: string): Date {
 
 export function assertDateRange(from: Date, to: Date) {
   if (from > to) {
-    throw new AppError("The start date must be before or equal to the end date.", 400);
+    throw new AppError(
+      "The start date must be before or equal to the end date.",
+      400,
+    );
   }
 }

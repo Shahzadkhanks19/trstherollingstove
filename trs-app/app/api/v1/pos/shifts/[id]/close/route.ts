@@ -30,7 +30,11 @@ export async function POST(request: Request, context: Context) {
       shiftId: shift._id,
       status: { $in: ["open", "sent_to_kitchen", "partially_paid"] },
     });
-    if (activeOrders > 0) throw new AppError(`Close or transfer ${activeOrders} active running order(s) before closing the shift.`, 409);
+    if (activeOrders > 0)
+      throw new AppError(
+        `Close or transfer ${activeOrders} active running order(s) before closing the shift.`,
+        409,
+      );
 
     const expectedCash = await calculateExpectedCash(id);
     const report = await getShiftReport(id);
@@ -70,7 +74,12 @@ export async function POST(request: Request, context: Context) {
       entityId: shift._id,
       reason: input.closeApprovalNote || input.closingNote,
       before: { status: "open", expectedCash },
-      after: { status: "closed", countedCash: input.countedCash, difference, closeSnapshot: shift.closeSnapshot },
+      after: {
+        status: "closed",
+        countedCash: input.countedCash,
+        difference,
+        closeSnapshot: shift.closeSnapshot,
+      },
     });
 
     publishRealtimeEventSafely({

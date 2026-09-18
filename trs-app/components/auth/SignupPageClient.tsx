@@ -45,7 +45,10 @@ export function SignupPageClient() {
   const [referralCode] = useState(() =>
     typeof window === "undefined"
       ? ""
-      : new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase() ?? "",
+      : (new URLSearchParams(window.location.search)
+          .get("ref")
+          ?.trim()
+          .toUpperCase() ?? ""),
   );
 
   const updateField = <Key extends keyof SignupForm>(
@@ -134,16 +137,15 @@ export function SignupPageClient() {
         }),
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | {
-            message?: string;
-            errors?: Array<{ field?: string; message?: string }>;
-          }
-        | null;
+      const payload = (await response.json().catch(() => null)) as {
+        message?: string;
+        errors?: Array<{ field?: string; message?: string }>;
+      } | null;
 
       if (!response.ok) {
         const validationMessage = payload?.errors?.find(
-          (error) => typeof error.message === "string" && error.message.length > 0,
+          (error) =>
+            typeof error.message === "string" && error.message.length > 0,
         )?.message;
 
         throw new Error(
@@ -297,7 +299,10 @@ export function SignupPageClient() {
                       />
                     </button>
                   </div>
-                  <span className="mt-2 block text-[9px] font-medium normal-case leading-4 text-[#7B746D]">Use 10–128 characters with uppercase, lowercase, a number and a special character.</span>
+                  <span className="mt-2 block text-[9px] font-medium normal-case leading-4 text-[#7B746D]">
+                    Use 10–128 characters with uppercase, lowercase, a number
+                    and a special character.
+                  </span>
                 </label>
 
                 <label className="block text-[10px] font-black">
@@ -361,7 +366,9 @@ export function SignupPageClient() {
                 disabled={status === "loading"}
                 className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#C8102E] px-6 text-[11px] font-black uppercase text-white shadow-[0_12px_28px_rgba(200,16,46,.22)] transition hover:-translate-y-0.5 hover:bg-[#A50E27] disabled:cursor-not-allowed disabled:opacity-65"
               >
-                {status === "loading" ? "Creating Account..." : "Create Account"}
+                {status === "loading"
+                  ? "Creating Account..."
+                  : "Create Account"}
                 <FontAwesomeIcon icon={faArrowRight} className="h-3" />
               </button>
             </form>

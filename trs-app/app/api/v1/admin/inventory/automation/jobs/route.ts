@@ -11,10 +11,9 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const parsed =
-      inventoryAutomationHistoryQuerySchema.parse(
-        Object.fromEntries(url.searchParams),
-      );
+    const parsed = inventoryAutomationHistoryQuerySchema.parse(
+      Object.fromEntries(url.searchParams),
+    );
 
     const filter: Record<string, unknown> = {};
     if (parsed.status) filter.status = parsed.status;

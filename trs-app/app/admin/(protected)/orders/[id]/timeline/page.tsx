@@ -1,1 +1,15 @@
-import { redirect } from "next/navigation";import {getAuthenticatedUser} from "@/lib/auth/session";import {OrderTimelineClient} from "@/components/admin/orders/OrderTimelineClient";export default async function Page({params}:{params:Promise<{id:string}>}){const user=await getAuthenticatedUser();const{id}=await params;if(!user)redirect(`/admin/login?redirect=/admin/orders/${id}/timeline`);if(!user.permissions.includes("orders.read"))redirect("/admin/dashboard?error=unauthorized");return <OrderTimelineClient orderId={id}/>}
+import { redirect } from "next/navigation";
+import { getAuthenticatedUser } from "@/lib/auth/session";
+import { OrderTimelineClient } from "@/components/admin/orders/OrderTimelineClient";
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const user = await getAuthenticatedUser();
+  const { id } = await params;
+  if (!user) redirect(`/admin/login?redirect=/admin/orders/${id}/timeline`);
+  if (!user.permissions.includes("orders.read"))
+    redirect("/admin/dashboard?error=unauthorized");
+  return <OrderTimelineClient orderId={id} />;
+}

@@ -81,15 +81,14 @@ InventoryScheduledReportSchema.index({
   nextRunAt: 1,
 });
 
-export type InventoryScheduledReportDocument =
-  InferSchemaType<typeof InventoryScheduledReportSchema>;
+export type InventoryScheduledReportDocument = InferSchemaType<
+  typeof InventoryScheduledReportSchema
+>;
 
-export const InventoryScheduledReport:
-  Model<InventoryScheduledReportDocument> =
-    (models.InventoryScheduledReport as
-      | Model<InventoryScheduledReportDocument>
-      | undefined) ??
-    model<InventoryScheduledReportDocument>(
-      "InventoryScheduledReport",
-      InventoryScheduledReportSchema,
-    );
+export const InventoryScheduledReport: Model<InventoryScheduledReportDocument> =
+  (models.InventoryScheduledReport as
+    Model<InventoryScheduledReportDocument> | undefined) ??
+  model<InventoryScheduledReportDocument>(
+    "InventoryScheduledReport",
+    InventoryScheduledReportSchema,
+  );

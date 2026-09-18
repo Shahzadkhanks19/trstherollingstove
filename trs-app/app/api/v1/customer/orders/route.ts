@@ -8,12 +8,16 @@ import { Order } from "@/models/Order";
 export async function GET(request: Request) {
   try {
     const actor = await requireAuthenticatedUser();
-    if (actor.roleKey !== "customer") throw new AppError("Customer access required.", 403);
+    if (actor.roleKey !== "customer")
+      throw new AppError("Customer access required.", 403);
     await connectToDatabase();
 
     const url = new URL(request.url);
     const page = Math.max(Number(url.searchParams.get("page") ?? 1), 1);
-    const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 20), 1), 100);
+    const limit = Math.min(
+      Math.max(Number(url.searchParams.get("limit") ?? 20), 1),
+      100,
+    );
     const status = url.searchParams.get("status");
 
     const filter: Record<string, unknown> = { customerId: actor.id };
@@ -29,7 +33,10 @@ export async function GET(request: Request) {
     ]);
 
     return successResponse(
-      { orders, pagination: { page, limit, total, pages: Math.ceil(total / limit) } },
+      {
+        orders,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      },
       "Orders loaded.",
     );
   } catch (error) {

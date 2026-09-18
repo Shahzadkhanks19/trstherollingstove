@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { AdminInventoryClient } from "@/components/admin/inventory/AdminInventoryClient";
 
-export const metadata = createAdminMetadata("Inventory", "Track ingredients, stock movements, recipes and low-stock alerts.");
+export const metadata = createAdminMetadata(
+  "Inventory",
+  "Track ingredients, stock movements, recipes and low-stock alerts.",
+);
 
 export const dynamic = "force-dynamic";
 

@@ -170,7 +170,9 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   return (
     <div className="min-w-36 rounded-2xl border border-[#e5d9cf] bg-white/95 p-3 shadow-xl backdrop-blur">
       {label !== undefined ? (
-        <p className="mb-2 text-xs font-black text-[#173044]">{String(label)}</p>
+        <p className="mb-2 text-xs font-black text-[#173044]">
+          {String(label)}
+        </p>
       ) : null}
       <div className="space-y-1.5">
         {payload.map((entry) => (
@@ -185,7 +187,9 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
               />
               {entry.name ?? "Value"}
             </span>
-            <strong className="text-[#173044]">{String(entry.value ?? 0)}</strong>
+            <strong className="text-[#173044]">
+              {String(entry.value ?? 0)}
+            </strong>
           </div>
         ))}
         {revenue !== null ? (
@@ -208,7 +212,10 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
 function HourlyTrendChart({ rows }: { rows: Data["hourly"] }) {
   const isMobile = useIsMobile();
   const peak = Math.max(0, ...rows.map((row) => row.orders));
-  const data = rows.map((row) => ({ ...row, peak: row.orders === peak && peak > 0 }));
+  const data = rows.map((row) => ({
+    ...row,
+    peak: row.orders === peak && peak > 0,
+  }));
 
   return (
     <div className="h-[250px] w-full min-w-0 sm:h-[310px]">
@@ -228,14 +235,22 @@ function HourlyTrendChart({ rows }: { rows: Data["hourly"] }) {
               <stop offset="100%" stopColor="#C8102E" stopOpacity={0.02} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="#E8EDF2" strokeDasharray="4 5" vertical={false} />
+          <CartesianGrid
+            stroke="#E8EDF2"
+            strokeDasharray="4 5"
+            vertical={false}
+          />
           <XAxis
             dataKey="hour"
             axisLine={false}
             tickLine={false}
             interval={0}
             minTickGap={0}
-            tick={{ fill: "#64748B", fontSize: isMobile ? 10 : 11, fontWeight: 800 }}
+            tick={{
+              fill: "#64748B",
+              fontSize: isMobile ? 10 : 11,
+              fontWeight: 800,
+            }}
           />
           <YAxis
             allowDecimals={false}
@@ -244,7 +259,10 @@ function HourlyTrendChart({ rows }: { rows: Data["hourly"] }) {
             width={isMobile ? 28 : 38}
             tick={{ fill: "#94A3B8", fontSize: 10, fontWeight: 700 }}
           />
-          <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#E8A53A", strokeDasharray: "4 4" }} />
+          <Tooltip
+            content={<ChartTooltip />}
+            cursor={{ stroke: "#E8A53A", strokeDasharray: "4 4" }}
+          />
           <Area
             type="monotone"
             dataKey="orders"
@@ -252,8 +270,18 @@ function HourlyTrendChart({ rows }: { rows: Data["hourly"] }) {
             stroke="#C8102E"
             strokeWidth={3}
             fill="url(#trsHourlyArea)"
-            activeDot={{ r: 6, fill: "#E8A53A", stroke: "#C8102E", strokeWidth: 2 }}
-            dot={{ r: isMobile ? 3 : 4, fill: "#FFFFFF", stroke: "#C8102E", strokeWidth: 2 }}
+            activeDot={{
+              r: 6,
+              fill: "#E8A53A",
+              stroke: "#C8102E",
+              strokeWidth: 2,
+            }}
+            dot={{
+              r: isMobile ? 3 : 4,
+              fill: "#FFFFFF",
+              stroke: "#C8102E",
+              strokeWidth: 2,
+            }}
             animationDuration={650}
           />
         </AreaChart>
@@ -265,7 +293,10 @@ function HourlyTrendChart({ rows }: { rows: Data["hourly"] }) {
 function HourlyBarChart({ rows }: { rows: Data["hourly"] }) {
   const isMobile = useIsMobile();
   const peak = Math.max(0, ...rows.map((row) => row.orders));
-  const data = rows.map((row) => ({ ...row, isPeak: row.orders === peak && peak > 0 }));
+  const data = rows.map((row) => ({
+    ...row,
+    isPeak: row.orders === peak && peak > 0,
+  }));
 
   return (
     <div className="h-[255px] w-full min-w-0 sm:h-[330px]">
@@ -280,14 +311,22 @@ function HourlyBarChart({ rows }: { rows: Data["hourly"] }) {
             bottom: 0,
           }}
         >
-          <CartesianGrid stroke="#EEF2F6" strokeDasharray="4 5" vertical={false} />
+          <CartesianGrid
+            stroke="#EEF2F6"
+            strokeDasharray="4 5"
+            vertical={false}
+          />
           <XAxis
             dataKey="hour"
             axisLine={false}
             tickLine={false}
             interval={0}
             minTickGap={0}
-            tick={{ fill: "#64748B", fontSize: isMobile ? 10 : 11, fontWeight: 800 }}
+            tick={{
+              fill: "#64748B",
+              fontSize: isMobile ? 10 : 11,
+              fontWeight: 800,
+            }}
           />
           <YAxis
             allowDecimals={false}
@@ -296,7 +335,10 @@ function HourlyBarChart({ rows }: { rows: Data["hourly"] }) {
             width={isMobile ? 28 : 38}
             tick={{ fill: "#94A3B8", fontSize: 10, fontWeight: 700 }}
           />
-          <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(232, 165, 58, 0.08)" }} />
+          <Tooltip
+            content={<ChartTooltip />}
+            cursor={{ fill: "rgba(232, 165, 58, 0.08)" }}
+          />
           <Bar
             dataKey="orders"
             name="Orders"
@@ -308,7 +350,13 @@ function HourlyBarChart({ rows }: { rows: Data["hourly"] }) {
             {data.map((entry) => (
               <Cell
                 key={entry.hour}
-                fill={entry.isPeak ? "#E8A53A" : entry.orders > 0 ? "#C8102E" : "#DCE3EA"}
+                fill={
+                  entry.isPeak
+                    ? "#E8A53A"
+                    : entry.orders > 0
+                      ? "#C8102E"
+                      : "#DCE3EA"
+                }
               />
             ))}
           </Bar>
@@ -340,11 +388,17 @@ function PaymentDonut({ rows }: { rows: Data["payments"] }) {
               animationDuration={650}
             >
               {rows.map((row, index) => (
-                <Cell key={row.method} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                <Cell
+                  key={row.method}
+                  fill={CHART_COLORS[index % CHART_COLORS.length]}
+                />
               ))}
             </Pie>
             <Tooltip
-              formatter={(value, name) => [money.format(Number(value ?? 0)), String(name)]}
+              formatter={(value, name) => [
+                money.format(Number(value ?? 0)),
+                String(name),
+              ]}
               contentStyle={{
                 borderRadius: 16,
                 borderColor: "#e5d9cf",
@@ -360,7 +414,9 @@ function PaymentDonut({ rows }: { rows: Data["payments"] }) {
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
               Collected
             </p>
-            <p className="mt-1 text-lg font-black text-[#173044]">{money.format(total)}</p>
+            <p className="mt-1 text-lg font-black text-[#173044]">
+              {money.format(total)}
+            </p>
           </div>
         </div>
       </div>
@@ -408,10 +464,19 @@ function CategoryChart({
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 4, right: isMobile ? 16 : 28, left: isMobile ? 2 : 12, bottom: 0 }}
+          margin={{
+            top: 4,
+            right: isMobile ? 16 : 28,
+            left: isMobile ? 2 : 12,
+            bottom: 0,
+          }}
           barCategoryGap="26%"
         >
-          <CartesianGrid stroke="#EEF2F6" strokeDasharray="4 5" horizontal={false} />
+          <CartesianGrid
+            stroke="#EEF2F6"
+            strokeDasharray="4 5"
+            horizontal={false}
+          />
           <XAxis
             type="number"
             hide={isMobile}
@@ -419,7 +484,9 @@ function CategoryChart({
             tickLine={false}
             tick={{ fill: "#94A3B8", fontSize: 10, fontWeight: 700 }}
             tickFormatter={(value) =>
-              valueKey === "revenue" ? money.format(Number(value)) : String(value)
+              valueKey === "revenue"
+                ? money.format(Number(value))
+                : String(value)
             }
           />
           <YAxis
@@ -428,11 +495,17 @@ function CategoryChart({
             axisLine={false}
             tickLine={false}
             width={isMobile ? 104 : 135}
-            tick={{ fill: "#173044", fontSize: isMobile ? 10 : 11, fontWeight: 800 }}
+            tick={{
+              fill: "#173044",
+              fontSize: isMobile ? 10 : 11,
+              fontWeight: 800,
+            }}
           />
           <Tooltip
             formatter={(value) => [
-              valueKey === "revenue" ? money.format(Number(value ?? 0)) : Number(value ?? 0),
+              valueKey === "revenue"
+                ? money.format(Number(value ?? 0))
+                : Number(value ?? 0),
               valueKey === "revenue" ? "Revenue" : "Quantity",
             ]}
             contentStyle={{
@@ -467,7 +540,13 @@ export function PosAnalyticsClient() {
   const [error, setError] = useState("");
 
   const query = useMemo(
-    () => new URLSearchParams({ from, to, orderMode: "all", saleType: "all" }).toString(),
+    () =>
+      new URLSearchParams({
+        from,
+        to,
+        orderMode: "all",
+        saleType: "all",
+      }).toString(),
     [from, to],
   );
 
@@ -487,7 +566,11 @@ export function PosAnalyticsClient() {
 
       setData(payload.data);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to load POS analytics.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Unable to load POS analytics.",
+      );
     } finally {
       setLoading(false);
     }
@@ -549,7 +632,9 @@ export function PosAnalyticsClient() {
       </section>
 
       {error ? (
-        <p className="rounded-xl bg-red-50 p-4 font-bold text-red-700">{error}</p>
+        <p className="rounded-xl bg-red-50 p-4 font-bold text-red-700">
+          {error}
+        </p>
       ) : null}
 
       {loading ? (
@@ -592,21 +677,27 @@ export function PosAnalyticsClient() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="text-xl font-black text-[#173044]">
-                    <FontAwesomeIcon icon={faChartLine} className="mr-2 text-[#C8102E]" />
+                    <FontAwesomeIcon
+                      icon={faChartLine}
+                      className="mr-2 text-[#C8102E]"
+                    />
                     Hourly order trend
                   </h2>
                   <p className="mb-5 mt-1 text-sm text-slate-500">
-                    Smooth demand trend from the first order hour to the last order hour,
-                    including zero-order gaps.
+                    Smooth demand trend from the first order hour to the last
+                    order hour, including zero-order gaps.
                   </p>
                 </div>
                 {data.hourly.length ? (
                   <span className="rounded-full bg-red-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#C8102E]">
                     {data.kpis.firstOrderAt
-                      ? new Date(data.kpis.firstOrderAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                      ? new Date(data.kpis.firstOrderAt).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )
                       : "—"}
                     {" – "}
                     {data.kpis.lastOrderAt
@@ -649,8 +740,8 @@ export function PosAnalyticsClient() {
                   Orders per hour · bar chart
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Direct hour-by-hour order volume comparison. Tap or hover a bar to see
-                  revenue and item count.
+                  Direct hour-by-hour order volume comparison. Tap or hover a
+                  bar to see revenue and item count.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4 text-[10px] font-black uppercase tracking-wider">
@@ -677,7 +768,9 @@ export function PosAnalyticsClient() {
 
           <div className="grid min-w-0 gap-6 xl:grid-cols-2">
             <section className="min-w-0 overflow-hidden rounded-3xl border bg-white p-4 sm:p-6">
-              <h2 className="text-xl font-black text-[#173044]">Category quantity</h2>
+              <h2 className="text-xl font-black text-[#173044]">
+                Category quantity
+              </h2>
               <p className="mb-4 mt-1 text-sm text-slate-500">
                 Actual units sold, not order-line count.
               </p>
@@ -691,7 +784,9 @@ export function PosAnalyticsClient() {
             </section>
 
             <section className="min-w-0 overflow-hidden rounded-3xl border bg-white p-4 sm:p-6">
-              <h2 className="text-xl font-black text-[#173044]">Category revenue</h2>
+              <h2 className="text-xl font-black text-[#173044]">
+                Category revenue
+              </h2>
               <p className="mb-4 mt-1 text-sm text-slate-500">
                 Commercial contribution by category.
               </p>
@@ -722,7 +817,10 @@ export function PosAnalyticsClient() {
                 </thead>
                 <tbody>
                   {data.topItems.map((row) => (
-                    <tr key={`${row.name}-${row.variantName}`} className="border-b">
+                    <tr
+                      key={`${row.name}-${row.variantName}`}
+                      className="border-b"
+                    >
                       <td className="p-3 font-black">
                         {row.name}
                         {row.variantName ? (

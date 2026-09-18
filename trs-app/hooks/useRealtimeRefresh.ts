@@ -16,7 +16,12 @@ type Options = {
   debounceMs?: number;
 };
 
-export function useRealtimeRefresh({ events, onEvent, enabled = true, debounceMs = 150 }: Options) {
+export function useRealtimeRefresh({
+  events,
+  onEvent,
+  enabled = true,
+  debounceMs = 150,
+}: Options) {
   const onEventRef = useRef(onEvent);
   const eventKey = events.join("|");
 
@@ -37,7 +42,10 @@ export function useRealtimeRefresh({ events, onEvent, enabled = true, debounceMs
     const handle = (event: RealtimeEventEnvelope) => {
       if (!acceptedEvents.has(event.event)) return;
       if (timer !== null) window.clearTimeout(timer);
-      timer = window.setTimeout(() => void onEventRef.current(event), debounceMs);
+      timer = window.setTimeout(
+        () => void onEventRef.current(event),
+        debounceMs,
+      );
     };
 
     socket.on("domain:event", handle);

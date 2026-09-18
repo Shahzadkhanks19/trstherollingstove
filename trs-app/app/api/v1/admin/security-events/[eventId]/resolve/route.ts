@@ -14,22 +14,14 @@ type Context = {
   params: Promise<{ eventId: string }>;
 };
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
-    const actor = await requirePermission(
-      "audit_logs.read",
-    );
+    const actor = await requirePermission("audit_logs.read");
 
     const { eventId } = await context.params;
 
     if (!Types.ObjectId.isValid(eventId)) {
-      throw new AppError(
-        "Invalid security event ID.",
-        400,
-      );
+      throw new AppError("Invalid security event ID.", 400);
     }
 
     const input = await validateRequestBody(
@@ -39,29 +31,23 @@ export async function PATCH(
 
     await connectToDatabase();
 
-    const event =
-      await SecurityEvent.findByIdAndUpdate(
-        eventId,
-        {
-          $set: {
-            resolved: true,
-            resolvedAt: new Date(),
-            resolvedBy:
-              new Types.ObjectId(actor.id),
-            resolutionNote:
-              input.resolutionNote,
-          },
+    const event = await SecurityEvent.findByIdAndUpdate(
+      eventId,
+      {
+        $set: {
+          resolved: true,
+          resolvedAt: new Date(),
+          resolvedBy: new Types.ObjectId(actor.id),
+          resolutionNote: input.resolutionNote,
         },
-        {
-          returnDocument: "after",
-        },
-      );
+      },
+      {
+        returnDocument: "after",
+      },
+    );
 
     if (!event) {
-      throw new AppError(
-        "Security event not found.",
-        404,
-      );
+      throw new AppError("Security event not found.", 404);
     }
 
     await writeAuditLog({
@@ -70,19 +56,14 @@ export async function PATCH(
       module: "security",
       entityType: "SecurityEvent",
       entityId: eventId,
-      description:
-        "Resolved a security event.",
+      description: "Resolved a security event.",
       metadata: {
         eventType: event.eventType,
-        resolutionNote:
-          input.resolutionNote,
+        resolutionNote: input.resolutionNote,
       },
     });
 
-    return successResponse(
-      event,
-      "Security event resolved.",
-    );
+    return successResponse(event, "Security event resolved.");
   } catch (error) {
     return handleApiError(error);
   }

@@ -2,9 +2,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { AppError } from "@/lib/errors/AppError";
 import { handleApiError } from "@/lib/errors/handleApiError";
-import {
-  generateCachedInventoryReport,
-} from "@/services/inventory-report-cache.service";
+import { generateCachedInventoryReport } from "@/services/inventory-report-cache.service";
 import {
   createInventoryReportPdf,
   createInventoryReportWorkbook,
@@ -36,19 +34,13 @@ function parseDate(value: string | null) {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
-export async function GET(
-  request: Request,
-  context: Context,
-) {
+export async function GET(request: Request, context: Context) {
   try {
     const actor = await requirePermission("reports.read");
     const { format } = await context.params;
 
     if (format !== "xlsx" && format !== "pdf") {
-      throw new AppError(
-        "Export format must be xlsx or pdf.",
-        400,
-      );
+      throw new AppError("Export format must be xlsx or pdf.", 400);
     }
 
     const url = new URL(request.url);
@@ -57,23 +49,15 @@ export async function GET(
     ) as InventoryReportType | null;
 
     if (!reportType || !TYPES.includes(reportType)) {
-      throw new AppError(
-        "A valid inventory report type is required.",
-        400,
-      );
+      throw new AppError("A valid inventory report type is required.", 400);
     }
 
     const filters: InventoryReportFilters = {
       from: parseDate(url.searchParams.get("from")),
       to: parseDate(url.searchParams.get("to")),
-      inventoryItemId:
-        url.searchParams.get("inventoryItemId") ??
-        undefined,
+      inventoryItemId: url.searchParams.get("inventoryItemId") ?? undefined,
       search: url.searchParams.get("search") ?? undefined,
-      limit: Math.min(
-        Number(url.searchParams.get("limit") ?? 5000),
-        10_000,
-      ),
+      limit: Math.min(Number(url.searchParams.get("limit") ?? 5000), 10_000),
     };
 
     await connectToDatabase();

@@ -17,13 +17,8 @@ const customerProfileSchema = z.object({
   preferredCommunicationChannel: z
     .enum(["whatsapp", "email", "phone", "none"])
     .optional(),
-  source: z
-    .enum(["website", "pos", "admin", "import", "other"])
-    .optional(),
-  tags: z
-    .array(z.string().trim().min(1).max(40))
-    .max(20)
-    .optional(),
+  source: z.enum(["website", "pos", "admin", "import", "other"]).optional(),
+  tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
 });
 
 const customerUpdateBaseSchema = z.object({

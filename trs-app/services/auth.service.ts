@@ -11,7 +11,10 @@ import {
   normalizeReferralCode,
 } from "@/lib/referrals/referralCode";
 import { AuthSession } from "@/models/AuthSession";
-import { CustomerProfile, type CustomerProfileDocument } from "@/models/CustomerProfile";
+import {
+  CustomerProfile,
+  type CustomerProfileDocument,
+} from "@/models/CustomerProfile";
 import { Referral } from "@/models/Referral";
 import { Role } from "@/models/Role";
 import { SecurityToken } from "@/models/SecurityToken";
@@ -33,7 +36,10 @@ export async function createCustomer(input: CreateCustomerInput) {
 
   if (
     await User.exists({
-      $or: [{ email: input.email }, ...(input.phone ? [{ phone: input.phone }] : [])],
+      $or: [
+        { email: input.email },
+        ...(input.phone ? [{ phone: input.phone }] : []),
+      ],
     })
   ) {
     throw new AppError("Account already exists.", 409);
@@ -47,10 +53,15 @@ export async function createCustomer(input: CreateCustomerInput) {
   let referrerProfile: HydratedDocument<CustomerProfileDocument> | null = null;
   if (input.referralCode) {
     const normalizedCode = normalizeReferralCode(input.referralCode);
-    referrerProfile = await CustomerProfile.findOne({ referralCode: normalizedCode });
+    referrerProfile = await CustomerProfile.findOne({
+      referralCode: normalizedCode,
+    });
 
     if (!referrerProfile) {
-      throw new AppError("Referral code is invalid or no longer available.", 400);
+      throw new AppError(
+        "Referral code is invalid or no longer available.",
+        400,
+      );
     }
   }
 
@@ -92,7 +103,10 @@ export async function createCustomer(input: CreateCustomerInput) {
     throw error;
   }
 
-  const verificationEmailSent = await issueEmailVerification(user.id, user.email);
+  const verificationEmailSent = await issueEmailVerification(
+    user.id,
+    user.email,
+  );
   return { user, verificationEmailSent };
 }
 
@@ -104,9 +118,7 @@ export async function authenticate(identifier: string, password: string) {
       { email: normalizedIdentifier },
       { phone: normalizedIdentifier.replace(/\D/g, "") },
     ],
-  }).select(
-    "+passwordHash +failedLoginAttempts +lockedUntil",
-  );
+  }).select("+passwordHash +failedLoginAttempts +lockedUntil");
 
   if (user?.lockedUntil && user.lockedUntil > new Date()) {
     throw new AppError("Account temporarily locked.", 423);
@@ -222,7 +234,10 @@ export async function rotateSession(
   return { accessToken, refreshToken };
 }
 
-export async function issueEmailVerification(userId: string, email: string): Promise<boolean> {
+export async function issueEmailVerification(
+  userId: string,
+  email: string,
+): Promise<boolean> {
   const rawToken = generateOpaqueToken();
   await SecurityToken.deleteMany({
     userId,

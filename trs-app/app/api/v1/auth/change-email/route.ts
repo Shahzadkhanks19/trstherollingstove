@@ -17,28 +17,17 @@ export const revalidate = 0;
 export async function PATCH(request: Request) {
   try {
     const actor = await requireAuthenticatedUser();
-    const input = await validateRequestBody(
-      request,
-      changeEmailSchema,
-    );
+    const input = await validateRequestBody(request, changeEmailSchema);
 
     await connectToDatabase();
 
-    const user = await User.findById(actor.id).select(
-      "+passwordHash",
-    );
+    const user = await User.findById(actor.id).select("+passwordHash");
 
     if (
       !user ||
-      !(await verifyPassword(
-        input.currentPassword,
-        user.passwordHash,
-      ))
+      !(await verifyPassword(input.currentPassword, user.passwordHash))
     ) {
-      throw new AppError(
-        "Current password is incorrect.",
-        400,
-      );
+      throw new AppError("Current password is incorrect.", 400);
     }
 
     const nextEmail = input.newEmail.trim().toLowerCase();
@@ -79,8 +68,7 @@ export async function PATCH(request: Request) {
         {
           $set: {
             revokedAt: now,
-            revokeReason:
-              "Login email changed from admin security settings.",
+            revokeReason: "Login email changed from admin security settings.",
           },
         },
       ),
@@ -94,8 +82,7 @@ export async function PATCH(request: Request) {
           "Administrator changed their login email from the admin panel.",
         severity: "warning",
         outcome: "success",
-        userAgent:
-          request.headers.get("user-agent") ?? "",
+        userAgent: request.headers.get("user-agent") ?? "",
         metadata: {
           previousEmail: currentEmail,
           newEmail: nextEmail,

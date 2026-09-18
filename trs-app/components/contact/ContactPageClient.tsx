@@ -144,10 +144,7 @@ export function ContactPageClient() {
   >("idle");
   const [statusMessage, setStatusMessage] = useState("");
 
-  const updateField = (
-    field: keyof ContactFormState,
-    value: string,
-  ): void => {
+  const updateField = (field: keyof ContactFormState, value: string): void => {
     setForm((current) => ({ ...current, [field]: value }));
 
     if (status !== "idle") {
@@ -216,9 +213,7 @@ export function ContactPageClient() {
 
       setForm(initialFormState);
       setStatus("success");
-      setStatusMessage(
-        "Thank you. Your message has been sent successfully.",
-      );
+      setStatusMessage("Thank you. Your message has been sent successfully.");
     } catch {
       setStatus("error");
       setStatusMessage(
@@ -291,7 +286,9 @@ export function ContactPageClient() {
               </span>
               <div>
                 <h2 className="text-lg font-black uppercase">Our Location</h2>
-                <p className="mt-1 text-xs text-[#655E57]">Jodhpur, Rajasthan</p>
+                <p className="mt-1 text-xs text-[#655E57]">
+                  Jodhpur, Rajasthan
+                </p>
               </div>
             </div>
 

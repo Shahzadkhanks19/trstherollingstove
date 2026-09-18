@@ -10,10 +10,6 @@ export const SETTING_SECTIONS = [
   "integrations",
 ] as const;
 
-export type SettingSection =
-  (typeof SETTING_SECTIONS)[number];
+export type SettingSection = (typeof SETTING_SECTIONS)[number];
 
-export type SettingPayload = Record<
-  string,
-  unknown
->;
+export type SettingPayload = Record<string, unknown>;

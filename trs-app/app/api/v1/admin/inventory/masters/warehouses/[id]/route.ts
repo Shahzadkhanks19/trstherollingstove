@@ -14,18 +14,30 @@ export async function PATCH(request: Request, context: Context) {
     const input = await validateRequestBody(request, warehouseSchema.partial());
     const { id } = await context.params;
     await connectToDatabase();
-    const row = await Warehouse.findByIdAndUpdate(id, { $set: { ...input, updatedBy: actor.id } }, { returnDocument: "after", runValidators: true });
+    const row = await Warehouse.findByIdAndUpdate(
+      id,
+      { $set: { ...input, updatedBy: actor.id } },
+      { returnDocument: "after", runValidators: true },
+    );
     if (!row) throw new AppError("Record not found.", 404);
     return successResponse(row, "Updated successfully.");
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 export async function DELETE(_request: Request, context: Context) {
   try {
     const actor = await requirePermission("inventory.manage");
     const { id } = await context.params;
     await connectToDatabase();
-    const row = await Warehouse.findByIdAndUpdate(id, { $set: { isActive: false, updatedBy: actor.id } }, { returnDocument: "after", runValidators: true });
+    const row = await Warehouse.findByIdAndUpdate(
+      id,
+      { $set: { isActive: false, updatedBy: actor.id } },
+      { returnDocument: "after", runValidators: true },
+    );
     if (!row) throw new AppError("Record not found.", 404);
     return successResponse(row, "Deactivated successfully.");
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

@@ -15,9 +15,7 @@ export default async function InventoryForecastingPage() {
   const user = await getAuthenticatedUser();
 
   if (!user) {
-    redirect(
-      "/admin/login?redirect=/admin/inventory-forecasting",
-    );
+    redirect("/admin/login?redirect=/admin/inventory-forecasting");
   }
 
   if (!user.permissions.includes("inventory.read")) {
@@ -26,9 +24,7 @@ export default async function InventoryForecastingPage() {
 
   return (
     <InventoryForecastDashboardClient
-      canManage={user.permissions.includes(
-        "inventory.manage",
-      )}
+      canManage={user.permissions.includes("inventory.manage")}
       canExport={user.permissions.includes("reports.read")}
     />
   );

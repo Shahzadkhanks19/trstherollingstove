@@ -23,8 +23,7 @@ export async function GET(request: Request) {
 
     if (!parsed.success) {
       throw new AppError(
-        parsed.error.issues[0]?.message ??
-          "Invalid executive analytics query.",
+        parsed.error.issues[0]?.message ?? "Invalid executive analytics query.",
         400,
       );
     }

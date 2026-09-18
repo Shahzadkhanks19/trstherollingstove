@@ -2,21 +2,14 @@ import { BackgroundJob } from "@/models/BackgroundJob";
 import { Coupon } from "@/models/Coupon";
 import { Notification } from "@/models/Notification";
 import { Reservation } from "@/models/Reservation";
-import {
-  combineReservationDateTime,
-} from "@/lib/jobs/time";
-import type {
-  BackgroundJobKey,
-} from "@/types/jobs";
+import { combineReservationDateTime } from "@/lib/jobs/time";
+import type { BackgroundJobKey } from "@/types/jobs";
 
 type JobPayload = Record<string, unknown>;
 
-type JobHandlerResult =
-  Record<string, unknown>;
+type JobHandlerResult = Record<string, unknown>;
 
-type JobHandler = (
-  payload: JobPayload,
-) => Promise<JobHandlerResult>;
+type JobHandler = (payload: JobPayload) => Promise<JobHandlerResult>;
 
 async function expireCoupons() {
   const now = new Date();
@@ -40,23 +33,17 @@ async function expireCoupons() {
   };
 }
 
-async function createReservationReminders(
-  hoursBefore: 24 | 2,
-) {
+async function createReservationReminders(hoursBefore: 24 | 2) {
   const now = new Date();
   const windowStart = new Date(
-    now.getTime() +
-      (hoursBefore * 60 - 10) * 60 * 1000,
+    now.getTime() + (hoursBefore * 60 - 10) * 60 * 1000,
   );
   const windowEnd = new Date(
-    now.getTime() +
-      (hoursBefore * 60 + 10) * 60 * 1000,
+    now.getTime() + (hoursBefore * 60 + 10) * 60 * 1000,
   );
 
   const reminderField =
-    hoursBefore === 24
-      ? "reminder24hSent"
-      : "reminder2hSent";
+    hoursBefore === 24 ? "reminder24hSent" : "reminder2hSent";
 
   const reservations = await Reservation.find({
     status: "confirmed",
@@ -94,39 +81,32 @@ async function createReservationReminders(
   let sent = 0;
 
   for (const reservation of reservations) {
-    const reservationDateTime =
-      combineReservationDateTime(
-        new Date(reservation.reservationDate),
-        reservation.startTime,
-      );
+    const reservationDateTime = combineReservationDateTime(
+      new Date(reservation.reservationDate),
+      reservation.startTime,
+    );
 
-    if (
-      reservationDateTime < windowStart ||
-      reservationDateTime > windowEnd
-    ) {
+    if (reservationDateTime < windowStart || reservationDateTime > windowEnd) {
       continue;
     }
 
-    const claim =
-      await Reservation.updateOne(
-        {
-          _id: reservation._id,
-          [reminderField]: false,
+    const claim = await Reservation.updateOne(
+      {
+        _id: reservation._id,
+        [reminderField]: false,
+      },
+      {
+        $set: {
+          [reminderField]: true,
         },
-        {
-          $set: {
-            [reminderField]: true,
-          },
-        },
-      );
+      },
+    );
 
     if (claim.modifiedCount !== 1) {
       continue;
     }
 
-    const customerName =
-      reservation.customerSnapshot?.name ||
-      "Customer";
+    const customerName = reservation.customerSnapshot?.name || "Customer";
 
     await Notification.create({
       recipientId: reservation.customerId,
@@ -138,10 +118,8 @@ async function createReservationReminders(
         `for ${reservation.startTime}.`,
       actionUrl: "/dashboard/reservations",
       metadata: {
-        reservationId:
-          String(reservation._id),
-        reservationNumber:
-          reservation.reservationNumber,
+        reservationId: String(reservation._id),
+        reservationNumber: reservation.reservationNumber,
         hoursBefore,
       },
       expiresAt: reservationDateTime,
@@ -157,27 +135,18 @@ async function createReservationReminders(
   };
 }
 
-async function cleanupNotifications(
-  payload: JobPayload,
-) {
+async function cleanupNotifications(payload: JobPayload) {
   const retentionDays =
     typeof payload.retentionDays === "number"
-      ? Math.max(
-          1,
-          Math.min(365, payload.retentionDays),
-        )
+      ? Math.max(1, Math.min(365, payload.retentionDays))
       : 90;
 
-  const cutoff = new Date(
-    Date.now() -
-      retentionDays * 24 * 60 * 60 * 1000,
-  );
+  const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
 
-  const result =
-    await Notification.deleteMany({
-      isRead: true,
-      createdAt: { $lt: cutoff },
-    });
+  const result = await Notification.deleteMany({
+    isRead: true,
+    createdAt: { $lt: cutoff },
+  });
 
   return {
     deleted: result.deletedCount,
@@ -185,33 +154,20 @@ async function cleanupNotifications(
   };
 }
 
-async function cleanupJobs(
-  payload: JobPayload,
-) {
+async function cleanupJobs(payload: JobPayload) {
   const retentionDays =
     typeof payload.retentionDays === "number"
-      ? Math.max(
-          1,
-          Math.min(365, payload.retentionDays),
-        )
+      ? Math.max(1, Math.min(365, payload.retentionDays))
       : 30;
 
-  const cutoff = new Date(
-    Date.now() -
-      retentionDays * 24 * 60 * 60 * 1000,
-  );
+  const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
 
-  const result =
-    await BackgroundJob.deleteMany({
-      status: {
-        $in: [
-          "completed",
-          "failed",
-          "cancelled",
-        ],
-      },
-      updatedAt: { $lt: cutoff },
-    });
+  const result = await BackgroundJob.deleteMany({
+    status: {
+      $in: ["completed", "failed", "cancelled"],
+    },
+    updatedAt: { $lt: cutoff },
+  });
 
   return {
     deleted: result.deletedCount,
@@ -219,20 +175,11 @@ async function cleanupJobs(
   };
 }
 
-const handlers: Record<
-  BackgroundJobKey,
-  JobHandler
-> = {
-  "coupons.expire": async () =>
-    expireCoupons(),
-  "reservations.reminder24h":
-    async () =>
-      createReservationReminders(24),
-  "reservations.reminder2h":
-    async () =>
-      createReservationReminders(2),
-  "notifications.cleanup":
-    cleanupNotifications,
+const handlers: Record<BackgroundJobKey, JobHandler> = {
+  "coupons.expire": async () => expireCoupons(),
+  "reservations.reminder24h": async () => createReservationReminders(24),
+  "reservations.reminder2h": async () => createReservationReminders(2),
+  "notifications.cleanup": cleanupNotifications,
   "jobs.cleanup": cleanupJobs,
 };
 

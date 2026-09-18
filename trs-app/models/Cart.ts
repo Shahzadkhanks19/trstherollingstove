@@ -1,8 +1,18 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const CartModifierSchema = new Schema(
   {
-    groupId: { type: Schema.Types.ObjectId, ref: "ModifierGroup", required: true },
+    groupId: {
+      type: Schema.Types.ObjectId,
+      ref: "ModifierGroup",
+      required: true,
+    },
     groupName: { type: String, required: true, trim: true, maxlength: 80 },
     optionId: { type: Schema.Types.ObjectId, required: true },
     optionName: { type: String, required: true, trim: true, maxlength: 80 },
@@ -10,7 +20,6 @@ const CartModifierSchema = new Schema(
   },
   { _id: false, versionKey: false },
 );
-
 
 const ComboSnapshotItemSchema = new Schema(
   {
@@ -26,7 +35,11 @@ const ComboSnapshotItemSchema = new Schema(
 
 const CartItemSchema = new Schema(
   {
-    menuItemId: { type: Schema.Types.ObjectId, ref: "MenuItem", required: true },
+    menuItemId: {
+      type: Schema.Types.ObjectId,
+      ref: "MenuItem",
+      required: true,
+    },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     imageUrl: { type: String, trim: true, maxlength: 500, default: "" },
     variantId: { type: Schema.Types.ObjectId, default: null },
@@ -43,7 +56,12 @@ const CartItemSchema = new Schema(
     comboItems: { type: [ComboSnapshotItemSchema], default: [] },
     modifiers: { type: [CartModifierSchema], default: [] },
     quantity: { type: Number, required: true, min: 1, max: 50 },
-    specialInstructions: { type: String, trim: true, maxlength: 500, default: "" },
+    specialInstructions: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "",
+    },
     lineUnitPrice: { type: Number, required: true, min: 0 },
     lineTotal: { type: Number, required: true, min: 0 },
   },
@@ -79,4 +97,5 @@ const CartSchema = new Schema(
 
 export type CartDocument = InferSchemaType<typeof CartSchema>;
 export const Cart: Model<CartDocument> =
-  (models.Cart as Model<CartDocument>) || model<CartDocument>("Cart", CartSchema);
+  (models.Cart as Model<CartDocument>) ||
+  model<CartDocument>("Cart", CartSchema);

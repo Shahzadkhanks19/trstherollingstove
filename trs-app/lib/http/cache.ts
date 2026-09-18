@@ -1,9 +1,7 @@
 import { createHash } from "node:crypto";
 
 export function createEtag(value: string | Buffer) {
-  const digest = createHash("sha256")
-    .update(value)
-    .digest("base64url");
+  const digest = createHash("sha256").update(value).digest("base64url");
 
   return `\"${digest}\"`;
 }

@@ -14,33 +14,20 @@ import { changePasswordSchema } from "@/validators/auth";
 export async function PATCH(request: Request) {
   try {
     const actor = await requireAuthenticatedUser();
-    const input = await validateRequestBody(
-      request,
-      changePasswordSchema,
-    );
+    const input = await validateRequestBody(request, changePasswordSchema);
 
     await connectToDatabase();
 
-    const user = await User.findById(actor.id).select(
-      "+passwordHash",
-    );
+    const user = await User.findById(actor.id).select("+passwordHash");
 
     if (
       !user ||
-      !(await verifyPassword(
-        input.currentPassword,
-        user.passwordHash,
-      ))
+      !(await verifyPassword(input.currentPassword, user.passwordHash))
     ) {
-      throw new AppError(
-        "Current password is incorrect.",
-        400,
-      );
+      throw new AppError("Current password is incorrect.", 400);
     }
 
-    user.passwordHash = await hashPassword(
-      input.newPassword,
-    );
+    user.passwordHash = await hashPassword(input.newPassword);
     user.passwordChangedAt = new Date();
     user.tokenVersion += 1;
 
@@ -54,8 +41,7 @@ export async function PATCH(request: Request) {
         {
           $set: {
             revokedAt: new Date(),
-            revokeReason:
-              "Password changed from admin security settings.",
+            revokeReason: "Password changed from admin security settings.",
           },
         },
       ),
@@ -69,8 +55,7 @@ export async function PATCH(request: Request) {
           "Administrator changed their account password from the admin panel.",
         severity: "warning",
         outcome: "success",
-        userAgent:
-          request.headers.get("user-agent") ?? "",
+        userAgent: request.headers.get("user-agent") ?? "",
         metadata: {
           sessionsRevoked: true,
           source: "admin_security_page",

@@ -15,7 +15,8 @@ const globalStore = globalThis as typeof globalThis & {
   trsRateLimitStore?: Map<string, RateLimitEntry>;
 };
 
-const store = globalStore.trsRateLimitStore ?? new Map<string, RateLimitEntry>();
+const store =
+  globalStore.trsRateLimitStore ?? new Map<string, RateLimitEntry>();
 globalStore.trsRateLimitStore = store;
 
 export function resolveClientIp(request: Request) {

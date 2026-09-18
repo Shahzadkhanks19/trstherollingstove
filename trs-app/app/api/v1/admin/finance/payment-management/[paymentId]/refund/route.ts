@@ -11,7 +11,10 @@ export async function POST(request: Request, context: Context) {
     const actor = await requirePermission("payments.manage");
     const { paymentId } = await context.params;
     const input = await validateRequestBody(request, paymentRefundSchema);
-    return successResponse(await refundManagedPayment(paymentId, input, actor.id), "Refund recorded.");
+    return successResponse(
+      await refundManagedPayment(paymentId, input, actor.id),
+      "Refund recorded.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

@@ -7,7 +7,9 @@ const cell = (value: string | number) => {
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 };
 
-export function internalConsumptionFinancialsToCsv(report: InternalConsumptionFinancialReport): string {
+export function internalConsumptionFinancialsToCsv(
+  report: InternalConsumptionFinancialReport,
+): string {
   const rows: Array<Array<string | number>> = [
     ["TRS Financial Reporting"],
     ["From", report.range.from],
@@ -29,25 +31,48 @@ export function internalConsumptionFinancialsToCsv(report: InternalConsumptionFi
     [],
     ["Internal Consumption By Type"],
     ["Type", "Orders", "Menu Value", "Inventory Cost"],
-    ...report.internalConsumption.byType.map((row) => [row.saleType, row.orders, row.menuValue, row.inventoryCost]),
+    ...report.internalConsumption.byType.map((row) => [
+      row.saleType,
+      row.orders,
+      row.menuValue,
+      row.inventoryCost,
+    ]),
     [],
     ["Daily Revenue Trend"],
     ["Date", "Gross Sales", "Net Revenue", "Tax", "COGS", "Gross Profit"],
-    ...report.revenueTrend.map((row) => [row.date, row.grossSales, row.netRevenue, row.tax, row.cogs, row.grossProfit]),
+    ...report.revenueTrend.map((row) => [
+      row.date,
+      row.grossSales,
+      row.netRevenue,
+      row.tax,
+      row.cogs,
+      row.grossProfit,
+    ]),
     [],
     ["Expense Breakdown"],
     ["Category", "Amount", "Tax", "Count"],
-    ...report.expenseBreakdown.map((row) => [row.category, row.amount, row.tax, row.count]),
+    ...report.expenseBreakdown.map((row) => [
+      row.category,
+      row.amount,
+      row.tax,
+      row.count,
+    ]),
   ];
   return `\uFEFF${rows.map((row) => row.map(cell).join(",")).join("\n")}`;
 }
 
-export async function internalConsumptionFinancialsToXlsx(report: InternalConsumptionFinancialReport): Promise<Buffer> {
+export async function internalConsumptionFinancialsToXlsx(
+  report: InternalConsumptionFinancialReport,
+): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "The Rolling Stove ERP";
   workbook.created = new Date();
 
-  const addSheet = (name: string, columns: ExcelJS.Column[], rows: Record<string, unknown>[]) => {
+  const addSheet = (
+    name: string,
+    columns: ExcelJS.Column[],
+    rows: Record<string, unknown>[],
+  ) => {
     const sheet = workbook.addWorksheet(name);
     sheet.columns = columns;
     sheet.addRows(rows);
@@ -75,8 +100,14 @@ export async function internalConsumptionFinancialsToXlsx(report: InternalConsum
     [
       { metric: "From", value: report.range.from },
       { metric: "To", value: report.range.to },
-      ...Object.entries(report.kpis).map(([metric, value]) => ({ metric, value })),
-      ...Object.entries(report.dataQuality).map(([metric, value]) => ({ metric: `dataQuality.${metric}`, value })),
+      ...Object.entries(report.kpis).map(([metric, value]) => ({
+        metric,
+        value,
+      })),
+      ...Object.entries(report.dataQuality).map(([metric, value]) => ({
+        metric: `dataQuality.${metric}`,
+        value,
+      })),
     ],
   );
 
@@ -86,7 +117,10 @@ export async function internalConsumptionFinancialsToXlsx(report: InternalConsum
       { header: "Discount Type", key: "metric", width: 28 },
       { header: "Amount", key: "value", width: 18 },
     ] as ExcelJS.Column[],
-    Object.entries(report.discounts).map(([metric, value]) => ({ metric, value })),
+    Object.entries(report.discounts).map(([metric, value]) => ({
+      metric,
+      value,
+    })),
   );
 
   addSheet(
@@ -136,7 +170,9 @@ export async function internalConsumptionFinancialsToXlsx(report: InternalConsum
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
-export async function internalConsumptionFinancialsToPdf(report: InternalConsumptionFinancialReport): Promise<Buffer> {
+export async function internalConsumptionFinancialsToPdf(
+  report: InternalConsumptionFinancialReport,
+): Promise<Buffer> {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -161,24 +197,35 @@ export async function internalConsumptionFinancialsToPdf(report: InternalConsump
 
   line("THE ROLLING STOVE", 18, true);
   line("Financial Statements & Internal Consumption Report", 13, true);
-  line(`${report.range.from.slice(0, 10)} to ${report.range.to.slice(0, 10)}`, 9);
+  line(
+    `${report.range.from.slice(0, 10)} to ${report.range.to.slice(0, 10)}`,
+    9,
+  );
   y -= 8;
 
   line("PROFIT & LOSS", 12, true);
   for (const row of report.profitAndLoss) {
-    line(`${row.label}: INR ${row.amount.toFixed(2)}${row.kind === "subtotal" ? "" : ` (${row.kind})`}`, 10, row.kind === "subtotal");
+    line(
+      `${row.label}: INR ${row.amount.toFixed(2)}${row.kind === "subtotal" ? "" : ` (${row.kind})`}`,
+      10,
+      row.kind === "subtotal",
+    );
   }
 
   y -= 8;
   line("KEY RATIOS", 12, true);
   line(`Gross margin: ${report.kpis.grossMarginPercent.toFixed(2)}%`);
   line(`Food cost: ${report.kpis.foodCostPercent.toFixed(2)}%`);
-  line(`Internal consumption / revenue: ${report.kpis.internalConsumptionPercent.toFixed(2)}%`);
+  line(
+    `Internal consumption / revenue: ${report.kpis.internalConsumptionPercent.toFixed(2)}%`,
+  );
   line(`Average order value: INR ${report.kpis.averageOrderValue.toFixed(2)}`);
 
   y -= 8;
   line("DISCOUNT ANALYSIS", 12, true);
-  (Object.entries(report.discounts) as Array<[string, number]>).forEach(([key, value]) => line(`${key}: INR ${value.toFixed(2)}`));
+  (Object.entries(report.discounts) as Array<[string, number]>).forEach(
+    ([key, value]) => line(`${key}: INR ${value.toFixed(2)}`),
+  );
 
   y -= 8;
   line("GST SUMMARY", 12, true);
@@ -190,16 +237,24 @@ export async function internalConsumptionFinancialsToPdf(report: InternalConsump
   y -= 8;
   line("INTERNAL CONSUMPTION", 12, true);
   line(`Menu value: INR ${report.internalConsumption.menuValue.toFixed(2)}`);
-  line(`Inventory cost: INR ${report.internalConsumption.inventoryCost.toFixed(2)}`);
+  line(
+    `Inventory cost: INR ${report.internalConsumption.inventoryCost.toFixed(2)}`,
+  );
   report.internalConsumption.byType.forEach((row) => {
-    line(`${row.saleType}: ${row.orders} orders | INR ${row.inventoryCost.toFixed(2)} cost`);
+    line(
+      `${row.saleType}: ${row.orders} orders | INR ${row.inventoryCost.toFixed(2)} cost`,
+    );
   });
 
   y -= 8;
   line("DATA QUALITY", 12, true);
   line(`Cost coverage: ${report.dataQuality.costCoveragePercent.toFixed(2)}%`);
-  line(`Customer orders without cost: ${report.dataQuality.customerOrdersWithoutCost}`);
-  line(`Internal orders without cost: ${report.dataQuality.internalOrdersWithoutCost}`);
+  line(
+    `Customer orders without cost: ${report.dataQuality.customerOrdersWithoutCost}`,
+  );
+  line(
+    `Internal orders without cost: ${report.dataQuality.internalOrdersWithoutCost}`,
+  );
 
   return Buffer.from(await pdf.save());
 }

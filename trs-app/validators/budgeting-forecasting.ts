@@ -17,11 +17,44 @@ const budgetBaseSchema = z.object({
   growthRate: z.coerce.number().min(-100).max(1000).default(0),
   inflationRate: z.coerce.number().min(-100).max(1000).default(0),
 });
-export const budgetCreateSchema = budgetBaseSchema.superRefine((value, context) => {
-  if (new Set(value.allocations.map((item) => item.month)).size !== value.allocations.length) context.addIssue({ code: "custom", path: ["allocations"], message: "Allocation months must be unique." });
-  if (value.allocations.some((item) => !item.month.startsWith(String(value.fiscalYear)))) context.addIssue({ code: "custom", path: ["allocations"], message: "Allocation months must match the fiscal year." });
-});
+export const budgetCreateSchema = budgetBaseSchema.superRefine(
+  (value, context) => {
+    if (
+      new Set(value.allocations.map((item) => item.month)).size !==
+      value.allocations.length
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["allocations"],
+        message: "Allocation months must be unique.",
+      });
+    if (
+      value.allocations.some(
+        (item) => !item.month.startsWith(String(value.fiscalYear)),
+      )
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["allocations"],
+        message: "Allocation months must match the fiscal year.",
+      });
+  },
+);
 export const budgetUpdateSchema = budgetBaseSchema.partial();
-export const budgetApprovalSchema = z.object({ action: z.enum(["submit", "approve", "reject", "archive"]), reason: z.string().trim().max(500).optional() });
-export const budgetForecastQuerySchema = z.object({ fiscalYear: z.coerce.number().int().min(2020).max(2200).default(new Date().getUTCFullYear()), scenario: z.enum(["base", "optimistic", "conservative"]).default("base"), department: z.string().trim().min(2).max(80).default("Company") });
-export const budgetForecastRebuildSchema = budgetForecastQuerySchema.extend({ source: z.enum(["manual", "scheduled", "system"]).default("manual") });
+export const budgetApprovalSchema = z.object({
+  action: z.enum(["submit", "approve", "reject", "archive"]),
+  reason: z.string().trim().max(500).optional(),
+});
+export const budgetForecastQuerySchema = z.object({
+  fiscalYear: z.coerce
+    .number()
+    .int()
+    .min(2020)
+    .max(2200)
+    .default(new Date().getUTCFullYear()),
+  scenario: z.enum(["base", "optimistic", "conservative"]).default("base"),
+  department: z.string().trim().min(2).max(80).default("Company"),
+});
+export const budgetForecastRebuildSchema = budgetForecastQuerySchema.extend({
+  source: z.enum(["manual", "scheduled", "system"]).default("manual"),
+});

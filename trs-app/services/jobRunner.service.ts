@@ -2,15 +2,9 @@ import { randomUUID } from "crypto";
 
 import { BackgroundJob } from "@/models/BackgroundJob";
 import { JobRun } from "@/models/JobRun";
-import {
-  retryDelayMs,
-} from "@/lib/jobs/time";
-import {
-  executeJobHandler,
-} from "@/services/jobHandlers.service";
-import type {
-  BackgroundJobKey,
-} from "@/types/jobs";
+import { retryDelayMs } from "@/lib/jobs/time";
+import { executeJobHandler } from "@/services/jobHandlers.service";
+import type { BackgroundJobKey } from "@/types/jobs";
 
 type WorkerResult = {
   processed: number;
@@ -19,20 +13,14 @@ type WorkerResult = {
   retried: number;
 };
 
-function errorMessage(
-  error: unknown,
-) {
+function errorMessage(error: unknown) {
   return error instanceof Error
     ? error.message.slice(0, 2000)
     : "Unknown background job error.";
 }
 
-async function claimNextJob(
-  workerId: string,
-) {
-  const staleLockBefore = new Date(
-    Date.now() - 15 * 60 * 1000,
-  );
+async function claimNextJob(workerId: string) {
+  const staleLockBefore = new Date(Date.now() - 15 * 60 * 1000);
 
   return BackgroundJob.findOneAndUpdate(
     {
@@ -75,12 +63,8 @@ async function claimNextJob(
   );
 }
 
-export async function runBackgroundWorker(
-  limit = 10,
-) {
-  const workerId =
-    `${process.env.HOSTNAME ?? "trs-worker"}-` +
-    randomUUID();
+export async function runBackgroundWorker(limit = 10) {
+  const workerId = `${process.env.HOSTNAME ?? "trs-worker"}-` + randomUUID();
 
   const summary: WorkerResult = {
     processed: 0,
@@ -90,8 +74,7 @@ export async function runBackgroundWorker(
   };
 
   for (let index = 0; index < limit; index += 1) {
-    const job =
-      await claimNextJob(workerId);
+    const job = await claimNextJob(workerId);
 
     if (!job) {
       break;
@@ -111,12 +94,10 @@ export async function runBackgroundWorker(
     });
 
     try {
-      const result =
-        await executeJobHandler(
-          job.key as BackgroundJobKey,
-          (job.payload ?? {}) as
-            Record<string, unknown>,
-        );
+      const result = await executeJobHandler(
+        job.key as BackgroundJobKey,
+        (job.payload ?? {}) as Record<string, unknown>,
+      );
 
       const completedAt = new Date();
 
@@ -143,9 +124,7 @@ export async function runBackgroundWorker(
           $set: {
             status: "completed",
             completedAt,
-            durationMs:
-              completedAt.getTime() -
-              startedAt.getTime(),
+            durationMs: completedAt.getTime() - startedAt.getTime(),
             result,
           },
         },
@@ -153,12 +132,10 @@ export async function runBackgroundWorker(
 
       summary.completed += 1;
     } catch (error) {
-      const message =
-        errorMessage(error);
+      const message = errorMessage(error);
       const failedAt = new Date();
 
-      const shouldRetry =
-        job.attempts < job.maxAttempts;
+      const shouldRetry = job.attempts < job.maxAttempts;
 
       await BackgroundJob.updateOne(
         {
@@ -167,20 +144,11 @@ export async function runBackgroundWorker(
         },
         {
           $set: {
-            status: shouldRetry
-              ? "queued"
-              : "failed",
+            status: shouldRetry ? "queued" : "failed",
             runAt: shouldRetry
-              ? new Date(
-                  Date.now() +
-                    retryDelayMs(
-                      job.attempts,
-                    ),
-                )
+              ? new Date(Date.now() + retryDelayMs(job.attempts))
               : job.runAt,
-            failedAt: shouldRetry
-              ? null
-              : failedAt,
+            failedAt: shouldRetry ? null : failedAt,
             lockedAt: null,
             lockedBy: "",
             lastError: message,
@@ -194,9 +162,7 @@ export async function runBackgroundWorker(
           $set: {
             status: "failed",
             completedAt: failedAt,
-            durationMs:
-              failedAt.getTime() -
-              startedAt.getTime(),
+            durationMs: failedAt.getTime() - startedAt.getTime(),
             error: message,
           },
         },

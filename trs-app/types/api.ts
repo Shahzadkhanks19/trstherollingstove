@@ -36,9 +36,7 @@ export type ApiSuccess<T> = ApiSuccessResponse<T>;
 
 export type ApiFailure = ApiErrorResponse;
 
-export type ApiResponse<T> =
-  | ApiSuccessResponse<T>
-  | ApiErrorResponse;
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export type Paginated<T> = {
   items: T[];
@@ -125,11 +123,7 @@ export type OrderStatus =
   | "refunded";
 
 export type PaymentStatus =
-  | "pending"
-  | "paid"
-  | "failed"
-  | "refunded"
-  | "partially_refunded";
+  "pending" | "paid" | "failed" | "refunded" | "partially_refunded";
 
 export type OrderSummary = {
   id: string;

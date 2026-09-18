@@ -84,8 +84,7 @@ export const PERMISSION_DEFINITIONS: Record<
   "menu.create": {
     name: "Create menu",
     module: "menu",
-    description:
-      "Create menu categories, items, modifiers, and tax classes.",
+    description: "Create menu categories, items, modifiers, and tax classes.",
   },
 
   "menu.update": {
@@ -136,7 +135,8 @@ export const PERMISSION_DEFINITIONS: Record<
   "kds.use": {
     name: "Use KDS",
     module: "kds",
-    description: "View and update kitchen tickets assigned to kitchen stations.",
+    description:
+      "View and update kitchen tickets assigned to kitchen stations.",
   },
 
   "kds.manage": {
@@ -158,7 +158,6 @@ export const PERMISSION_DEFINITIONS: Record<
     description: "Manage inventory.",
   },
 
-
   "suppliers.read": {
     name: "View suppliers",
     module: "suppliers",
@@ -175,15 +174,13 @@ export const PERMISSION_DEFINITIONS: Record<
   "purchases.read": {
     name: "View purchases",
     module: "purchases",
-    description:
-      "View purchase orders, goods receipts and supplier payments.",
+    description: "View purchase orders, goods receipts and supplier payments.",
   },
 
   "purchases.manage": {
     name: "Manage purchases",
     module: "purchases",
-    description:
-      "Create, approve, receive, cancel and settle purchase orders.",
+    description: "Create, approve, receive, cancel and settle purchase orders.",
   },
 
   "payments.read": {
@@ -225,8 +222,7 @@ export const PERMISSION_DEFINITIONS: Record<
   "reservations.manage": {
     name: "Manage reservations",
     module: "reservations",
-    description:
-      "Create, update, confirm, cancel and complete reservations.",
+    description: "Create, update, confirm, cancel and complete reservations.",
   },
 
   "notifications.read": {
@@ -264,22 +260,14 @@ export const PERMISSION_DEFINITIONS: Record<
     module: "cms",
     description: "Create, update, publish and delete website CMS content.",
   },
-
 };
 
-const allPermissions = Object.keys(
-  PERMISSION_DEFINITIONS,
-) as PermissionKey[];
+const allPermissions = Object.keys(PERMISSION_DEFINITIONS) as PermissionKey[];
 
-export const DEFAULT_ROLE_PERMISSIONS: Record<
-  string,
-  PermissionKey[]
-> = {
+export const DEFAULT_ROLE_PERMISSIONS: Record<string, PermissionKey[]> = {
   super_admin: allPermissions,
 
-  admin: allPermissions.filter(
-    (permission) => permission !== "roles.delete",
-  ),
+  admin: allPermissions.filter((permission) => permission !== "roles.delete"),
 
   manager: [
     "users.read",
@@ -341,11 +329,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<
     "payments.read",
   ],
 
-  kitchen_staff: [
-    "menu.read",
-    "orders.read",
-    "kds.use",
-  ],
+  kitchen_staff: ["menu.read", "orders.read", "kds.use"],
 
   inventory_staff: [
     "menu.read",
@@ -357,11 +341,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<
     "purchases.manage",
   ],
 
-  customer: [
-    "menu.read",
-    "orders.create",
-    "customer.self",
-  ],
+  customer: ["menu.read", "orders.create", "customer.self"],
 };
 
 export const DEFAULT_ROLE_NAMES: Record<string, string> = {

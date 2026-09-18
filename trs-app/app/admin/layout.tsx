@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
+export default function AdminRootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return children;
 }

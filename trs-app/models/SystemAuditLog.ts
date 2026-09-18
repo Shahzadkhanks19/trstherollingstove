@@ -6,10 +6,7 @@ import {
   type Model,
 } from "mongoose";
 
-import {
-  AUDIT_OUTCOMES,
-  AUDIT_SEVERITIES,
-} from "@/types/audit";
+import { AUDIT_OUTCOMES, AUDIT_SEVERITIES } from "@/types/audit";
 
 const SystemAuditLogSchema = new Schema(
   {
@@ -124,14 +121,10 @@ SystemAuditLogSchema.index({
   createdAt: -1,
 });
 
-export type SystemAuditLogDocument =
-  InferSchemaType<typeof SystemAuditLogSchema>;
+export type SystemAuditLogDocument = InferSchemaType<
+  typeof SystemAuditLogSchema
+>;
 
-export const SystemAuditLog:
-  Model<SystemAuditLogDocument> =
-    (models.SystemAuditLog as
-      Model<SystemAuditLogDocument>) ||
-    model<SystemAuditLogDocument>(
-      "SystemAuditLog",
-      SystemAuditLogSchema,
-    );
+export const SystemAuditLog: Model<SystemAuditLogDocument> =
+  (models.SystemAuditLog as Model<SystemAuditLogDocument>) ||
+  model<SystemAuditLogDocument>("SystemAuditLog", SystemAuditLogSchema);

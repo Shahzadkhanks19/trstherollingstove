@@ -19,7 +19,11 @@ export function isFullPortion(value: string): boolean {
 }
 
 export function canonicalNaanLabel(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 export function findMixedNaanPrice(
@@ -30,10 +34,12 @@ export function findMixedNaanPrice(
 ): number | null {
   const variant = canonicalNaanLabel(variantLabel);
   const platterName = canonicalNaanLabel(platterOptionName ?? "");
-  const entry = entries.find((candidate) =>
-    canonicalNaanLabel(candidate.variantLabel) === variant &&
-    (candidate.optionId === platterOptionId ||
-      (platterName && canonicalNaanLabel(candidate.optionName) === platterName)),
+  const entry = entries.find(
+    (candidate) =>
+      canonicalNaanLabel(candidate.variantLabel) === variant &&
+      (candidate.optionId === platterOptionId ||
+        (platterName &&
+          canonicalNaanLabel(candidate.optionName) === platterName)),
   );
   return entry ? Number(entry.price) : null;
 }

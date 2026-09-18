@@ -25,9 +25,7 @@ export async function GET() {
     await requirePermission("reports.read");
     await connectToDatabase();
 
-    return successResponse(
-      await getInventoryReportCacheStatistics(),
-    );
+    return successResponse(await getInventoryReportCacheStatistics());
   } catch (error) {
     return handleApiError(error);
   }
@@ -39,15 +37,13 @@ export async function DELETE(request: Request) {
     const url = new URL(request.url);
     const requestedType = url.searchParams.get("type");
     const reportType =
-      requestedType &&
-      TYPES.includes(requestedType as InventoryReportType)
+      requestedType && TYPES.includes(requestedType as InventoryReportType)
         ? (requestedType as InventoryReportType)
         : undefined;
 
     await connectToDatabase();
 
-    const result =
-      await invalidateInventoryReportCache(reportType);
+    const result = await invalidateInventoryReportCache(reportType);
 
     await recordInventoryAudit({
       actorUserId: actor.id,
@@ -64,10 +60,7 @@ export async function DELETE(request: Request) {
       data: result,
     });
 
-    return successResponse(
-      result,
-      "Inventory report cache invalidated.",
-    );
+    return successResponse(result, "Inventory report cache invalidated.");
   } catch (error) {
     return handleApiError(error);
   }

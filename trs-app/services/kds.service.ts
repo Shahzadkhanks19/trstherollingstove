@@ -12,7 +12,6 @@ import {
   publishOrderStatusChanged,
 } from "@/services/realtimeEvents.service";
 
-
 const ORDER_STATUS_RANK: Record<string, number> = {
   placed: 0,
   accepted: 1,
@@ -23,7 +22,10 @@ const ORDER_STATUS_RANK: Record<string, number> = {
   rejected: 5,
 };
 
-export async function syncOrderStatusFromKitchen(orderId: string, actorId?: string) {
+export async function syncOrderStatusFromKitchen(
+  orderId: string,
+  actorId?: string,
+) {
   const [order, tickets] = await Promise.all([
     Order.findById(orderId),
     KitchenTicket.find({ orderId: new Types.ObjectId(orderId) })
@@ -35,18 +37,33 @@ export async function syncOrderStatusFromKitchen(orderId: string, actorId?: stri
   if (["completed", "cancelled", "rejected"].includes(order.status)) return;
 
   const statuses = tickets.map((ticket) => ticket.status);
-  let nextStatus: "accepted" | "preparing" | "ready" | "completed" | "cancelled" | null = null;
+  let nextStatus:
+    "accepted" | "preparing" | "ready" | "completed" | "cancelled" | null =
+    null;
 
-  if (statuses.every((status) => status === "cancelled")) nextStatus = "cancelled";
-  else if (statuses.every((status) => ["served", "cancelled"].includes(status))) nextStatus = "completed";
-  else if (statuses.every((status) => ["ready", "served", "cancelled"].includes(status))) nextStatus = "ready";
-  else if (statuses.some((status) => status === "preparing")) nextStatus = "preparing";
-  else if (statuses.some((status) => status === "accepted")) nextStatus = "accepted";
+  if (statuses.every((status) => status === "cancelled"))
+    nextStatus = "cancelled";
+  else if (statuses.every((status) => ["served", "cancelled"].includes(status)))
+    nextStatus = "completed";
+  else if (
+    statuses.every((status) =>
+      ["ready", "served", "cancelled"].includes(status),
+    )
+  )
+    nextStatus = "ready";
+  else if (statuses.some((status) => status === "preparing"))
+    nextStatus = "preparing";
+  else if (statuses.some((status) => status === "accepted"))
+    nextStatus = "accepted";
 
   if (!nextStatus || nextStatus === order.status) return;
 
   // Kitchen activity must not accidentally move an order backwards.
-  if ((ORDER_STATUS_RANK[nextStatus] ?? -1) < (ORDER_STATUS_RANK[order.status] ?? -1)) return;
+  if (
+    (ORDER_STATUS_RANK[nextStatus] ?? -1) <
+    (ORDER_STATUS_RANK[order.status] ?? -1)
+  )
+    return;
 
   const previousStatus = order.status;
   const now = new Date();
@@ -119,9 +136,7 @@ export async function createKitchenTicketsFromOrder(
     $or: [
       {
         menuItemId: {
-          $in: input.items.map(
-            (item) => new Types.ObjectId(item.menuItemId),
-          ),
+          $in: input.items.map((item) => new Types.ObjectId(item.menuItemId)),
         },
       },
       {
@@ -129,10 +144,7 @@ export async function createKitchenTicketsFromOrder(
           $in: input.items
             .map((item) => item.categoryId)
             .filter(Boolean)
-            .map(
-              (id) =>
-                new Types.ObjectId(String(id)),
-            ),
+            .map((id) => new Types.ObjectId(String(id))),
         },
       },
     ],
@@ -155,7 +167,8 @@ export async function createKitchenTicketsFromOrder(
       {
         $set: {
           name: "Main Kitchen",
-          description: "Default kitchen station created automatically for incoming orders.",
+          description:
+            "Default kitchen station created automatically for incoming orders.",
           isActive: true,
           sortOrder: 0,
           targetPreparationMinutes: 15,
@@ -188,8 +201,7 @@ export async function createKitchenTicketsFromOrder(
       if (!stationIsActive) return false;
 
       const menuMatches =
-        rule.menuItemId &&
-        String(rule.menuItemId) === item.menuItemId;
+        rule.menuItemId && String(rule.menuItemId) === item.menuItemId;
 
       const categoryMatches =
         rule.categoryId &&
@@ -209,9 +221,7 @@ export async function createKitchenTicketsFromOrder(
   }
 
   const ticketWrites = [...stationMap.entries()]
-    .filter(([stationId]) =>
-      activeStationIdSet.has(stationId),
-    )
+    .filter(([stationId]) => activeStationIdSet.has(stationId))
     .map(([stationId, items]) =>
       KitchenTicket.updateOne(
         {
@@ -220,9 +230,7 @@ export async function createKitchenTicketsFromOrder(
         },
         {
           $setOnInsert: {
-            orderId: new Types.ObjectId(
-              input.orderId,
-            ),
+            orderId: new Types.ObjectId(input.orderId),
             orderNumber: input.orderNumber,
             stationId: new Types.ObjectId(stationId),
             source: input.source,
@@ -232,27 +240,26 @@ export async function createKitchenTicketsFromOrder(
             customerPhone: input.customerPhone ?? "",
             customerEmail: input.customerEmail ?? "",
             orderTakerName: input.orderTakerName ?? "",
-            estimatedReadyAt: input.estimatedReadyAt ? new Date(input.estimatedReadyAt) : null,
+            estimatedReadyAt: input.estimatedReadyAt
+              ? new Date(input.estimatedReadyAt)
+              : null,
             status: initialStatus,
             acceptedBy:
-              input.source === "pos"
-                ? new Types.ObjectId(input.actorId)
-                : null,
+              input.source === "pos" ? new Types.ObjectId(input.actorId) : null,
             acceptedAt: input.source === "pos" ? createdAt : null,
             startedAt: input.source === "pos" ? createdAt : null,
             items: items.map((item) => ({
-              orderItemId: new Types.ObjectId(
-                item.orderItemId,
-              ),
-              menuItemId: new Types.ObjectId(
-                item.menuItemId,
-              ),
+              orderItemId: new Types.ObjectId(item.orderItemId),
+              menuItemId: new Types.ObjectId(item.menuItemId),
               name: item.name,
               variantName:
                 item.variantName?.trim() ||
-                item.modifiers?.find((modifier) =>
-                  /portion|plate|size/i.test(modifier.name) ||
-                  /half\s*plate|full\s*plate|\bsmall\b|\bmedium\b|\blarge\b/i.test(modifier.value),
+                item.modifiers?.find(
+                  (modifier) =>
+                    /portion|plate|size/i.test(modifier.name) ||
+                    /half\s*plate|full\s*plate|\bsmall\b|\bmedium\b|\blarge\b/i.test(
+                      modifier.value,
+                    ),
                 )?.value ||
                 "",
               quantity: item.quantity,
@@ -308,36 +315,25 @@ export async function createKitchenTicketsFromOrder(
 
 export async function updateKitchenTicketStatus(
   ticketId: string,
-  status:
-    | "accepted"
-    | "preparing"
-    | "ready"
-    | "served"
-    | "cancelled",
+  status: "accepted" | "preparing" | "ready" | "served" | "cancelled",
   actorId: string,
 ) {
-  const ticket =
-    await KitchenTicket.findById(ticketId);
+  const ticket = await KitchenTicket.findById(ticketId);
 
   if (!ticket) {
-    throw new AppError(
-      "Kitchen ticket not found.",
-      404,
-    );
+    throw new AppError("Kitchen ticket not found.", 404);
   }
 
   const now = new Date();
   ticket.status = status;
 
   if (status === "accepted") {
-    ticket.acceptedBy =
-      new Types.ObjectId(actorId);
+    ticket.acceptedBy = new Types.ObjectId(actorId);
     ticket.acceptedAt = now;
   }
 
   if (status === "preparing") {
-    ticket.startedAt =
-      ticket.startedAt ?? now;
+    ticket.startedAt = ticket.startedAt ?? now;
   }
 
   if (status === "ready") {
@@ -379,63 +375,37 @@ export async function recalculateKitchenTicketStatus(
   ticketId: string,
   actorId?: string,
 ) {
-  const ticket =
-    await KitchenTicket.findById(ticketId);
+  const ticket = await KitchenTicket.findById(ticketId);
 
   if (!ticket) {
-    throw new AppError(
-      "Kitchen ticket not found.",
-      404,
-    );
+    throw new AppError("Kitchen ticket not found.", 404);
   }
 
-  const statuses = ticket.items.map(
-    (item) => item.status,
-  );
+  const statuses = ticket.items.map((item) => item.status);
 
-  if (
-    statuses.every(
-      (status) => status === "cancelled",
-    )
-  ) {
+  if (statuses.every((status) => status === "cancelled")) {
     ticket.status = "cancelled";
-    ticket.cancelledAt =
-      ticket.cancelledAt ?? new Date();
+    ticket.cancelledAt = ticket.cancelledAt ?? new Date();
   } else if (
     statuses.every((status) =>
-      ["ready", "served", "cancelled"].includes(
-        status,
-      ),
+      ["ready", "served", "cancelled"].includes(status),
     )
   ) {
-    ticket.status = statuses.some(
-      (status) => status === "served",
-    )
+    ticket.status = statuses.some((status) => status === "served")
       ? "served"
       : "ready";
 
     if (ticket.status === "ready") {
-      ticket.readyAt =
-        ticket.readyAt ?? new Date();
+      ticket.readyAt = ticket.readyAt ?? new Date();
     }
 
     if (ticket.status === "served") {
-      ticket.servedAt =
-        ticket.servedAt ?? new Date();
+      ticket.servedAt = ticket.servedAt ?? new Date();
     }
-  } else if (
-    statuses.some(
-      (status) => status === "preparing",
-    )
-  ) {
+  } else if (statuses.some((status) => status === "preparing")) {
     ticket.status = "preparing";
-    ticket.startedAt =
-      ticket.startedAt ?? new Date();
-  } else if (
-    statuses.some(
-      (status) => status === "accepted",
-    )
-  ) {
+    ticket.startedAt = ticket.startedAt ?? new Date();
+  } else if (statuses.some((status) => status === "accepted")) {
     ticket.status = "accepted";
   } else {
     ticket.status = "queued";
@@ -504,17 +474,13 @@ export async function autoCompleteOverdueKitchenTickets(input?: {
   thresholdMinutes?: number;
 }) {
   const configuredMinutes = Number(
-    input?.thresholdMinutes ??
-      process.env.KDS_AUTO_COMPLETE_MINUTES ??
-      30,
+    input?.thresholdMinutes ?? process.env.KDS_AUTO_COMPLETE_MINUTES ?? 30,
   );
   const thresholdMinutes = Number.isFinite(configuredMinutes)
     ? Math.min(180, Math.max(5, Math.round(configuredMinutes)))
     : 30;
   const now = new Date();
-  const cutoff = new Date(
-    now.getTime() - thresholdMinutes * 60 * 1000,
-  );
+  const cutoff = new Date(now.getTime() - thresholdMinutes * 60 * 1000);
 
   const candidates = await KitchenTicket.find({
     status: { $nin: ["served", "cancelled"] },
@@ -531,14 +497,23 @@ export async function autoCompleteOverdueKitchenTickets(input?: {
       },
     ],
   })
-    .select("_id orderId orderNumber stationId status priority items createdFromOrderAt")
+    .select(
+      "_id orderId orderNumber stationId status priority items createdFromOrderAt",
+    )
     .lean();
 
   if (candidates.length === 0) {
-    return { checked: 0, completedTickets: 0, completedOrders: 0, thresholdMinutes };
+    return {
+      checked: 0,
+      completedTickets: 0,
+      completedOrders: 0,
+      thresholdMinutes,
+    };
   }
 
-  const orderIds = [...new Set(candidates.map((ticket) => String(ticket.orderId)))];
+  const orderIds = [
+    ...new Set(candidates.map((ticket) => String(ticket.orderId))),
+  ];
   const eligibleOrders = await Order.find({
     _id: { $in: orderIds.map((id) => new Types.ObjectId(id)) },
     status: { $nin: ["cancelled", "rejected"] },
@@ -546,7 +521,9 @@ export async function autoCompleteOverdueKitchenTickets(input?: {
   })
     .select("_id")
     .lean();
-  const eligibleOrderIds = new Set(eligibleOrders.map((order) => String(order._id)));
+  const eligibleOrderIds = new Set(
+    eligibleOrders.map((order) => String(order._id)),
+  );
 
   let completedTickets = 0;
   const touchedOrderIds = new Set<string>();
@@ -607,4 +584,3 @@ export async function autoCompleteOverdueKitchenTickets(input?: {
     cutoff,
   };
 }
-

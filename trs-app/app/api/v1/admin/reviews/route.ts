@@ -24,10 +24,15 @@ export async function GET(request: Request) {
     const search = url.searchParams.get("search")?.trim();
 
     const filter: Record<string, unknown> = {};
-    if (requestedStatus && requestedStatus !== "all" && reviewStatuses.has(requestedStatus)) {
+    if (
+      requestedStatus &&
+      requestedStatus !== "all" &&
+      reviewStatuses.has(requestedStatus)
+    ) {
       filter.status = requestedStatus;
     }
-    if (Number.isInteger(rating) && rating >= 1 && rating <= 5) filter.rating = rating;
+    if (Number.isInteger(rating) && rating >= 1 && rating <= 5)
+      filter.rating = rating;
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
@@ -50,12 +55,19 @@ export async function GET(request: Request) {
       ]),
     ]);
 
-    const statusCounts = Object.fromEntries(counts.map((entry) => [entry._id, entry.count]));
+    const statusCounts = Object.fromEntries(
+      counts.map((entry) => [entry._id, entry.count]),
+    );
     statusCounts.all = counts.reduce((sum, entry) => sum + entry.count, 0);
 
     return successResponse({
       reviews,
-      pagination: { page, limit, total, pages: Math.max(1, Math.ceil(total / limit)) },
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.max(1, Math.ceil(total / limit)),
+      },
       statusCounts,
     });
   } catch (error) {

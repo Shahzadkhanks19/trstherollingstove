@@ -9,7 +9,10 @@ export async function POST(request: Request) {
   try {
     const actor = await requirePermission("reports.read");
     const input = await validateRequestBody(request, revenueRebuildSchema);
-    const snapshot = await buildRevenueSnapshot({ ...input, generatedBy: actor.id });
+    const snapshot = await buildRevenueSnapshot({
+      ...input,
+      generatedBy: actor.id,
+    });
     return successResponse(snapshot, "Revenue snapshot rebuilt.");
   } catch (error) {
     return handleApiError(error);

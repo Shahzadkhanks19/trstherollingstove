@@ -24,7 +24,11 @@ export const internalReasonSchema = z.object({
   isActive: z.boolean().default(true),
   sortOrder: z.coerce.number().int().min(0).max(9999).default(0),
   description: z.string().trim().max(500).default(""),
-  color: z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/).default("#C8102E"),
+  color: z
+    .string()
+    .trim()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .default("#C8102E"),
   icon: z.string().trim().max(80).default(""),
   requiresApproval: z.boolean().default(false),
   maximumMenuValue: z.coerce.number().min(0).max(100000).default(0),
@@ -45,7 +49,11 @@ export const staffMealSettingsSchema = z.object({
   requireManagerApprovalOnLimit: z.boolean(),
 });
 
-export const internalMasterTypeSchema = z.enum(["department", "designation", "meal_category"]);
+export const internalMasterTypeSchema = z.enum([
+  "department",
+  "designation",
+  "meal_category",
+]);
 export const internalMasterSchema = z.object({
   type: internalMasterTypeSchema,
   name: z.string().trim().min(2).max(100),
@@ -84,7 +92,12 @@ export const internalSettingsSchema = z.object({
   defaultMonthlyLimit: z.coerce.number().int().min(0).max(3000),
 });
 
-export const internalDirectoryTypeSchema = z.enum(["family_member", "complimentary_reason", "wastage_reason", "testing_reason"]);
+export const internalDirectoryTypeSchema = z.enum([
+  "family_member",
+  "complimentary_reason",
+  "wastage_reason",
+  "testing_reason",
+]);
 
 export const internalDirectorySchema = z.object({
   type: internalDirectoryTypeSchema,

@@ -36,7 +36,8 @@ export async function deliverInventoryReportByEmail(input: {
       status: "skipped",
       provider: "not_configured",
       messageId: "",
-      error: "EMAIL_PROVIDER_ENDPOINT or EMAIL_PROVIDER_TOKEN is not configured.",
+      error:
+        "EMAIL_PROVIDER_ENDPOINT or EMAIL_PROVIDER_TOKEN is not configured.",
     }));
   }
 
@@ -88,7 +89,10 @@ export async function deliverInventoryReportByEmail(input: {
         status: "failed",
         provider: "http_email_provider",
         messageId: "",
-        error: error instanceof Error ? error.message : "Unknown email delivery error.",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown email delivery error.",
       });
     }
   }

@@ -19,7 +19,10 @@ export async function GET(_request: Request, context: Context) {
     const { couponId } = await context.params;
     await connectToDatabase();
 
-    const coupon = await Coupon.findOne({ _id: couponId, deletedAt: null }).lean();
+    const coupon = await Coupon.findOne({
+      _id: couponId,
+      deletedAt: null,
+    }).lean();
     if (!coupon) throw new AppError("Coupon not found.", 404);
 
     return successResponse(coupon, "Coupon loaded.");
@@ -38,10 +41,15 @@ export async function PATCH(request: Request, context: Context) {
     const coupon = await Coupon.findOne({ _id: couponId, deletedAt: null });
     if (!coupon) throw new AppError("Coupon not found.", 404);
 
-    if (input.discountType === "free_item" || coupon.discountType === "free_item") {
+    if (
+      input.discountType === "free_item" ||
+      coupon.discountType === "free_item"
+    ) {
       const nextDiscountType = input.discountType ?? coupon.discountType;
       const nextFreeMenuItemId =
-        input.freeMenuItemId === undefined ? coupon.freeMenuItemId : input.freeMenuItemId;
+        input.freeMenuItemId === undefined
+          ? coupon.freeMenuItemId
+          : input.freeMenuItemId;
 
       if (nextDiscountType === "free_item") {
         const freeItemExists = await MenuItem.exists({
@@ -52,7 +60,10 @@ export async function PATCH(request: Request, context: Context) {
         });
 
         if (!freeItemExists) {
-          throw new AppError("Select a valid active and available free item.", 400);
+          throw new AppError(
+            "Select a valid active and available free item.",
+            400,
+          );
         }
       }
     }
@@ -62,14 +73,16 @@ export async function PATCH(request: Request, context: Context) {
       updatedBy: new Types.ObjectId(actor.id),
     };
 
-    if (input.startsAt !== undefined) update.startsAt = new Date(input.startsAt);
-    if (input.expiresAt !== undefined) update.expiresAt = new Date(input.expiresAt);
+    if (input.startsAt !== undefined)
+      update.startsAt = new Date(input.startsAt);
+    if (input.expiresAt !== undefined)
+      update.expiresAt = new Date(input.expiresAt);
 
     const nextDiscountType = input.discountType ?? coupon.discountType;
     const nextDiscountValue =
       nextDiscountType === "free_item"
         ? 0
-        : input.discountValue ?? coupon.discountValue;
+        : (input.discountValue ?? coupon.discountValue);
 
     if (nextDiscountType === "free_item") {
       update.discountValue = 0;
@@ -107,7 +120,10 @@ export async function PATCH(request: Request, context: Context) {
      * collection so the selected type is persisted even when that stale model
      * is still present in memory.
      */
-    if (input.couponChannel !== undefined || input.publicOfferPlacement !== undefined) {
+    if (
+      input.couponChannel !== undefined ||
+      input.publicOfferPlacement !== undefined
+    ) {
       const channelWrite = await Coupon.collection.updateOne(
         { _id: new Types.ObjectId(couponId), deletedAt: null },
         {
@@ -140,14 +156,20 @@ export async function PATCH(request: Request, context: Context) {
       input.couponChannel !== undefined &&
       persistedCoupon.couponChannel !== input.couponChannel
     ) {
-      throw new AppError("Coupon type could not be updated. Please try again.", 409);
+      throw new AppError(
+        "Coupon type could not be updated. Please try again.",
+        409,
+      );
     }
 
     if (
       input.publicOfferPlacement !== undefined &&
       persistedCoupon.publicOfferPlacement !== input.publicOfferPlacement
     ) {
-      throw new AppError("Offer placement could not be updated. Please try again.", 409);
+      throw new AppError(
+        "Offer placement could not be updated. Please try again.",
+        409,
+      );
     }
 
     await writeAuditLog({

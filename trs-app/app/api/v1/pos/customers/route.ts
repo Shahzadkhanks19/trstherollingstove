@@ -14,11 +14,17 @@ import { getCustomerRoleId } from "@/services/userManagement.service";
 
 function normalizePhone(value: unknown) {
   const phone = typeof value === "string" ? value.replace(/\D/g, "") : "";
-  if (phone.length !== 10) throw new AppError("Enter a valid 10-digit mobile number.", 422);
+  if (phone.length !== 10)
+    throw new AppError("Enter a valid 10-digit mobile number.", 422);
   return phone;
 }
 
-function serialize(user: { _id: unknown; name: string; phone?: string | null; email: string }) {
+function serialize(user: {
+  _id: unknown;
+  name: string;
+  phone?: string | null;
+  email: string;
+}) {
   return {
     id: String(user._id),
     name: user.name,
@@ -33,7 +39,8 @@ export async function GET(request: Request) {
     await requirePermission("pos.use");
     await connectToDatabase();
     const query = new URL(request.url).searchParams.get("q")?.trim() ?? "";
-    if (query.length < 2) return successResponse([], "Enter at least two characters.");
+    if (query.length < 2)
+      return successResponse([], "Enter at least two characters.");
 
     const roleId = await getCustomerRoleId();
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -60,20 +67,37 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const actor = await requirePermission("pos.use");
-    const input = (await request.json()) as { name?: unknown; phone?: unknown; email?: unknown };
-    const name = typeof input.name === "string" ? input.name.trim().slice(0, 80) : "";
-    if (name.length < 2) throw new AppError("Customer name must contain at least two characters.", 422);
+    const input = (await request.json()) as {
+      name?: unknown;
+      phone?: unknown;
+      email?: unknown;
+    };
+    const name =
+      typeof input.name === "string" ? input.name.trim().slice(0, 80) : "";
+    if (name.length < 2)
+      throw new AppError(
+        "Customer name must contain at least two characters.",
+        422,
+      );
     const phone = normalizePhone(input.phone);
-    const suppliedEmail = typeof input.email === "string" ? input.email.trim().toLowerCase() : "";
-    if (suppliedEmail && !/^\S+@\S+\.\S+$/.test(suppliedEmail)) throw new AppError("Enter a valid email address.", 422);
+    const suppliedEmail =
+      typeof input.email === "string" ? input.email.trim().toLowerCase() : "";
+    if (suppliedEmail && !/^\S+@\S+\.\S+$/.test(suppliedEmail))
+      throw new AppError("Enter a valid email address.", 422);
 
     await connectToDatabase();
-    const duplicate = await User.findOne({ $or: [{ phone }, ...(suppliedEmail ? [{ email: suppliedEmail }] : [])] })
+    const duplicate = await User.findOne({
+      $or: [{ phone }, ...(suppliedEmail ? [{ email: suppliedEmail }] : [])],
+    })
       .select("name phone email roleId isActive")
       .lean();
     if (duplicate) {
-      if (!duplicate.isActive) throw new AppError("A matching customer exists but is inactive.", 409);
-      return successResponse(serialize(duplicate), "Existing customer selected.");
+      if (!duplicate.isActive)
+        throw new AppError("A matching customer exists but is inactive.", 409);
+      return successResponse(
+        serialize(duplicate),
+        "Existing customer selected.",
+      );
     }
 
     const roleId = await getCustomerRoleId();
@@ -98,7 +122,11 @@ export async function POST(request: Request) {
       description: `POS customer ${name} created.`,
       metadata: { phone, emailProvided: Boolean(suppliedEmail) },
     });
-    publishPosCustomerChanged({ customerId: user.id, action: "created", actorId: actor.id });
+    publishPosCustomerChanged({
+      customerId: user.id,
+      action: "created",
+      actorId: actor.id,
+    });
     return successResponse(serialize(user), "Customer created.", 201);
   } catch (error) {
     return handleApiError(error);

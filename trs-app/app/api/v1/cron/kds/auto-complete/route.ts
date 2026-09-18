@@ -11,8 +11,10 @@ export const revalidate = 0;
 function safeEqual(supplied: string, expected: string) {
   const suppliedBuffer = Buffer.from(supplied);
   const expectedBuffer = Buffer.from(expected);
-  return suppliedBuffer.length === expectedBuffer.length &&
-    timingSafeEqual(suppliedBuffer, expectedBuffer);
+  return (
+    suppliedBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(suppliedBuffer, expectedBuffer)
+  );
 }
 
 function isAuthorized(request: Request) {
@@ -21,7 +23,7 @@ function isAuthorized(request: Request) {
   const authorization = request.headers.get("authorization");
   const supplied = authorization?.startsWith("Bearer ")
     ? authorization.slice(7)
-    : request.headers.get("x-cron-secret") ?? "";
+    : (request.headers.get("x-cron-secret") ?? "");
   return safeEqual(supplied, expected);
 }
 
@@ -35,7 +37,10 @@ export async function POST(request: Request) {
     }
 
     if (process.env.KDS_AUTO_COMPLETE_ENABLED === "false") {
-      return successResponse({ skipped: true }, "Kitchen auto-completion is disabled.");
+      return successResponse(
+        { skipped: true },
+        "Kitchen auto-completion is disabled.",
+      );
     }
 
     await connectToDatabase();

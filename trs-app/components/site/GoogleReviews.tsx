@@ -35,8 +35,7 @@ export const DEFAULT_GOOGLE_REVIEWS: readonly GoogleReview[] = [
     name: "Riya Singh",
     initials: "RS",
     time: "3 months ago",
-    review:
-      "Chur-chur naan is a must try—soft, buttery and full of flavour.",
+    review: "Chur-chur naan is a must try—soft, buttery and full of flavour.",
     rating: 5,
   },
   {
@@ -57,11 +56,7 @@ export const DEFAULT_GOOGLE_REVIEWS: readonly GoogleReview[] = [
   },
 ] as const;
 
-export function GoogleIcon({
-  className = "h-5 w-5",
-}: {
-  className?: string;
-}) {
+export function GoogleIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -149,51 +144,53 @@ export function GoogleReviews({
           compact ? "xl:grid-cols-4" : "lg:grid-cols-4"
         }`}
       >
-        {reviews.map(({ name, initials, time, review, rating: itemRating = 5 }, index) => (
-          <article
-            key={`${name}-${time}`}
-            className="group flex min-h-[220px] min-w-0 flex-col rounded-[16px] border border-[#E5E7EB] bg-white p-4 shadow-[0_2px_8px_rgba(60,64,67,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_10px_28px_rgba(60,64,67,.14)]"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <span
-                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${
-                    index % 4 === 0
-                      ? "bg-[#4285F4]"
-                      : index % 4 === 1
-                        ? "bg-[#34A853]"
-                        : index % 4 === 2
-                          ? "bg-[#EA4335]"
-                          : "bg-[#F9AB00]"
-                  }`}
-                >
-                  {initials}
-                </span>
+        {reviews.map(
+          ({ name, initials, time, review, rating: itemRating = 5 }, index) => (
+            <article
+              key={`${name}-${time}`}
+              className="group flex min-h-[220px] min-w-0 flex-col rounded-[16px] border border-[#E5E7EB] bg-white p-4 shadow-[0_2px_8px_rgba(60,64,67,.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_10px_28px_rgba(60,64,67,.14)]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${
+                      index % 4 === 0
+                        ? "bg-[#4285F4]"
+                        : index % 4 === 1
+                          ? "bg-[#34A853]"
+                          : index % 4 === 2
+                            ? "bg-[#EA4335]"
+                            : "bg-[#F9AB00]"
+                    }`}
+                  >
+                    {initials}
+                  </span>
 
-                <div className="min-w-0">
-                  <h3 className="truncate text-[11px] font-bold text-[#202124]">
-                    {name}
-                  </h3>
-                  <p className="mt-0.5 text-[9px] text-[#70757A]">{time}</p>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-[11px] font-bold text-[#202124]">
+                      {name}
+                    </h3>
+                    <p className="mt-0.5 text-[9px] text-[#70757A]">{time}</p>
+                  </div>
                 </div>
+
+                <GoogleIcon className="h-5 w-5 shrink-0" />
               </div>
 
-              <GoogleIcon className="h-5 w-5 shrink-0" />
-            </div>
+              <div className="mt-4">
+                <StarRating rating={itemRating} />
+              </div>
 
-            <div className="mt-4">
-              <StarRating rating={itemRating} />
-            </div>
+              <p className="mt-3 line-clamp-5 text-[10px] font-medium leading-5 text-[#3C4043]">
+                {review}
+              </p>
 
-            <p className="mt-3 line-clamp-5 text-[10px] font-medium leading-5 text-[#3C4043]">
-              {review}
-            </p>
-
-            <div className="mt-auto pt-4 text-[9px] font-medium text-[#70757A]">
-              Posted on Google
-            </div>
-          </article>
-        ))}
+              <div className="mt-auto pt-4 text-[9px] font-medium text-[#70757A]">
+                Posted on Google
+              </div>
+            </article>
+          ),
+        )}
       </div>
 
       <div className="mt-6 text-center">
@@ -205,10 +202,7 @@ export function GoogleReviews({
         >
           <GoogleIcon className="h-4 w-4" />
           View All Reviews on Google
-          <FontAwesomeIcon
-            icon={faArrowRight}
-            className="h-3 text-[#4285F4]"
-          />
+          <FontAwesomeIcon icon={faArrowRight} className="h-3 text-[#4285F4]" />
         </a>
       </div>
     </section>

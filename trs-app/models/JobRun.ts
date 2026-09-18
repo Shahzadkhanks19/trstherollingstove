@@ -6,10 +6,7 @@ import {
   type Model,
 } from "mongoose";
 
-import {
-  BACKGROUND_JOB_KEYS,
-  JOB_RUN_STATUSES,
-} from "@/types/jobs";
+import { BACKGROUND_JOB_KEYS, JOB_RUN_STATUSES } from "@/types/jobs";
 
 const JobRunSchema = new Schema(
   {
@@ -79,12 +76,8 @@ JobRunSchema.index({
   createdAt: -1,
 });
 
-export type JobRunDocument =
-  InferSchemaType<typeof JobRunSchema>;
+export type JobRunDocument = InferSchemaType<typeof JobRunSchema>;
 
 export const JobRun: Model<JobRunDocument> =
   (models.JobRun as Model<JobRunDocument>) ||
-  model<JobRunDocument>(
-    "JobRun",
-    JobRunSchema,
-  );
+  model<JobRunDocument>("JobRun", JobRunSchema);

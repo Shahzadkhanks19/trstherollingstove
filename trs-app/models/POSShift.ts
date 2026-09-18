@@ -66,8 +66,17 @@ const POSShiftSchema = new Schema(
       maxlength: 1000,
       default: "",
     },
-    closeApprovedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
-    closeApprovalNote: { type: String, trim: true, maxlength: 500, default: "" },
+    closeApprovedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    closeApprovalNote: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "",
+    },
     closeSnapshot: {
       orderCount: { type: Number, min: 0, default: 0 },
       grossSales: { type: Number, min: 0, default: 0 },
@@ -91,8 +100,7 @@ POSShiftSchema.index(
   },
 );
 
-export type POSShiftDocument =
-  InferSchemaType<typeof POSShiftSchema>;
+export type POSShiftDocument = InferSchemaType<typeof POSShiftSchema>;
 
 export const POSShift: Model<POSShiftDocument> =
   (models.POSShift as Model<POSShiftDocument>) ||

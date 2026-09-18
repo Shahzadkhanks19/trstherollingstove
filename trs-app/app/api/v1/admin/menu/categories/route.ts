@@ -65,7 +65,11 @@ export async function POST(request: Request) {
       description: `Menu category ${category.name} created.`,
     });
 
-    publishMenuUpdated({ action: "created", categoryId: category.id, actorId: actor.id });
+    publishMenuUpdated({
+      action: "created",
+      categoryId: category.id,
+      actorId: actor.id,
+    });
 
     return successResponse(category, "Category created.", 201);
   } catch (error) {

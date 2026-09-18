@@ -11,74 +11,51 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
     const actor = await requirePermission("kds.manage");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      updateRoutingRuleSchema,
-    );
+    const input = await validateRequestBody(request, updateRoutingRuleSchema);
 
     await connectToDatabase();
 
-    const rule =
-      await KitchenRoutingRule.findByIdAndUpdate(
-        id,
-        {
-          $set: {
-            ...input,
-            updatedBy: actor.id,
-          },
+    const rule = await KitchenRoutingRule.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          ...input,
+          updatedBy: actor.id,
         },
-        {
-          returnDocument: "after",
-        },
-      );
+      },
+      {
+        returnDocument: "after",
+      },
+    );
 
     if (!rule) {
-      throw new AppError(
-        "Kitchen routing rule not found.",
-        404,
-      );
+      throw new AppError("Kitchen routing rule not found.", 404);
     }
 
-    return successResponse(
-      rule,
-      "Kitchen routing rule updated.",
-    );
+    return successResponse(rule, "Kitchen routing rule updated.");
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  context: Context,
-) {
+export async function DELETE(_request: Request, context: Context) {
   try {
     await requirePermission("kds.manage");
     const { id } = await context.params;
 
     await connectToDatabase();
 
-    const rule =
-      await KitchenRoutingRule.findByIdAndDelete(id);
+    const rule = await KitchenRoutingRule.findByIdAndDelete(id);
 
     if (!rule) {
-      throw new AppError(
-        "Kitchen routing rule not found.",
-        404,
-      );
+      throw new AppError("Kitchen routing rule not found.", 404);
     }
 
-    return successResponse(
-      null,
-      "Kitchen routing rule deleted.",
-    );
+    return successResponse(null, "Kitchen routing rule deleted.");
   } catch (error) {
     return handleApiError(error);
   }

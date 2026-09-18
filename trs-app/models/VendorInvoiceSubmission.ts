@@ -73,26 +73,34 @@ const VendorInvoiceSubmissionSchema =
       notes: { type: String, trim: true, default: "", maxlength: 2000 },
       submittedAt: { type: Date, required: true, default: Date.now },
       reviewedAt: { type: Date, default: null },
-      reviewedBy: { type: Schema.Types.ObjectId, ref: "AdminUser", default: null },
-      rejectionReason: { type: String, trim: true, default: "", maxlength: 1000 },
+      reviewedBy: {
+        type: Schema.Types.ObjectId,
+        ref: "AdminUser",
+        default: null,
+      },
+      rejectionReason: {
+        type: String,
+        trim: true,
+        default: "",
+        maxlength: 1000,
+      },
       paidAt: { type: Date, default: null },
       createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
       updatedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     },
-    { timestamps: true, versionKey: false }
+    { timestamps: true, versionKey: false },
   );
 
 VendorInvoiceSubmissionSchema.index(
   { vendorId: 1, invoiceNumber: 1 },
-  { unique: true }
+  { unique: true },
 );
 VendorInvoiceSubmissionSchema.index({ status: 1, submittedAt: -1 });
 
 export const VendorInvoiceSubmission: Model<VendorInvoiceSubmissionDocument> =
   (models.VendorInvoiceSubmission as
-    | Model<VendorInvoiceSubmissionDocument>
-    | undefined) ??
+    Model<VendorInvoiceSubmissionDocument> | undefined) ??
   model<VendorInvoiceSubmissionDocument>(
     "VendorInvoiceSubmission",
-    VendorInvoiceSubmissionSchema
+    VendorInvoiceSubmissionSchema,
   );

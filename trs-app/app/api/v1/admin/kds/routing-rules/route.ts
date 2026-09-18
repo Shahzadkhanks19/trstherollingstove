@@ -27,10 +27,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const actor = await requirePermission("kds.manage");
-    const input = await validateRequestBody(
-      request,
-      createRoutingRuleSchema,
-    );
+    const input = await validateRequestBody(request, createRoutingRuleSchema);
 
     await connectToDatabase();
 
@@ -40,11 +37,7 @@ export async function POST(request: Request) {
       updatedBy: actor.id,
     });
 
-    return successResponse(
-      rule,
-      "Kitchen routing rule created.",
-      201,
-    );
+    return successResponse(rule, "Kitchen routing rule created.", 201);
   } catch (error) {
     return handleApiError(error);
   }

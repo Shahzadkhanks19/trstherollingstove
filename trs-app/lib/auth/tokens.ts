@@ -79,7 +79,9 @@ export async function verifyAccessToken(token: string): Promise<AccessClaims> {
   };
 }
 
-export async function verifyRefreshToken(token: string): Promise<RefreshClaims> {
+export async function verifyRefreshToken(
+  token: string,
+): Promise<RefreshClaims> {
   const { payload } = await jwtVerify(token, refreshSecret);
   if (
     payload.typ !== "refresh" ||

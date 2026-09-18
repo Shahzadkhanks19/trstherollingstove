@@ -18,22 +18,16 @@ export async function GET(request: Request) {
 
     if (!parsed.success) {
       throw new AppError(
-        parsed.error.issues[0]?.message ??
-          "Invalid report query.",
+        parsed.error.issues[0]?.message ?? "Invalid report query.",
         400,
       );
     }
 
     await connectToDatabase();
 
-    const range = resolveReportRange(
-      parsed.data.from,
-      parsed.data.to,
-    );
+    const range = resolveReportRange(parsed.data.from, parsed.data.to);
 
-    return successResponse(
-      await getInventoryReport(range),
-    );
+    return successResponse(await getInventoryReport(range));
   } catch (error) {
     return handleApiError(error);
   }

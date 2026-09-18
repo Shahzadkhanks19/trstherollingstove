@@ -64,13 +64,13 @@ KitchenRoutingRuleSchema.index(
   },
 );
 
-export type KitchenRoutingRuleDocument =
-  InferSchemaType<typeof KitchenRoutingRuleSchema>;
+export type KitchenRoutingRuleDocument = InferSchemaType<
+  typeof KitchenRoutingRuleSchema
+>;
 
-export const KitchenRoutingRule:
-  Model<KitchenRoutingRuleDocument> =
-    (models.KitchenRoutingRule as Model<KitchenRoutingRuleDocument>) ||
-    model<KitchenRoutingRuleDocument>(
-      "KitchenRoutingRule",
-      KitchenRoutingRuleSchema,
-    );
+export const KitchenRoutingRule: Model<KitchenRoutingRuleDocument> =
+  (models.KitchenRoutingRule as Model<KitchenRoutingRuleDocument>) ||
+  model<KitchenRoutingRuleDocument>(
+    "KitchenRoutingRule",
+    KitchenRoutingRuleSchema,
+  );

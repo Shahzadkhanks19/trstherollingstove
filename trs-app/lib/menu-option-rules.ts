@@ -54,7 +54,9 @@ export function getCustomerVisibleOptionGroups(
       }
       return {
         ...group,
-        choices: group.choices.filter((choice) => !choice.name.toLowerCase().includes("jain")),
+        choices: group.choices.filter(
+          (choice) => !choice.name.toLowerCase().includes("jain"),
+        ),
       };
     })
     .filter((group) => group.choices.length > 0);
@@ -95,14 +97,12 @@ export function getCategoryGuidance(categorySlug: string): string[] {
         "Dips and extra cheese where supported",
       ];
     case "brownies":
-      return [
-        "Regular, with ice cream or sizzling variants where configured",
-      ];
+      return ["Regular, with ice cream or sizzling variants where configured"];
     case "mocktails":
-      return [
-        "Size, sweetness and ice preference where configured",
-      ];
+      return ["Size, sweetness and ice preference where configured"];
     default:
-      return ["Available customisations are controlled from the admin dashboard"];
+      return [
+        "Available customisations are controlled from the admin dashboard",
+      ];
   }
 }

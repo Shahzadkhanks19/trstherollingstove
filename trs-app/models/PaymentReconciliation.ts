@@ -1,8 +1,19 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const PaymentReconciliationSchema = new Schema(
   {
-    paymentId: { type: Schema.Types.ObjectId, ref: "Payment", required: true, index: true },
+    paymentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Payment",
+      required: true,
+      index: true,
+    },
     providerPaymentId: { type: String, trim: true, default: "", index: true },
     reconciliationType: {
       type: String,
@@ -29,10 +40,19 @@ const PaymentReconciliationSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-PaymentReconciliationSchema.index({ paymentId: 1, reconciliationType: 1, createdAt: -1 });
+PaymentReconciliationSchema.index({
+  paymentId: 1,
+  reconciliationType: 1,
+  createdAt: -1,
+});
 PaymentReconciliationSchema.index({ status: 1, reconciledAt: -1 });
 
-export type PaymentReconciliationRecord = InferSchemaType<typeof PaymentReconciliationSchema>;
+export type PaymentReconciliationRecord = InferSchemaType<
+  typeof PaymentReconciliationSchema
+>;
 export const PaymentReconciliation: Model<PaymentReconciliationRecord> =
   (models.PaymentReconciliation as Model<PaymentReconciliationRecord>) ||
-  model<PaymentReconciliationRecord>("PaymentReconciliation", PaymentReconciliationSchema);
+  model<PaymentReconciliationRecord>(
+    "PaymentReconciliation",
+    PaymentReconciliationSchema,
+  );

@@ -4,8 +4,16 @@ const schema = z.object({
   ACCESS_TOKEN_SECRET: z.string().min(32, "Must be at least 32 characters"),
   REFRESH_TOKEN_SECRET: z.string().min(32, "Must be at least 32 characters"),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
-  ADMIN_ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(604800),
-  REFRESH_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(2592000),
+  ADMIN_ACCESS_TOKEN_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(604800),
+  REFRESH_TOKEN_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(2592000),
   AUTH_COOKIE_SECURE: z.enum(["true", "false"]).default("false"),
   AUTH_COOKIE_DOMAIN: z.preprocess(
     (value) => (value === "" ? undefined : value),

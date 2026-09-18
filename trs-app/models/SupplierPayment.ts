@@ -34,14 +34,7 @@ const SupplierPaymentSchema = new Schema(
     },
     method: {
       type: String,
-      enum: [
-        "cash",
-        "upi",
-        "bank_transfer",
-        "cheque",
-        "card",
-        "other",
-      ],
+      enum: ["cash", "upi", "bank_transfer", "cheque", "card", "other"],
       required: true,
     },
     referenceNumber: {
@@ -73,13 +66,10 @@ const SupplierPaymentSchema = new Schema(
   },
 );
 
-export type SupplierPaymentDocument =
-  InferSchemaType<typeof SupplierPaymentSchema>;
+export type SupplierPaymentDocument = InferSchemaType<
+  typeof SupplierPaymentSchema
+>;
 
-export const SupplierPayment:
-  Model<SupplierPaymentDocument> =
-    (models.SupplierPayment as Model<SupplierPaymentDocument>) ||
-    model<SupplierPaymentDocument>(
-      "SupplierPayment",
-      SupplierPaymentSchema,
-    );
+export const SupplierPayment: Model<SupplierPaymentDocument> =
+  (models.SupplierPayment as Model<SupplierPaymentDocument>) ||
+  model<SupplierPaymentDocument>("SupplierPayment", SupplierPaymentSchema);

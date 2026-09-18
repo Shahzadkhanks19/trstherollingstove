@@ -100,7 +100,10 @@ export async function PATCH(request: Request) {
       .lean();
 
     if (items.length !== input.itemIds.length) {
-      throw new AppError("One or more selected menu items no longer exist.", 400);
+      throw new AppError(
+        "One or more selected menu items no longer exist.",
+        400,
+      );
     }
     if (items.some((item) => item.isCombo)) {
       throw new AppError(
@@ -117,7 +120,8 @@ export async function PATCH(request: Request) {
           price: Number(variant.compareAtPrice ?? variant.price),
           compareAtPrice: null,
         }));
-        const defaultVariant = variants.find((variant) => variant.isDefault) ?? variants[0];
+        const defaultVariant =
+          variants.find((variant) => variant.isDefault) ?? variants[0];
         const restoredBasePrice = defaultVariant
           ? Number(defaultVariant.price)
           : Number(item.compareAtPrice ?? item.basePrice);
@@ -146,12 +150,17 @@ export async function PATCH(request: Request) {
           const originalPrice = Number(variant.compareAtPrice ?? variant.price);
           return {
             ...variant,
-            price: calculateDiscountedPrice(originalPrice, discountType, discountValue),
+            price: calculateDiscountedPrice(
+              originalPrice,
+              discountType,
+              discountValue,
+            ),
             compareAtPrice: roundMoney(originalPrice),
           };
         });
         const defaultVariant =
-          discountedVariants.find((variant) => variant.isDefault) ?? discountedVariants[0];
+          discountedVariants.find((variant) => variant.isDefault) ??
+          discountedVariants[0];
 
         return {
           updateOne: {
@@ -174,7 +183,11 @@ export async function PATCH(request: Request) {
           filter: { _id: item._id, deletedAt: null },
           update: {
             $set: {
-              basePrice: calculateDiscountedPrice(originalPrice, discountType, discountValue),
+              basePrice: calculateDiscountedPrice(
+                originalPrice,
+                discountType,
+                discountValue,
+              ),
               compareAtPrice: roundMoney(originalPrice),
               updatedBy,
             },
@@ -183,8 +196,13 @@ export async function PATCH(request: Request) {
       };
     });
 
-    const result = await MenuItem.collection.bulkWrite(operations, { ordered: true });
-    const actionLabel = input.action === "remove_discount" ? "removed discounts from" : "applied discounts to";
+    const result = await MenuItem.collection.bulkWrite(operations, {
+      ordered: true,
+    });
+    const actionLabel =
+      input.action === "remove_discount"
+        ? "removed discounts from"
+        : "applied discounts to";
 
     await writeAuditLog({
       actorUserId: actor.id,

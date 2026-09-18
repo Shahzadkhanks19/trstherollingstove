@@ -40,27 +40,19 @@ export async function POST(request: Request) {
     );
     await connectToDatabase();
 
-    const reportRequest =
-      await InventoryReportRequest.create({
-        ...input,
-        requestedBy: actor.id,
-        status: "processing",
-        startedAt: new Date(),
-      });
+    const reportRequest = await InventoryReportRequest.create({
+      ...input,
+      requestedBy: actor.id,
+      status: "processing",
+      startedAt: new Date(),
+    });
 
     try {
-      const rows = await generateInventoryReport(
-        input.reportType,
-        {
-          ...input.filters,
-          from: input.filters.from
-            ? new Date(input.filters.from)
-            : undefined,
-          to: input.filters.to
-            ? new Date(input.filters.to)
-            : undefined,
-        },
-      );
+      const rows = await generateInventoryReport(input.reportType, {
+        ...input.filters,
+        from: input.filters.from ? new Date(input.filters.from) : undefined,
+        to: input.filters.to ? new Date(input.filters.to) : undefined,
+      });
 
       const downloadUrl =
         input.format === "csv"
@@ -76,9 +68,7 @@ export async function POST(request: Request) {
       reportRequest.status = "failed";
       reportRequest.completedAt = new Date();
       reportRequest.errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Report generation failed.";
+        error instanceof Error ? error.message : "Report generation failed.";
       await reportRequest.save();
     }
 

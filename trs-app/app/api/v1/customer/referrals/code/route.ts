@@ -35,7 +35,10 @@ export async function GET() {
       throw new AppError("Unable to generate referral code.", 500);
     }
 
-    const appUrl = (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
+    const appUrl = (process.env.APP_URL || "http://localhost:3000").replace(
+      /\/$/,
+      "",
+    );
 
     return successResponse(
       {

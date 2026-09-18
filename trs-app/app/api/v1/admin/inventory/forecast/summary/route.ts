@@ -12,9 +12,7 @@ export async function GET(request: Request) {
 
     await connectToDatabase();
 
-    return successResponse(
-      await getForecastSummary(runId),
-    );
+    return successResponse(await getForecastSummary(runId));
   } catch (error) {
     return handleApiError(error);
   }

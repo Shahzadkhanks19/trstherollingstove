@@ -3,7 +3,8 @@ import { OrderSuccessClient } from "@/components/order-success/OrderSuccessClien
 
 export const metadata: Metadata = {
   title: "Order Confirmed",
-  description: "View your confirmed TRS order, payment details, pickup time, earned coins, tracking and invoice.",
+  description:
+    "View your confirmed TRS order, payment details, pickup time, earned coins, tracking and invoice.",
   robots: { index: false, follow: false },
 };
 

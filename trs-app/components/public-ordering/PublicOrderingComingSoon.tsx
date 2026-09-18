@@ -6,11 +6,7 @@ import {
   faUtensils,
 } from "@fortawesome/free-solid-svg-icons";
 
-export function PublicOrderingComingSoon({
-  message,
-}: {
-  message: string;
-}) {
+export function PublicOrderingComingSoon({ message }: { message: string }) {
   return (
     <main className="min-h-[calc(100vh-8rem)] bg-[radial-gradient(circle_at_top,#fff5ec_0%,#fff_45%,#f8f4f1_100%)] px-4 py-16 sm:px-6 sm:py-24">
       <section className="mx-auto max-w-2xl overflow-hidden rounded-[32px] border border-[#eadfd7] bg-white shadow-2xl shadow-[#173044]/10">
@@ -45,7 +41,8 @@ export function PublicOrderingComingSoon({
             </Link>
           </div>
           <p className="mt-6 text-xs font-semibold leading-5 text-[#8b8078]">
-            The contact form remains available for enquiries, feedback and complaints.
+            The contact form remains available for enquiries, feedback and
+            complaints.
           </p>
         </div>
       </section>

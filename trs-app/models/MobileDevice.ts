@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const MobileDeviceSchema = new Schema(
   {
@@ -75,10 +81,7 @@ const MobileDeviceSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-MobileDeviceSchema.index(
-  { userId: 1, installationId: 1 },
-  { unique: true },
-);
+MobileDeviceSchema.index({ userId: 1, installationId: 1 }, { unique: true });
 MobileDeviceSchema.index({ pushToken: 1 }, { sparse: true });
 
 export type MobileDeviceDocument = InferSchemaType<typeof MobileDeviceSchema>;

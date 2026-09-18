@@ -8,12 +8,7 @@ import {
 
 export const auditLogQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(100)
-    .default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().trim().max(200).optional(),
   module: z.string().trim().max(100).optional(),
   action: z.string().trim().max(160).optional(),
@@ -26,16 +21,9 @@ export const auditLogQuerySchema = z.object({
 
 export const securityEventQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(100)
-    .default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().trim().max(200).optional(),
-  eventType: z
-    .enum(SECURITY_EVENT_TYPES)
-    .optional(),
+  eventType: z.enum(SECURITY_EVENT_TYPES).optional(),
   severity: z.enum(AUDIT_SEVERITIES).optional(),
   resolved: z
     .enum(["true", "false"])
@@ -46,9 +34,5 @@ export const securityEventQuerySchema = z.object({
 });
 
 export const resolveSecurityEventSchema = z.object({
-  resolutionNote: z
-    .string()
-    .trim()
-    .min(3)
-    .max(1000),
+  resolutionNote: z.string().trim().min(3).max(1000),
 });

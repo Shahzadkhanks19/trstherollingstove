@@ -1,8 +1,4 @@
-import {
-  createHmac,
-  randomUUID,
-  timingSafeEqual,
-} from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 
 import { env } from "@/config/env";
 
@@ -14,9 +10,7 @@ function secret() {
     process.env.ACCESS_TOKEN_SECRET?.trim();
 
   if (!value) {
-    throw new Error(
-      "INVOICE_VERIFICATION_SECRET is not configured.",
-    );
+    throw new Error("INVOICE_VERIFICATION_SECRET is not configured.");
   }
 
   return value;
@@ -31,10 +25,7 @@ export function signInvoiceVerification(
   invoiceNumber: string,
 ) {
   return createHmac("sha256", secret())
-    .update(
-      `${SIGNATURE_VERSION}:${publicId}:${invoiceNumber}`,
-      "utf8",
-    )
+    .update(`${SIGNATURE_VERSION}:${publicId}:${invoiceNumber}`, "utf8")
     .digest("hex");
 }
 
@@ -47,10 +38,7 @@ export function verifyInvoiceSignature(
     return false;
   }
 
-  const expected = signInvoiceVerification(
-    publicId,
-    invoiceNumber,
-  );
+  const expected = signInvoiceVerification(publicId, invoiceNumber);
 
   return timingSafeEqual(
     Buffer.from(expected, "hex"),

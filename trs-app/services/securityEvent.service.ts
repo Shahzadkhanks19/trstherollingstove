@@ -1,10 +1,7 @@
 import { Types } from "mongoose";
 
 import { SecurityEvent } from "@/models/SecurityEvent";
-import type {
-  AuditSeverity,
-  SecurityEventType,
-} from "@/types/audit";
+import type { AuditSeverity, SecurityEventType } from "@/types/audit";
 
 type RecordSecurityEventInput = {
   eventType: SecurityEventType;
@@ -18,15 +15,12 @@ type RecordSecurityEventInput = {
   metadata?: Record<string, unknown>;
 };
 
-export async function recordSecurityEvent(
-  input: RecordSecurityEventInput,
-) {
+export async function recordSecurityEvent(input: RecordSecurityEventInput) {
   return SecurityEvent.create({
     eventType: input.eventType,
     severity: input.severity ?? "warning",
     userId:
-      input.userId &&
-      Types.ObjectId.isValid(input.userId)
+      input.userId && Types.ObjectId.isValid(input.userId)
         ? new Types.ObjectId(input.userId)
         : null,
     email: input.email ?? "",

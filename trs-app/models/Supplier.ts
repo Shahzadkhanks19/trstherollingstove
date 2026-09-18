@@ -128,8 +128,7 @@ SupplierSchema.index({
   name: 1,
 });
 
-export type SupplierDocument =
-  InferSchemaType<typeof SupplierSchema>;
+export type SupplierDocument = InferSchemaType<typeof SupplierSchema>;
 
 export const Supplier: Model<SupplierDocument> =
   (models.Supplier as Model<SupplierDocument>) ||

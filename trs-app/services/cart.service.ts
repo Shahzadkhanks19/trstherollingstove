@@ -1,7 +1,12 @@
 import { Types } from "mongoose";
 
 import { AppError } from "@/lib/errors/AppError";
-import { isMediumPizzaVariant, isThinCrustEnabled, thinCrustGroupId, thinCrustOptionId } from "@/lib/menu-special-config";
+import {
+  isMediumPizzaVariant,
+  isThinCrustEnabled,
+  thinCrustGroupId,
+  thinCrustOptionId,
+} from "@/lib/menu-special-config";
 import {
   MIXED_NAAN_GROUP_ID,
   MIXED_NAAN_GROUP_NAME,
@@ -33,7 +38,14 @@ type ResolvedCartLine = {
   comboOriginalPrice: number | null;
   comboSellingPrice: number | null;
   comboSavings: number | null;
-  comboItems: Array<{ menuItemId: Types.ObjectId | null; name: string; variantId: Types.ObjectId | null; variantName: string; quantity: number; unitPrice: number }>;
+  comboItems: Array<{
+    menuItemId: Types.ObjectId | null;
+    name: string;
+    variantId: Types.ObjectId | null;
+    variantName: string;
+    quantity: number;
+    unitPrice: number;
+  }>;
   modifiers: Array<{
     groupId: Types.ObjectId;
     groupName: string;
@@ -53,7 +65,8 @@ function roundMoney(value: number) {
 
 function canonicalVariantLabel(value: string): string {
   const normalized = value.trim().toLowerCase();
-  if (normalized.includes("small") || normalized.includes("regular")) return "regular";
+  if (normalized.includes("small") || normalized.includes("regular"))
+    return "regular";
   if (normalized.includes("medium")) return "medium";
   if (normalized.includes("large")) return "large";
   if (normalized.includes("half")) return "half";
@@ -97,9 +110,12 @@ export async function resolveCartLine(input: {
   let baseUnitPrice = menuItem.basePrice;
   let variantId: Types.ObjectId | null = null;
   let variantName = "";
-  let compareAtUnitPrice = menuItem.compareAtPrice == null ? null : Number(menuItem.compareAtPrice);
+  let compareAtUnitPrice =
+    menuItem.compareAtPrice == null ? null : Number(menuItem.compareAtPrice);
 
-  const activeVariants = (menuItem.variants ?? []).filter((entry) => entry.isActive);
+  const activeVariants = (menuItem.variants ?? []).filter(
+    (entry) => entry.isActive,
+  );
   if (activeVariants.length > 0 && !input.variantId) {
     throw new AppError("Select an available size or portion.", 400);
   }
@@ -112,7 +128,8 @@ export async function resolveCartLine(input: {
     baseUnitPrice = variant.price;
     variantId = new Types.ObjectId(input.variantId);
     variantName = variant.name;
-    compareAtUnitPrice = variant.compareAtPrice == null ? null : Number(variant.compareAtPrice);
+    compareAtUnitPrice =
+      variant.compareAtPrice == null ? null : Number(variant.compareAtPrice);
   }
 
   const requestedModifiers = input.modifiers ?? [];
@@ -146,7 +163,10 @@ export async function resolveCartLine(input: {
       throw new AppError("Thin crust is not available for this pizza.", 400);
     }
     if (!isMediumPizzaVariant(variantName)) {
-      throw new AppError("Thin crust is available only with the Medium pizza size.", 400);
+      throw new AppError(
+        "Thin crust is available only with the Medium pizza size.",
+        400,
+      );
     }
     if (
       thinCrustSelections.length !== 1 ||
@@ -173,20 +193,30 @@ export async function resolveCartLine(input: {
 
   for (const group of groups) {
     const selectedCount = (grouped.get(group._id.toString()) ?? []).length;
-    const minimum = group.isRequired ? Math.max(1, group.minSelections) : group.minSelections;
+    const minimum = group.isRequired
+      ? Math.max(1, group.minSelections)
+      : group.minSelections;
     if (selectedCount < minimum) {
-      throw new AppError(`${group.name} requires at least ${minimum} selection${minimum === 1 ? "" : "s"}.`, 400);
+      throw new AppError(
+        `${group.name} requires at least ${minimum} selection${minimum === 1 ? "" : "s"}.`,
+        400,
+      );
     }
     if (selectedCount > group.maxSelections) {
-      throw new AppError(`${group.name} allows at most ${group.maxSelections} selection${group.maxSelections === 1 ? "" : "s"}.`, 400);
+      throw new AppError(
+        `${group.name} allows at most ${group.maxSelections} selection${group.maxSelections === 1 ? "" : "s"}.`,
+        400,
+      );
     }
   }
 
   if (grouped.size > 0) {
-
     for (const groupId of grouped.keys()) {
       if (!allowedGroupIds.has(groupId)) {
-        throw new AppError("A selected modifier is not available for this item.", 400);
+        throw new AppError(
+          "A selected modifier is not available for this item.",
+          400,
+        );
       }
     }
 
@@ -214,7 +244,9 @@ export async function resolveCartLine(input: {
         );
         if (!option) throw new AppError("Modifier option is unavailable.", 400);
 
-        const selectedQuantity = optionIds.filter((id) => id === optionId).length;
+        const selectedQuantity = optionIds.filter(
+          (id) => id === optionId,
+        ).length;
         const maximumQuantity = option.maxQuantity ?? 1;
         if (selectedQuantity > maximumQuantity) {
           throw new AppError(
@@ -243,7 +275,10 @@ export async function resolveCartLine(input: {
   if (combinationPricing?.enabled) {
     const combinationGroupId = combinationPricing.modifierGroupId?.toString();
     if (!combinationGroupId || !allowedGroupIds.has(combinationGroupId)) {
-      throw new AppError("Combination pricing is not configured correctly for this item.", 400);
+      throw new AppError(
+        "Combination pricing is not configured correctly for this item.",
+        400,
+      );
     }
     const selectedCombinationOptions = grouped.get(combinationGroupId) ?? [];
     if (selectedCombinationOptions.length !== 1) {
@@ -257,7 +292,10 @@ export async function resolveCartLine(input: {
         candidate.variantLabel.trim().toLowerCase() === normalizedVariant,
     );
     if (!entry) {
-      throw new AppError("The selected platter combination has no configured price.", 400);
+      throw new AppError(
+        "The selected platter combination has no configured price.",
+        400,
+      );
     }
     baseUnitPrice = entry.price;
   }
@@ -280,10 +318,14 @@ export async function resolveCartLine(input: {
     const currentEntry = (combinationPricing.entries ?? []).find(
       (candidate) =>
         candidate.optionId?.toString() === selectedPlatterId &&
-        candidate.variantLabel.trim().toLowerCase() === variantName.trim().toLowerCase(),
+        candidate.variantLabel.trim().toLowerCase() ===
+          variantName.trim().toLowerCase(),
     );
     if (!selectedPlatterId || !currentEntry) {
-      throw new AppError("Select the platter sabji before choosing a second naan.", 400);
+      throw new AppError(
+        "Select the platter sabji before choosing a second naan.",
+        400,
+      );
     }
 
     const alternateId = mixedNaanSelections[0].optionId;
@@ -319,7 +361,9 @@ export async function resolveCartLine(input: {
       );
     }
     const higherPrice = Math.max(Number(currentEntry.price), alternatePrice);
-    const priceDifference = roundMoney(higherPrice - Number(currentEntry.price));
+    const priceDifference = roundMoney(
+      higherPrice - Number(currentEntry.price),
+    );
     resolvedModifiers.push({
       groupId: new Types.ObjectId(MIXED_NAAN_GROUP_ID),
       groupName: MIXED_NAAN_GROUP_NAME,
@@ -345,10 +389,14 @@ export async function resolveCartLine(input: {
     0,
   );
   const lineUnitPrice = roundMoney(baseUnitPrice + modifierTotal);
-  const originalUnitPrice = !menuItem.isCombo && compareAtUnitPrice != null && compareAtUnitPrice > baseUnitPrice
-    ? roundMoney(compareAtUnitPrice + modifierTotal)
-    : null;
-  const isDiscountedItem = originalUnitPrice != null && originalUnitPrice > lineUnitPrice;
+  const originalUnitPrice =
+    !menuItem.isCombo &&
+    compareAtUnitPrice != null &&
+    compareAtUnitPrice > baseUnitPrice
+      ? roundMoney(compareAtUnitPrice + modifierTotal)
+      : null;
+  const isDiscountedItem =
+    originalUnitPrice != null && originalUnitPrice > lineUnitPrice;
 
   return {
     menuItemId: new Types.ObjectId(input.menuItemId),
@@ -359,10 +407,14 @@ export async function resolveCartLine(input: {
     baseUnitPrice,
     isDiscountedItem,
     originalUnitPrice,
-    itemDiscountSavings: isDiscountedItem ? roundMoney((originalUnitPrice ?? lineUnitPrice) - lineUnitPrice) : null,
+    itemDiscountSavings: isDiscountedItem
+      ? roundMoney((originalUnitPrice ?? lineUnitPrice) - lineUnitPrice)
+      : null,
     isCombo: menuItem.isCombo ?? false,
     comboId: menuItem.isCombo ? menuItem._id : null,
-    comboOriginalPrice: menuItem.isCombo ? (menuItem.comboOriginalPrice ?? menuItem.compareAtPrice ?? null) : null,
+    comboOriginalPrice: menuItem.isCombo
+      ? (menuItem.comboOriginalPrice ?? menuItem.compareAtPrice ?? null)
+      : null,
     comboSellingPrice: menuItem.isCombo ? baseUnitPrice : null,
     comboSavings: menuItem.isCombo ? (menuItem.comboSavings ?? null) : null,
     comboItems,

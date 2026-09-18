@@ -12,8 +12,12 @@ export async function GET(request: Request) {
     await connectToDatabase();
     const active = new URL(request.url).searchParams.get("active");
     const filter = active === "true" ? { isActive: true } : {};
-    return successResponse(await PickupPerson.find(filter).sort({ name: 1 }).lean());
-  } catch (error) { return handleApiError(error); }
+    return successResponse(
+      await PickupPerson.find(filter).sort({ name: 1 }).lean(),
+    );
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 export async function POST(request: Request) {
@@ -21,7 +25,13 @@ export async function POST(request: Request) {
     const actor = await requirePermission("purchases.manage");
     const input = await validateRequestBody(request, createPickupPersonSchema);
     await connectToDatabase();
-    const person = await PickupPerson.create({ ...input, createdBy: actor.id, updatedBy: actor.id });
+    const person = await PickupPerson.create({
+      ...input,
+      createdBy: actor.id,
+      updatedBy: actor.id,
+    });
     return successResponse(person, "Pickup person created.", 201);
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

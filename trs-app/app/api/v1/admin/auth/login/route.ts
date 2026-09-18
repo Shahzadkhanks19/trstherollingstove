@@ -1,7 +1,11 @@
 import { after, NextResponse } from "next/server";
 
 import { authConfig } from "@/config/auth";
-import { ACCESS_COOKIE, REFRESH_COOKIE, REMEMBER_COOKIE } from "@/lib/auth/cookies";
+import {
+  ACCESS_COOKIE,
+  REFRESH_COOKIE,
+  REMEMBER_COOKIE,
+} from "@/lib/auth/cookies";
 import { getRequestMetadata } from "@/lib/auth/requestMeta";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { AppError } from "@/lib/errors/AppError";
@@ -21,7 +25,12 @@ export async function POST(request: Request) {
     await connectToDatabase();
     const role = await Role.findById(user.roleId).lean();
 
-    if (!role || !role.isActive || role.key === "customer" || role.key === "user") {
+    if (
+      !role ||
+      !role.isActive ||
+      role.key === "customer" ||
+      role.key === "user"
+    ) {
       throw new AppError("This account does not have admin access.", 403);
     }
 

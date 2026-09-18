@@ -43,7 +43,10 @@ export async function GET(_: Request, context: Context) {
 export async function PATCH(request: Request, context: Context) {
   try {
     const actor = await requirePermission("notifications.manage");
-    const input = await validateRequestBody(request, updateContactMessageSchema);
+    const input = await validateRequestBody(
+      request,
+      updateContactMessageSchema,
+    );
     await connectToDatabase();
     const { enquiryId } = await context.params;
     const update: Record<string, unknown> = { ...input };
@@ -64,7 +67,12 @@ export async function PATCH(request: Request, context: Context) {
       entityId: enquiryId,
       description: `Enquiry updated with status ${enquiry.status}.`,
     });
-    publishEnquiryEvent({ action: "updated", enquiryId, actorId: actor.id, status: enquiry.status });
+    publishEnquiryEvent({
+      action: "updated",
+      enquiryId,
+      actorId: actor.id,
+      status: enquiry.status,
+    });
     return successResponse(enquiry, "Enquiry updated.");
   } catch (error) {
     return handleApiError(error);
@@ -86,7 +94,12 @@ export async function DELETE(_: Request, context: Context) {
       entityId: enquiryId,
       description: `Enquiry from ${enquiry.email} deleted.`,
     });
-    publishEnquiryEvent({ action: "updated", enquiryId, actorId: actor.id, status: "deleted" });
+    publishEnquiryEvent({
+      action: "updated",
+      enquiryId,
+      actorId: actor.id,
+      status: "deleted",
+    });
     return successResponse({ id: enquiryId }, "Enquiry deleted.");
   } catch (error) {
     return handleApiError(error);

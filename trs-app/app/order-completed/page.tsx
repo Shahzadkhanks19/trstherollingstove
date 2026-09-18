@@ -5,7 +5,8 @@ import { OrderCompletedClient } from "@/components/order-completed/OrderComplete
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
   title: "Order Completed",
-  description: "Your TRS order has been completed. View earned coins, reorder, or share your experience.",
+  description:
+    "Your TRS order has been completed. View earned coins, reorder, or share your experience.",
 };
 
 function PageFallback() {

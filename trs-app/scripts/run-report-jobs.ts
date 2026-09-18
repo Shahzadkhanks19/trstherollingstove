@@ -1,5 +1,8 @@
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { enqueueDueScheduledReports, runReportJobWorker } from "@/services/report-job-runner.service";
+import {
+  enqueueDueScheduledReports,
+  runReportJobWorker,
+} from "@/services/report-job-runner.service";
 
 async function main() {
   const limit = Math.min(Math.max(Number(process.argv[2] || 25), 1), 50);

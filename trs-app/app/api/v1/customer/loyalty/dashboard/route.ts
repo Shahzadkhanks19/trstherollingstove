@@ -1,2 +1,20 @@
-import { requireAuthenticatedUser } from "@/lib/auth/session";import { connectToDatabase } from "@/lib/db/mongoose";import { AppError } from "@/lib/errors/AppError";import { handleApiError } from "@/lib/errors/handleApiError";import { successResponse } from "@/lib/http/apiResponse";import { getCustomerLoyaltyDashboard } from "@/services/loyalty.service";
-export async function GET(){try{const actor=await requireAuthenticatedUser();if(actor.roleKey!=="customer")throw new AppError("Customer access required.",403);await connectToDatabase();return successResponse(await getCustomerLoyaltyDashboard(actor.id),"Loyalty dashboard loaded.");}catch(error){return handleApiError(error);}}
+import { requireAuthenticatedUser } from "@/lib/auth/session";
+import { connectToDatabase } from "@/lib/db/mongoose";
+import { AppError } from "@/lib/errors/AppError";
+import { handleApiError } from "@/lib/errors/handleApiError";
+import { successResponse } from "@/lib/http/apiResponse";
+import { getCustomerLoyaltyDashboard } from "@/services/loyalty.service";
+export async function GET() {
+  try {
+    const actor = await requireAuthenticatedUser();
+    if (actor.roleKey !== "customer")
+      throw new AppError("Customer access required.", 403);
+    await connectToDatabase();
+    return successResponse(
+      await getCustomerLoyaltyDashboard(actor.id),
+      "Loyalty dashboard loaded.",
+    );
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

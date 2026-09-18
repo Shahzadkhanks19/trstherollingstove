@@ -16,8 +16,7 @@ export async function GET(request: Request) {
 
     if (!parsed.success) {
       throw new AppError(
-        parsed.error.issues[0]?.message ??
-          "Invalid inventory report query.",
+        parsed.error.issues[0]?.message ?? "Invalid inventory report query.",
         400,
       );
     }

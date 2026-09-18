@@ -4,7 +4,10 @@ import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
 import { validateRequestBody } from "@/lib/validation/validateRequest";
 import { MobileDevice } from "@/models/MobileDevice";
-import { revokeMobileDevice, upsertMobileDevice } from "@/services/mobile.service";
+import {
+  revokeMobileDevice,
+  upsertMobileDevice,
+} from "@/services/mobile.service";
 import { mobileDeviceSchema } from "@/validators/mobile";
 
 export async function GET(request: Request) {
@@ -41,7 +44,9 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const actor = await requireMobileCustomer(request);
-    const installationId = new URL(request.url).searchParams.get("installationId");
+    const installationId = new URL(request.url).searchParams.get(
+      "installationId",
+    );
 
     await connectToDatabase();
     await revokeMobileDevice(actor.id, installationId ?? undefined);

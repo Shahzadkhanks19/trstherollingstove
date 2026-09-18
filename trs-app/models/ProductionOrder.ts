@@ -48,7 +48,7 @@ const ProductionLineSchema = new Schema(
     actualQuantity: { type: Number, required: true, min: 0, default: 0 },
     unitCost: { type: Number, required: true, min: 0, default: 0 },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const ProductionOrderSchema = new Schema<ProductionOrderDocument>(
@@ -88,7 +88,12 @@ const ProductionOrderSchema = new Schema<ProductionOrderDocument>(
     startedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
-    cancellationReason: { type: String, default: "", trim: true, maxlength: 500 },
+    cancellationReason: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 500,
+    },
     plannedYield: { type: Number, required: true, min: 0 },
     actualYield: { type: Number, required: true, min: 0, default: 0 },
     yieldUnit: { type: String, required: true, trim: true, maxlength: 40 },
@@ -113,7 +118,7 @@ const ProductionOrderSchema = new Schema<ProductionOrderDocument>(
       default: null,
     },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 ProductionOrderSchema.index({ status: 1, plannedStartAt: 1 });

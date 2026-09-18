@@ -1,11 +1,8 @@
-export const CART_UPDATED_EVENT =
-  "trs:cart-updated";
+export const CART_UPDATED_EVENT = "trs:cart-updated";
 
-export const AUTH_UPDATED_EVENT =
-  "trs:auth-updated";
+export const AUTH_UPDATED_EVENT = "trs:auth-updated";
 
-export const GUEST_CART_KEY =
-  "trs_guest_cart_v1";
+export const GUEST_CART_KEY = "trs_guest_cart_v1";
 
 export type CartModifier = {
   groupId?: string;
@@ -84,38 +81,19 @@ function emptyCart(): CartApiData {
   };
 }
 
-function recalculateGuestCart(
-  items: CartApiItem[],
-): CartApiData {
-  const normalized = items.map(
-    (item) => ({
-      ...item,
-      quantity: Math.max(
-        1,
-        Math.min(50, item.quantity),
-      ),
-      lineTotal:
-        Math.round(
-          item.lineUnitPrice *
-            Math.max(
-              1,
-              Math.min(
-                50,
-                item.quantity,
-              ),
-            ) *
-            100,
-        ) / 100,
-    }),
-  );
+function recalculateGuestCart(items: CartApiItem[]): CartApiData {
+  const normalized = items.map((item) => ({
+    ...item,
+    quantity: Math.max(1, Math.min(50, item.quantity)),
+    lineTotal:
+      Math.round(
+        item.lineUnitPrice * Math.max(1, Math.min(50, item.quantity)) * 100,
+      ) / 100,
+  }));
 
   const subtotal =
     Math.round(
-      normalized.reduce(
-        (sum, item) =>
-          sum + item.lineTotal,
-        0,
-      ) * 100,
+      normalized.reduce((sum, item) => sum + item.lineTotal, 0) * 100,
     ) / 100;
 
   return {
@@ -124,30 +102,21 @@ function recalculateGuestCart(
     taxTotal: 0,
     discountTotal: 0,
     grandTotal: subtotal,
-    itemCount: normalized.reduce(
-      (sum, item) =>
-        sum + item.quantity,
-      0,
-    ),
+    itemCount: normalized.reduce((sum, item) => sum + item.quantity, 0),
   };
 }
 
-export function publishCartUpdated(
-  itemCount: number,
-): void {
+export function publishCartUpdated(itemCount: number): void {
   if (typeof window === "undefined") {
     return;
   }
 
   window.dispatchEvent(
-    new CustomEvent(
-      CART_UPDATED_EVENT,
-      {
-        detail: {
-          itemCount,
-        },
+    new CustomEvent(CART_UPDATED_EVENT, {
+      detail: {
+        itemCount,
       },
-    ),
+    }),
   );
 }
 
@@ -156,11 +125,7 @@ export function publishAuthUpdated(): void {
     return;
   }
 
-  window.dispatchEvent(
-    new CustomEvent(
-      AUTH_UPDATED_EVENT,
-    ),
-  );
+  window.dispatchEvent(new CustomEvent(AUTH_UPDATED_EVENT));
 }
 
 export function readGuestCart(): CartApiData {
@@ -169,50 +134,32 @@ export function readGuestCart(): CartApiData {
   }
 
   try {
-    const raw =
-      window.localStorage.getItem(
-        GUEST_CART_KEY,
-      );
+    const raw = window.localStorage.getItem(GUEST_CART_KEY);
 
     if (!raw) {
       return emptyCart();
     }
 
-    const parsed =
-      JSON.parse(
-        raw,
-      ) as Partial<CartApiData>;
+    const parsed = JSON.parse(raw) as Partial<CartApiData>;
 
     return recalculateGuestCart(
-      Array.isArray(parsed.items)
-        ? (parsed.items as CartApiItem[])
-        : [],
+      Array.isArray(parsed.items) ? (parsed.items as CartApiItem[]) : [],
     );
   } catch {
     return emptyCart();
   }
 }
 
-export function writeGuestCart(
-  cart: CartApiData,
-): CartApiData {
+export function writeGuestCart(cart: CartApiData): CartApiData {
   if (typeof window === "undefined") {
     return cart;
   }
 
-  const next =
-    recalculateGuestCart(
-      cart.items,
-    );
+  const next = recalculateGuestCart(cart.items);
 
-  window.localStorage.setItem(
-    GUEST_CART_KEY,
-    JSON.stringify(next),
-  );
+  window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(next));
 
-  publishCartUpdated(
-    next.itemCount,
-  );
+  publishCartUpdated(next.itemCount);
 
   return next;
 }
@@ -222,9 +169,7 @@ export function clearGuestCart(): void {
     return;
   }
 
-  window.localStorage.removeItem(
-    GUEST_CART_KEY,
-  );
+  window.localStorage.removeItem(GUEST_CART_KEY);
 
   publishCartUpdated(0);
 }
@@ -232,80 +177,48 @@ export function clearGuestCart(): void {
 function guestLineKey(
   item: Pick<
     CartApiItem,
-    | "menuItemId"
-    | "variantId"
-    | "modifiers"
-    | "specialInstructions"
+    "menuItemId" | "variantId" | "modifiers" | "specialInstructions"
   >,
 ): string {
-  const modifiers = (
-    item.modifiers ?? []
-  )
-    .map(
-      (modifier) =>
-        `${modifier.groupId ?? ""}:${
-          modifier.optionId ?? ""
-        }`,
-    )
+  const modifiers = (item.modifiers ?? [])
+    .map((modifier) => `${modifier.groupId ?? ""}:${modifier.optionId ?? ""}`)
     .sort()
     .join("|");
 
-  return `${item.menuItemId ?? ""}::${
-    item.variantId ?? ""
-  }::${modifiers}::${
+  return `${item.menuItemId ?? ""}::${item.variantId ?? ""}::${modifiers}::${
     item.specialInstructions ?? ""
   }`;
 }
 
-export function addGuestCartItem(
-  input: GuestCartInput,
-): CartApiData {
+export function addGuestCartItem(input: GuestCartInput): CartApiData {
   const cart = readGuestCart();
 
   const lineUnitPrice =
     input.baseUnitPrice +
-    input.modifiers.reduce(
-      (sum, modifier) =>
-        sum + modifier.unitPrice,
-      0,
-    );
+    input.modifiers.reduce((sum, modifier) => sum + modifier.unitPrice, 0);
 
   const candidate: CartApiItem = {
-    _id: `guest-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}`,
+    _id: `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`,
 
     menuItemId: input.menuItemId,
-    variantId:
-      input.variantId ?? null,
+    variantId: input.variantId ?? null,
     name: input.name,
     imageUrl: input.imageUrl,
     variantName: input.variantName,
-    baseUnitPrice:
-      input.baseUnitPrice,
+    baseUnitPrice: input.baseUnitPrice,
     modifiers: input.modifiers,
     quantity: input.quantity,
-    specialInstructions:
-      input.specialInstructions ?? "",
+    specialInstructions: input.specialInstructions ?? "",
     lineUnitPrice,
-    lineTotal:
-      lineUnitPrice *
-      input.quantity,
+    lineTotal: lineUnitPrice * input.quantity,
   };
 
-  const existing =
-    cart.items.find(
-      (item) =>
-        guestLineKey(item) ===
-        guestLineKey(candidate),
-    );
+  const existing = cart.items.find(
+    (item) => guestLineKey(item) === guestLineKey(candidate),
+  );
 
   if (existing) {
-    existing.quantity = Math.min(
-      50,
-      existing.quantity +
-        input.quantity,
-    );
+    existing.quantity = Math.min(50, existing.quantity + input.quantity);
   } else {
     cart.items.push(candidate);
   }
@@ -319,55 +232,37 @@ export function updateGuestCartItem(
 ): CartApiData {
   const cart = readGuestCart();
 
-  const item = cart.items.find(
-    (entry) =>
-      entry._id === itemId,
-  );
+  const item = cart.items.find((entry) => entry._id === itemId);
 
   if (item) {
-    item.quantity = Math.max(
-      1,
-      Math.min(50, quantity),
-    );
+    item.quantity = Math.max(1, Math.min(50, quantity));
   }
 
   return writeGuestCart(cart);
 }
 
-export function removeGuestCartItem(
-  itemId: string,
-): CartApiData {
+export function removeGuestCartItem(itemId: string): CartApiData {
   const cart = readGuestCart();
 
-  cart.items =
-    cart.items.filter(
-      (entry) =>
-        entry._id !== itemId,
-    );
+  cart.items = cart.items.filter((entry) => entry._id !== itemId);
 
   return writeGuestCart(cart);
 }
 
 async function requestCurrentCustomer(): Promise<Response> {
-  return fetch(
-    "/api/v1/auth/me",
-    {
-      cache: "no-store",
-      credentials: "include",
-    },
-  );
+  return fetch("/api/v1/auth/me", {
+    cache: "no-store",
+    credentials: "include",
+  });
 }
 
 async function refreshAuthentication(): Promise<boolean> {
   try {
-    const response = await fetch(
-      "/api/v1/auth/refresh",
-      {
-        method: "POST",
-        cache: "no-store",
-        credentials: "include",
-      },
-    );
+    const response = await fetch("/api/v1/auth/refresh", {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+    });
 
     return response.ok;
   } catch {
@@ -376,22 +271,17 @@ async function refreshAuthentication(): Promise<boolean> {
 }
 
 export async function getCurrentCustomerData(): Promise<CurrentCustomer | null> {
-  let response =
-    await requestCurrentCustomer();
+  let response = await requestCurrentCustomer();
 
   /*
    * The access token may have expired while
    * the refresh token is still valid.
    */
-  if (
-    response.status === 401
-  ) {
-    const refreshed =
-      await refreshAuthentication();
+  if (response.status === 401) {
+    const refreshed = await refreshAuthentication();
 
     if (refreshed) {
-      response =
-        await requestCurrentCustomer();
+      response = await requestCurrentCustomer();
     }
   }
 
@@ -399,14 +289,9 @@ export async function getCurrentCustomerData(): Promise<CurrentCustomer | null> 
     return null;
   }
 
-  const body =
-    (await response.json()) as ApiEnvelope<CurrentCustomer>;
+  const body = (await response.json()) as ApiEnvelope<CurrentCustomer>;
 
-  if (
-    !body.data ||
-    body.data.roleKey !==
-      "customer"
-  ) {
+  if (!body.data || body.data.roleKey !== "customer") {
     return null;
   }
 
@@ -414,44 +299,27 @@ export async function getCurrentCustomerData(): Promise<CurrentCustomer | null> 
 }
 
 export async function getCurrentCustomer(): Promise<boolean> {
-  return Boolean(
-    await getCurrentCustomerData(),
-  );
+  return Boolean(await getCurrentCustomerData());
 }
 
 export async function fetchCustomerCart(): Promise<CartApiData> {
-  let response = await fetch(
-    "/api/v1/customer/cart",
-    {
+  let response = await fetch("/api/v1/customer/cart", {
+    cache: "no-store",
+    credentials: "include",
+  });
+
+  if (response.status === 401 && (await refreshAuthentication())) {
+    response = await fetch("/api/v1/customer/cart", {
       cache: "no-store",
       credentials: "include",
-    },
-  );
-
-  if (
-    response.status === 401 &&
-    (await refreshAuthentication())
-  ) {
-    response = await fetch(
-      "/api/v1/customer/cart",
-      {
-        cache: "no-store",
-        credentials: "include",
-      },
-    );
+    });
   }
 
-  const body =
-    (await response.json()) as ApiEnvelope<CartApiData>;
+  const body = (await response.json()) as ApiEnvelope<CartApiData>;
 
-  if (
-    !response.ok ||
-    !body.data
-  ) {
+  if (!response.ok || !body.data) {
     throw new Error(
-      body.error?.message ??
-        body.message ??
-        "Unable to load cart.",
+      body.error?.message ?? body.message ?? "Unable to load cart.",
     );
   }
 
@@ -462,8 +330,7 @@ export async function fetchActiveCart(): Promise<{
   cart: CartApiData;
   authenticated: boolean;
 }> {
-  const customer =
-    await getCurrentCustomerData();
+  const customer = await getCurrentCustomerData();
 
   if (!customer) {
     return {
@@ -474,8 +341,7 @@ export async function fetchActiveCart(): Promise<{
 
   try {
     return {
-      cart:
-        await fetchCustomerCart(),
+      cart: await fetchCustomerCart(),
       authenticated: true,
     };
   } catch (error) {
@@ -485,10 +351,7 @@ export async function fetchActiveCart(): Promise<{
      * authenticated and return an empty cart
      * only when the cart itself cannot load.
      */
-    console.error(
-      "Customer cart loading failed:",
-      error,
-    );
+    console.error("Customer cart loading failed:", error);
 
     return {
       cart: emptyCart(),
@@ -500,87 +363,53 @@ export async function fetchActiveCart(): Promise<{
 export async function mergeGuestCart(): Promise<CartApiData | null> {
   const guest = readGuestCart();
 
-  if (
-    guest.items.length === 0
-  ) {
+  if (guest.items.length === 0) {
     publishAuthUpdated();
     return null;
   }
 
-  const response = await fetch(
-    "/api/v1/customer/cart/merge",
-    {
-      method: "POST",
-      credentials: "include",
+  const response = await fetch("/api/v1/customer/cart/merge", {
+    method: "POST",
+    credentials: "include",
 
-      headers: {
-        "Content-Type":
-          "application/json",
-      },
-
-      body: JSON.stringify({
-        items: guest.items
-          .filter(
-            (item) =>
-              Boolean(
-                item.menuItemId,
-              ),
-          )
-          .map((item) => ({
-            menuItemId:
-              item.menuItemId!,
-            variantId:
-              item.variantId ?? null,
-
-            modifiers: (
-              item.modifiers ?? []
-            )
-              .filter(
-                (modifier) =>
-                  Boolean(
-                    modifier.groupId &&
-                      modifier.optionId,
-                  ),
-              )
-              .map(
-                (modifier) => ({
-                  groupId:
-                    modifier.groupId!,
-                  optionId:
-                    modifier.optionId!,
-                }),
-              ),
-
-            quantity:
-              item.quantity,
-
-            specialInstructions:
-              item.specialInstructions ??
-              "",
-          })),
-      }),
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
 
-  const body =
-    (await response.json()) as ApiEnvelope<CartApiData>;
+    body: JSON.stringify({
+      items: guest.items
+        .filter((item) => Boolean(item.menuItemId))
+        .map((item) => ({
+          menuItemId: item.menuItemId!,
+          variantId: item.variantId ?? null,
 
-  if (
-    !response.ok ||
-    !body.data
-  ) {
+          modifiers: (item.modifiers ?? [])
+            .filter((modifier) =>
+              Boolean(modifier.groupId && modifier.optionId),
+            )
+            .map((modifier) => ({
+              groupId: modifier.groupId!,
+              optionId: modifier.optionId!,
+            })),
+
+          quantity: item.quantity,
+
+          specialInstructions: item.specialInstructions ?? "",
+        })),
+    }),
+  });
+
+  const body = (await response.json()) as ApiEnvelope<CartApiData>;
+
+  if (!response.ok || !body.data) {
     throw new Error(
-      body.error?.message ??
-        body.message ??
-        "Unable to merge your saved cart.",
+      body.error?.message ?? body.message ?? "Unable to merge your saved cart.",
     );
   }
 
   clearGuestCart();
 
-  publishCartUpdated(
-    body.data.itemCount,
-  );
+  publishCartUpdated(body.data.itemCount);
 
   publishAuthUpdated();
 
@@ -590,78 +419,51 @@ export async function mergeGuestCart(): Promise<CartApiData | null> {
 function convertCustomerCartToGuestCart(
   customerCart: CartApiData,
 ): CartApiData {
-  const guestItems =
-    customerCart.items
-      .filter(
-        (item) =>
-          Boolean(item.menuItemId),
-      )
-      .map((item, index) => ({
-        ...item,
+  const guestItems = customerCart.items
+    .filter((item) => Boolean(item.menuItemId))
+    .map((item, index) => ({
+      ...item,
 
-        _id: `guest-${Date.now()}-${index}-${Math.random()
-          .toString(36)
-          .slice(2)}`,
+      _id: `guest-${Date.now()}-${index}-${Math.random()
+        .toString(36)
+        .slice(2)}`,
 
-        modifiers: (
-          item.modifiers ?? []
-        ).map((modifier) => ({
-          ...modifier,
-        })),
-      }));
+      modifiers: (item.modifiers ?? []).map((modifier) => ({
+        ...modifier,
+      })),
+    }));
 
-  return recalculateGuestCart(
-    guestItems,
-  );
+  return recalculateGuestCart(guestItems);
 }
 
 export async function logoutCustomerPreservingCart(): Promise<void> {
-  let cartSnapshot: CartApiData | null =
-    null;
+  let cartSnapshot: CartApiData | null = null;
 
   try {
-    cartSnapshot =
-      await fetchCustomerCart();
+    cartSnapshot = await fetchCustomerCart();
   } catch (error) {
-    console.error(
-      "Unable to snapshot customer cart before logout:",
-      error,
-    );
+    console.error("Unable to snapshot customer cart before logout:", error);
   }
 
-  const response = await fetch(
-    "/api/v1/auth/logout",
-    {
-      method: "POST",
-      credentials: "include",
-    },
-  );
+  const response = await fetch("/api/v1/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
 
-  const body =
-    (await response
-      .json()
-      .catch(
-        () => null,
-      )) as ApiEnvelope<null> | null;
+  const body = (await response
+    .json()
+    .catch(() => null)) as ApiEnvelope<null> | null;
 
   if (!response.ok) {
     throw new Error(
-      body?.error?.message ??
-        body?.message ??
-        "Unable to log out.",
+      body?.error?.message ?? body?.message ?? "Unable to log out.",
     );
   }
 
   if (cartSnapshot) {
-    writeGuestCart(
-      convertCustomerCartToGuestCart(
-        cartSnapshot,
-      ),
-    );
+    writeGuestCart(convertCustomerCartToGuestCart(cartSnapshot));
   } else {
-    publishCartUpdated(
-      readGuestCart().itemCount,
-    );
+    publishCartUpdated(readGuestCart().itemCount);
   }
 
   publishAuthUpdated();

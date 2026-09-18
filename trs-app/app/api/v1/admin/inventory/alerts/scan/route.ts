@@ -9,10 +9,7 @@ import { inventoryAlertScanSchema } from "@/validators/inventory-alerts-reports"
 export async function POST(request: Request) {
   try {
     await requirePermission("inventory.manage");
-    const input = await validateRequestBody(
-      request,
-      inventoryAlertScanSchema,
-    );
+    const input = await validateRequestBody(request, inventoryAlertScanSchema);
     await connectToDatabase();
 
     return successResponse(

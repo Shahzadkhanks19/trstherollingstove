@@ -12,7 +12,10 @@ export async function GET() {
   try {
     await requirePermission("menu.read");
     await connectToDatabase();
-    return successResponse(await TaxClass.find().sort({ name: 1 }).lean(), "Tax classes loaded.");
+    return successResponse(
+      await TaxClass.find().sort({ name: 1 }).lean(),
+      "Tax classes loaded.",
+    );
   } catch (error) {
     return handleApiError(error);
   }
@@ -28,7 +31,11 @@ export async function POST(request: Request) {
       throw new AppError("A tax class with this code already exists.", 409);
     }
 
-    const taxClass = await TaxClass.create({ ...input, createdBy: actor.id, updatedBy: actor.id });
+    const taxClass = await TaxClass.create({
+      ...input,
+      createdBy: actor.id,
+      updatedBy: actor.id,
+    });
     await writeAuditLog({
       actorUserId: actor.id,
       action: "menu.tax_class_created",

@@ -14,76 +14,46 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(
-  request: Request,
-  context: Context,
-) {
+export async function POST(request: Request, context: Context) {
   try {
-    const actor = await requirePermission(
-      "purchases.manage",
-    );
+    const actor = await requirePermission("purchases.manage");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      cancelPurchaseOrderSchema,
-    );
+    const input = await validateRequestBody(request, cancelPurchaseOrderSchema);
 
     await connectToDatabase();
 
-    const purchaseOrder =
-      await PurchaseOrder.findById(id);
+    const purchaseOrder = await PurchaseOrder.findById(id);
 
     if (!purchaseOrder) {
-      throw new AppError(
-        "Purchase order not found.",
-        404,
-      );
+      throw new AppError("Purchase order not found.", 404);
     }
 
-    if (
-      !["draft", "approved"].includes(
-        purchaseOrder.status,
-      )
-    ) {
-      throw new AppError(
-        "Received purchase orders cannot be cancelled.",
-        409,
-      );
+    if (!["draft", "approved"].includes(purchaseOrder.status)) {
+      throw new AppError("Received purchase orders cannot be cancelled.", 409);
     }
 
-    const wasApproved =
-      purchaseOrder.status === "approved";
+    const wasApproved = purchaseOrder.status === "approved";
 
     purchaseOrder.status = "cancelled";
-    purchaseOrder.cancelledBy =
-      new Types.ObjectId(actor.id);
+    purchaseOrder.cancelledBy = new Types.ObjectId(actor.id);
     purchaseOrder.cancelledAt = new Date();
-    purchaseOrder.cancellationReason =
-      input.reason;
-    purchaseOrder.updatedBy =
-      new Types.ObjectId(actor.id);
+    purchaseOrder.cancellationReason = input.reason;
+    purchaseOrder.updatedBy = new Types.ObjectId(actor.id);
 
     await purchaseOrder.save();
 
     if (wasApproved) {
-      await Supplier.findByIdAndUpdate(
-        purchaseOrder.supplierId,
-        {
-          $inc: {
-            outstandingBalance:
-              -purchaseOrder.balanceAmount,
-          },
-          $set: {
-            updatedBy: actor.id,
-          },
+      await Supplier.findByIdAndUpdate(purchaseOrder.supplierId, {
+        $inc: {
+          outstandingBalance: -purchaseOrder.balanceAmount,
         },
-      );
+        $set: {
+          updatedBy: actor.id,
+        },
+      });
     }
 
-    return successResponse(
-      purchaseOrder,
-      "Purchase order cancelled.",
-    );
+    return successResponse(purchaseOrder, "Purchase order cancelled.");
   } catch (error) {
     return handleApiError(error);
   }

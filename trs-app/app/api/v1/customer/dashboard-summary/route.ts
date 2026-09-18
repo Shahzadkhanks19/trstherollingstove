@@ -7,8 +7,12 @@ import { getCustomerDashboardSummary } from "@/services/customer-dashboard.servi
 export async function GET() {
   try {
     const user = await requireAuthenticatedUser();
-    if (user.roleKey !== "customer") throw new AppError("Customer access required.", 403);
-    return successResponse(await getCustomerDashboardSummary(user.id), "Dashboard loaded.");
+    if (user.roleKey !== "customer")
+      throw new AppError("Customer access required.", 403);
+    return successResponse(
+      await getCustomerDashboardSummary(user.id),
+      "Dashboard loaded.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

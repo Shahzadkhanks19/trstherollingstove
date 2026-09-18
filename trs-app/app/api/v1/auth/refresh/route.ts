@@ -16,29 +16,17 @@ export async function POST() {
   try {
     const cookieStore = await cookies();
 
-    const refreshToken =
-      cookieStore.get(REFRESH_COOKIE)?.value;
+    const refreshToken = cookieStore.get(REFRESH_COOKIE)?.value;
 
     if (!refreshToken) {
-      throw new AppError(
-        "Refresh token is missing.",
-        401,
-      );
+      throw new AppError("Refresh token is missing.", 401);
     }
 
-    const claims =
-      await verifyRefreshToken(
-        refreshToken,
-      );
+    const claims = await verifyRefreshToken(refreshToken);
 
-    const nextSession =
-      await rotateSession(
-        refreshToken,
-        claims,
-      );
+    const nextSession = await rotateSession(refreshToken, claims);
 
-    const rememberMe =
-      await getRememberMePreference();
+    const rememberMe = await getRememberMePreference();
 
     await setAuthCookies(
       nextSession.accessToken,
@@ -46,10 +34,7 @@ export async function POST() {
       rememberMe,
     );
 
-    return successResponse(
-      null,
-      "Session refreshed.",
-    );
+    return successResponse(null, "Session refreshed.");
   } catch (error) {
     await clearAuthCookies();
     return handleApiError(error);

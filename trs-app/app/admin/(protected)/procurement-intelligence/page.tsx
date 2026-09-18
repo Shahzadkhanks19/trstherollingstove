@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function ProcurementIntelligencePage() {
   const user = await getAuthenticatedUser();
   if (!user) redirect("/admin/login?redirect=/admin/procurement-intelligence");
-  if (!user.permissions.includes("purchases.read")) redirect("/admin/login?error=unauthorized");
+  if (!user.permissions.includes("purchases.read"))
+    redirect("/admin/login?error=unauthorized");
   return <ProcurementIntelligenceClient />;
 }

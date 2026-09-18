@@ -90,7 +90,8 @@ export async function GET(request: Request) {
 
     return new Response(buffer as ArrayBuffer, {
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${count.countNumber}.xlsx"`,
         "Cache-Control": "private, no-store",
       },

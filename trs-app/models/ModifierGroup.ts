@@ -1,4 +1,11 @@
-import { Schema, deleteModel, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  deleteModel,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const ModifierOptionSchema = new Schema(
   {
@@ -8,7 +15,12 @@ const ModifierOptionSchema = new Schema(
       type: [
         new Schema(
           {
-            variantLabel: { type: String, required: true, trim: true, maxlength: 80 },
+            variantLabel: {
+              type: String,
+              required: true,
+              trim: true,
+              maxlength: 80,
+            },
             price: { type: Number, required: true, min: 0 },
           },
           { _id: false, versionKey: false },
@@ -29,7 +41,11 @@ const ModifierGroupSchema = new Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 80 },
     internalName: { type: String, required: true, trim: true, maxlength: 100 },
-    selectionType: { type: String, enum: ["single", "multiple", "quantity"], required: true },
+    selectionType: {
+      type: String,
+      enum: ["single", "multiple", "quantity"],
+      required: true,
+    },
     isRequired: { type: Boolean, default: false },
     minSelections: { type: Number, default: 0, min: 0 },
     maxSelections: { type: Number, default: 1, min: 1 },
@@ -47,8 +63,7 @@ ModifierGroupSchema.index({ internalName: 1 }, { unique: true });
 export type ModifierGroupDocument = InferSchemaType<typeof ModifierGroupSchema>;
 
 const existingModifierGroupModel = models.ModifierGroup as
-  | Model<ModifierGroupDocument>
-  | undefined;
+  Model<ModifierGroupDocument> | undefined;
 
 if (
   existingModifierGroupModel &&

@@ -47,9 +47,7 @@ type RecordMovementInput = {
   session?: ClientSession;
 };
 
-export async function recordInventoryMovement(
-  input: RecordMovementInput,
-) {
+export async function recordInventoryMovement(input: RecordMovementInput) {
   const quantity = input.quantity;
   const isInbound = INBOUND_TYPES.has(input.type);
   const unitCost = input.unitCost ?? 0;
@@ -77,7 +75,9 @@ export async function recordInventoryMovement(
                       $divide: [
                         {
                           $add: [
-                            { $multiply: ["$currentStock", "$averageUnitCost"] },
+                            {
+                              $multiply: ["$currentStock", "$averageUnitCost"],
+                            },
                             quantity * unitCost,
                           ],
                         },
@@ -103,19 +103,13 @@ export async function recordInventoryMovement(
         },
       };
 
-  const itemBefore = await InventoryItem.findOneAndUpdate(
-    query,
-    update,
-    {
-      returnDocument: "before",
-      session: input.session,
-    },
-  );
+  const itemBefore = await InventoryItem.findOneAndUpdate(query, update, {
+    returnDocument: "before",
+    session: input.session,
+  });
 
   if (!itemBefore) {
-    const existingItem = await InventoryItem.findById(
-      input.inventoryItemId,
-    )
+    const existingItem = await InventoryItem.findById(input.inventoryItemId)
       .session(input.session ?? null)
       .select("name isActive currentStock")
       .lean();
@@ -125,16 +119,10 @@ export async function recordInventoryMovement(
     }
 
     if (!existingItem.isActive) {
-      throw new AppError(
-        "Inactive inventory items cannot be updated.",
-        409,
-      );
+      throw new AppError("Inactive inventory items cannot be updated.", 409);
     }
 
-    throw new AppError(
-      `Insufficient stock for ${existingItem.name}.`,
-      409,
-    );
+    throw new AppError(`Insufficient stock for ${existingItem.name}.`, 409);
   }
 
   const stockBefore = itemBefore.currentStock;
@@ -178,9 +166,7 @@ type DeductOrderInput = {
   }>;
 };
 
-export async function deductInventoryForOrder(
-  input: DeductOrderInput,
-) {
+export async function deductInventoryForOrder(input: DeductOrderInput) {
   const menuItemIds = input.items.map(
     (item) => new Types.ObjectId(item.menuItemId),
   );
@@ -191,18 +177,13 @@ export async function deductInventoryForOrder(
   }).lean();
 
   const recipeMap = new Map(
-    recipes.map((recipe) => [
-      String(recipe.menuItemId),
-      recipe,
-    ]),
+    recipes.map((recipe) => [String(recipe.menuItemId), recipe]),
   );
 
   const movements = [];
 
   for (const orderItem of input.items) {
-    const recipe = recipeMap.get(
-      orderItem.menuItemId,
-    );
+    const recipe = recipeMap.get(orderItem.menuItemId);
 
     if (!recipe) {
       continue;
@@ -210,22 +191,17 @@ export async function deductInventoryForOrder(
 
     for (const ingredient of recipe.ingredients) {
       const requiredQuantity =
-        (ingredient.quantity *
-          orderItem.quantity) /
-        recipe.yieldQuantity;
+        (ingredient.quantity * orderItem.quantity) / recipe.yieldQuantity;
 
-      const movement =
-        await recordInventoryMovement({
-          inventoryItemId: String(
-            ingredient.inventoryItemId,
-          ),
-          type: "sale",
-          quantity: requiredQuantity,
-          referenceType: "order",
-          referenceId: input.orderId,
-          reason: "Automatic deduction from completed order.",
-          actorId: input.actorId,
-        });
+      const movement = await recordInventoryMovement({
+        inventoryItemId: String(ingredient.inventoryItemId),
+        type: "sale",
+        quantity: requiredQuantity,
+        referenceType: "order",
+        referenceId: input.orderId,
+        reason: "Automatic deduction from completed order.",
+        actorId: input.actorId,
+      });
 
       movements.push(movement);
     }

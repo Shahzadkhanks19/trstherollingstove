@@ -12,7 +12,9 @@ export async function GET() {
   try {
     await requirePermission("cms.read");
     await connectToDatabase();
-    return successResponse(await GalleryItem.find().sort({ sortOrder: 1, createdAt: -1 }).lean());
+    return successResponse(
+      await GalleryItem.find().sort({ sortOrder: 1, createdAt: -1 }).lean(),
+    );
   } catch (error) {
     return handleApiError(error);
   }

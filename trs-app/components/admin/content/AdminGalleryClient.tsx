@@ -1,6 +1,11 @@
 "use client";
 
-import { faPlus, faSearch, faTrash, faVideo } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPlus,
+  faSearch,
+  faTrash,
+  faVideo,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -12,12 +17,7 @@ import { MediaPicker } from "@/components/admin/media/MediaPicker";
 type Api<T> = { data: T; message?: string };
 type MediaType = "image" | "video";
 type GalleryCategory =
-  | "Food"
-  | "Food Truck"
-  | "Ambience"
-  | "Customer Photos"
-  | "Videos"
-  | "Events";
+  "Food" | "Food Truck" | "Ambience" | "Customer Photos" | "Videos" | "Events";
 
 type GalleryItem = {
   _id: string;
@@ -69,10 +69,13 @@ export function AdminGalleryClient() {
         credentials: "include",
       });
       const json = (await response.json()) as Api<GalleryItem[]>;
-      if (!response.ok) throw new Error(json.message || "Unable to load gallery.");
+      if (!response.ok)
+        throw new Error(json.message || "Unable to load gallery.");
       setRows(Array.isArray(json.data) ? json.data : []);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to load gallery.");
+      setMessage(
+        error instanceof Error ? error.message : "Unable to load gallery.",
+      );
     }
   }, []);
 
@@ -110,14 +113,19 @@ export function AdminGalleryClient() {
         body: JSON.stringify(form),
       });
       const json = (await response.json()) as Api<unknown>;
-      if (!response.ok) throw new Error(json.message || "Unable to create gallery item.");
+      if (!response.ok)
+        throw new Error(json.message || "Unable to create gallery item.");
 
       setForm(emptyForm);
       setShowForm(false);
       setMessage("Gallery item created and published on the public gallery.");
       await load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to create gallery item.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to create gallery item.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -184,7 +192,9 @@ export function AdminGalleryClient() {
               aria-label="Media title"
               placeholder="Title"
               value={form.title}
-              onChange={(event) => setForm({ ...form, title: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, title: event.target.value })
+              }
               className="rounded-xl border p-3"
             />
 
@@ -192,7 +202,10 @@ export function AdminGalleryClient() {
               aria-label="Gallery category"
               value={form.category}
               onChange={(event) =>
-                setForm({ ...form, category: event.target.value as GalleryCategory })
+                setForm({
+                  ...form,
+                  category: event.target.value as GalleryCategory,
+                })
               }
               className="rounded-xl border p-3"
             >
@@ -226,13 +239,17 @@ export function AdminGalleryClient() {
               aria-label="Alternative text"
               placeholder="Alt text"
               value={form.altText}
-              onChange={(event) => setForm({ ...form, altText: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, altText: event.target.value })
+              }
               className="rounded-xl border p-3"
             />
 
             <div className="md:col-span-2">
               <MediaPicker
-                label={form.mediaType === "image" ? "Gallery image" : "Gallery video"}
+                label={
+                  form.mediaType === "image" ? "Gallery image" : "Gallery video"
+                }
                 value={form.mediaUrl}
                 onChange={(mediaUrl) => setForm({ ...form, mediaUrl })}
                 accept={form.mediaType}
@@ -246,7 +263,9 @@ export function AdminGalleryClient() {
                 <MediaPicker
                   label="Video thumbnail"
                   value={form.thumbnailUrl}
-                  onChange={(thumbnailUrl) => setForm({ ...form, thumbnailUrl })}
+                  onChange={(thumbnailUrl) =>
+                    setForm({ ...form, thumbnailUrl })
+                  }
                   accept="image"
                   category="gallery-thumbnails"
                 />
@@ -257,7 +276,9 @@ export function AdminGalleryClient() {
               aria-label="Media description"
               placeholder="Description"
               value={form.description}
-              onChange={(event) => setForm({ ...form, description: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, description: event.target.value })
+              }
               className="rounded-xl border p-3 md:col-span-2"
             />
 
@@ -286,7 +307,10 @@ export function AdminGalleryClient() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {filtered.map((item) => (
-          <article key={item._id} className="overflow-hidden rounded-2xl border bg-white">
+          <article
+            key={item._id}
+            className="overflow-hidden rounded-2xl border bg-white"
+          >
             <div className="relative aspect-[4/3] bg-[#f6eee7]">
               {item.mediaType === "image" ? (
                 <Image
@@ -314,7 +338,9 @@ export function AdminGalleryClient() {
             </div>
             <div className="space-y-3 p-4">
               <div>
-                <p className="text-xs font-black uppercase text-[#C8102E]">{item.category}</p>
+                <p className="text-xs font-black uppercase text-[#C8102E]">
+                  {item.category}
+                </p>
                 <h2 className="mt-1 font-black text-[#172536]">{item.title}</h2>
               </div>
               <div className="flex items-center justify-between gap-3">

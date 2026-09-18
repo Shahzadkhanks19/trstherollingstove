@@ -76,24 +76,20 @@ const InventoryReportCacheSchema = new Schema(
   },
 );
 
-InventoryReportCacheSchema.index(
-  { expiresAt: 1 },
-  { expireAfterSeconds: 0 },
-);
+InventoryReportCacheSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 InventoryReportCacheSchema.index({
   reportType: 1,
   generatedAt: -1,
 });
 
-export type InventoryReportCacheDocument =
-  InferSchemaType<typeof InventoryReportCacheSchema>;
+export type InventoryReportCacheDocument = InferSchemaType<
+  typeof InventoryReportCacheSchema
+>;
 
-export const InventoryReportCache:
-  Model<InventoryReportCacheDocument> =
-    (models.InventoryReportCache as
-      | Model<InventoryReportCacheDocument>
-      | undefined) ??
-    model<InventoryReportCacheDocument>(
-      "InventoryReportCache",
-      InventoryReportCacheSchema,
-    );
+export const InventoryReportCache: Model<InventoryReportCacheDocument> =
+  (models.InventoryReportCache as
+    Model<InventoryReportCacheDocument> | undefined) ??
+  model<InventoryReportCacheDocument>(
+    "InventoryReportCache",
+    InventoryReportCacheSchema,
+  );

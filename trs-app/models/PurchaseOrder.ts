@@ -96,9 +96,18 @@ const PurchaseOrderSchema = new Schema(
       default: "vendor_delivery",
       index: true,
     },
-    pickupPersonId: { type: Schema.Types.ObjectId, ref: "PickupPerson", default: null },
+    pickupPersonId: {
+      type: Schema.Types.ObjectId,
+      ref: "PickupPerson",
+      default: null,
+    },
     pickupPersonName: { type: String, trim: true, maxlength: 120, default: "" },
-    pickupPersonWhatsapp: { type: String, trim: true, maxlength: 20, default: "" },
+    pickupPersonWhatsapp: {
+      type: String,
+      trim: true,
+      maxlength: 20,
+      default: "",
+    },
     status: {
       type: String,
       enum: [
@@ -128,8 +137,7 @@ const PurchaseOrderSchema = new Schema(
         validator(value: unknown[]) {
           return value.length > 0;
         },
-        message:
-          "Purchase order must contain at least one item.",
+        message: "Purchase order must contain at least one item.",
       },
     },
     subtotal: {
@@ -168,15 +176,35 @@ const PurchaseOrderSchema = new Schema(
       required: true,
     },
     whatsappDeliveries: {
-      type: [{
-        recipientType: { type: String, enum: ["vendor", "admin", "pickup_person"], required: true },
-        destination: { type: String, trim: true, maxlength: 20, default: "" },
-        status: { type: String, enum: ["queued", "sent", "failed", "skipped"], default: "queued" },
-        provider: { type: String, trim: true, maxlength: 80, default: "" },
-        providerMessageId: { type: String, trim: true, maxlength: 200, default: "" },
-        failureReason: { type: String, trim: true, maxlength: 1000, default: "" },
-        attemptedAt: { type: Date, default: null },
-      }],
+      type: [
+        {
+          recipientType: {
+            type: String,
+            enum: ["vendor", "admin", "pickup_person"],
+            required: true,
+          },
+          destination: { type: String, trim: true, maxlength: 20, default: "" },
+          status: {
+            type: String,
+            enum: ["queued", "sent", "failed", "skipped"],
+            default: "queued",
+          },
+          provider: { type: String, trim: true, maxlength: 80, default: "" },
+          providerMessageId: {
+            type: String,
+            trim: true,
+            maxlength: 200,
+            default: "",
+          },
+          failureReason: {
+            type: String,
+            trim: true,
+            maxlength: 1000,
+            default: "",
+          },
+          attemptedAt: { type: Date, default: null },
+        },
+      ],
       default: [],
     },
     notes: {
@@ -232,12 +260,8 @@ PurchaseOrderSchema.index({
   orderDate: -1,
 });
 
-export type PurchaseOrderDocument =
-  InferSchemaType<typeof PurchaseOrderSchema>;
+export type PurchaseOrderDocument = InferSchemaType<typeof PurchaseOrderSchema>;
 
 export const PurchaseOrder: Model<PurchaseOrderDocument> =
   (models.PurchaseOrder as Model<PurchaseOrderDocument>) ||
-  model<PurchaseOrderDocument>(
-    "PurchaseOrder",
-    PurchaseOrderSchema,
-  );
+  model<PurchaseOrderDocument>("PurchaseOrder", PurchaseOrderSchema);

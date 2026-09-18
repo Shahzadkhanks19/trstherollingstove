@@ -29,10 +29,7 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(
-  _request: Request,
-  context: Context,
-) {
+export async function GET(_request: Request, context: Context) {
   try {
     await requirePermission("inventory.read");
     const { id } = await context.params;
@@ -42,10 +39,7 @@ export async function GET(
     const item = await InventoryItem.findById(id).lean();
 
     if (!item) {
-      throw new AppError(
-        "Inventory item not found.",
-        404,
-      );
+      throw new AppError("Inventory item not found.", 404);
     }
 
     return successResponse(item);
@@ -54,19 +48,11 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
-    const actor = await requirePermission(
-      "inventory.manage",
-    );
+    const actor = await requirePermission("inventory.manage");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      updateInventoryItemSchema,
-    );
+    const input = await validateRequestBody(request, updateInventoryItemSchema);
 
     await connectToDatabase();
 
@@ -75,9 +61,7 @@ export async function PATCH(
       {
         $set: {
           ...input,
-          ...(input.sku
-            ? { sku: input.sku.toUpperCase() }
-            : {}),
+          ...(input.sku ? { sku: input.sku.toUpperCase() } : {}),
           updatedBy: actor.id,
           ...(input.isActive === true
             ? {
@@ -94,52 +78,33 @@ export async function PATCH(
     );
 
     if (!item) {
-      throw new AppError(
-        "Inventory item not found.",
-        404,
-      );
+      throw new AppError("Inventory item not found.", 404);
     }
 
-    return successResponse(
-      item,
-      "Inventory item updated.",
-    );
+    return successResponse(item, "Inventory item updated.");
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-
-export async function DELETE(
-  request: Request,
-  context: Context,
-) {
+export async function DELETE(request: Request, context: Context) {
   try {
-    const actor = await requirePermission(
-      "inventory.manage",
-    );
+    const actor = await requirePermission("inventory.manage");
     const { id } = await context.params;
     const url = new URL(request.url);
-    const permanent =
-      url.searchParams.get("permanent") === "true";
+    const permanent = url.searchParams.get("permanent") === "true";
 
     await connectToDatabase();
 
     const item = await InventoryItem.findById(id);
 
     if (!item) {
-      throw new AppError(
-        "Inventory item not found.",
-        404,
-      );
+      throw new AppError("Inventory item not found.", 404);
     }
 
     if (!permanent) {
       if (!item.isActive) {
-        return successResponse(
-          item,
-          "Inventory item is already archived.",
-        );
+        return successResponse(item, "Inventory item is already archived.");
       }
 
       const actorObjectId = new Types.ObjectId(actor.id);
@@ -222,25 +187,21 @@ export async function DELETE(
      * inventory item is deleted last. If an earlier deletion fails, the item
      * remains archived and the request can be retried safely.
      */
-    const [
-      movementResult,
-      forecastResult,
-      alertRuleResult,
-      alertEventResult,
-    ] = await Promise.all([
-      InventoryMovement.deleteMany({
-        inventoryItemId: item._id,
-      }),
-      InventoryForecastSnapshot.deleteMany({
-        inventoryItemId: item._id,
-      }),
-      InventoryAlertRule.deleteMany({
-        inventoryItemId: item._id,
-      }),
-      InventoryAlertEvent.deleteMany({
-        inventoryItemId: item._id,
-      }),
-    ]);
+    const [movementResult, forecastResult, alertRuleResult, alertEventResult] =
+      await Promise.all([
+        InventoryMovement.deleteMany({
+          inventoryItemId: item._id,
+        }),
+        InventoryForecastSnapshot.deleteMany({
+          inventoryItemId: item._id,
+        }),
+        InventoryAlertRule.deleteMany({
+          inventoryItemId: item._id,
+        }),
+        InventoryAlertEvent.deleteMany({
+          inventoryItemId: item._id,
+        }),
+      ]);
 
     const deleteResult = await InventoryItem.deleteOne({
       _id: item._id,

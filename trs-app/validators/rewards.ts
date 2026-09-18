@@ -15,7 +15,9 @@ const couponBaseSchema = z.object({
     .transform((value) => value.toUpperCase()),
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().max(500).default(""),
-  couponChannel: z.enum(["spin_wheel_only", "public_offer"]).default("public_offer"),
+  couponChannel: z
+    .enum(["spin_wheel_only", "public_offer"])
+    .default("public_offer"),
   publicOfferPlacement: z.enum(["permanent", "everyday"]).default("permanent"),
   discountType: z.enum(["percentage", "fixed", "free_item"]),
   discountValue: z.number().min(0),
@@ -72,7 +74,10 @@ function validateCouponConfiguration(
       });
     }
 
-    if (value.discountType === "percentage" && (value.discountValue ?? 0) > 100) {
+    if (
+      value.discountType === "percentage" &&
+      (value.discountValue ?? 0) > 100
+    ) {
       context.addIssue({
         code: "custom",
         path: ["discountValue"],
@@ -107,7 +112,12 @@ export const couponUpdateSchema = couponBaseSchema
   .superRefine(validateCouponConfiguration);
 
 export const applyCouponSchema = z.object({
-  code: z.string().trim().min(3).max(30).transform((value) => value.toUpperCase()),
+  code: z
+    .string()
+    .trim()
+    .min(3)
+    .max(30)
+    .transform((value) => value.toUpperCase()),
 });
 
 export const redeemCoinsSchema = z.object({
@@ -116,8 +126,11 @@ export const redeemCoinsSchema = z.object({
 
 export const coinAdjustmentSchema = z.object({
   customerId: objectId,
-  amount: z.number().int().refine((value) => value !== 0, {
-    message: "Amount cannot be zero.",
-  }),
+  amount: z
+    .number()
+    .int()
+    .refine((value) => value !== 0, {
+      message: "Amount cannot be zero.",
+    }),
   description: z.string().trim().min(3).max(300),
 });

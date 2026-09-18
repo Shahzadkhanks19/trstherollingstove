@@ -108,21 +108,30 @@ function CouponOfferCard({
     <article className="min-w-0 rounded-2xl border border-[#EDE3D8] bg-white p-5 shadow-[0_12px_30px_rgba(50,30,15,.05)] transition hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(50,30,15,.09)] sm:p-6">
       <div className="flex min-w-0 gap-4">
         <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-[#F1D7BA] bg-[#FFF8ED] text-[#D27C0C]">
-          <FontAwesomeIcon icon={coupon.firstOrderOnly ? faGift : faPercent} className="h-6" />
+          <FontAwesomeIcon
+            icon={coupon.firstOrderOnly ? faGift : faPercent}
+            className="h-6"
+          />
         </span>
         <div className="min-w-0">
-          <h3 className="break-words text-sm font-black uppercase text-[#172536]">{coupon.name}</h3>
+          <h3 className="break-words text-sm font-black uppercase text-[#172536]">
+            {coupon.name}
+          </h3>
           <p className="mt-2 text-xs font-medium leading-5 text-[#6F665D]">
             {coupon.description || couponSummary(coupon)}
           </p>
-          <p className="mt-2 text-xs font-black text-[#C8102E]">{couponSummary(coupon)}</p>
+          <p className="mt-2 text-xs font-black text-[#C8102E]">
+            {couponSummary(coupon)}
+          </p>
           <button
             type="button"
             onClick={() => void onCopy(coupon.code)}
             className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[#E8D8CA] px-3 py-2 text-[10px] font-black uppercase text-[#172536] transition hover:border-[#C8102E] hover:text-[#C8102E]"
           >
             <FontAwesomeIcon icon={faCopy} className="h-3" />
-            {copiedCode === coupon.code ? "Code copied" : `Use code: ${coupon.code}`}
+            {copiedCode === coupon.code
+              ? "Code copied"
+              : `Use code: ${coupon.code}`}
           </button>
         </div>
       </div>
@@ -147,9 +156,12 @@ export function OffersPageClient({
     const firstCard = slider.querySelector<HTMLElement>("[data-offer-card]");
     const cardWidth = firstCard?.offsetWidth ?? slider.clientWidth;
     const computedGap = Number.parseFloat(
-      window.getComputedStyle(slider).columnGap || window.getComputedStyle(slider).gap || "16",
+      window.getComputedStyle(slider).columnGap ||
+        window.getComputedStyle(slider).gap ||
+        "16",
     );
-    const distance = cardWidth + (Number.isFinite(computedGap) ? computedGap : 16);
+    const distance =
+      cardWidth + (Number.isFinite(computedGap) ? computedGap : 16);
 
     slider.scrollBy({
       left: direction === "next" ? distance : -distance,
@@ -207,7 +219,9 @@ export function OffersPageClient({
 
             <h1 className="mt-5 max-w-[680px] break-words text-[clamp(2.7rem,11vw,6.4rem)] font-black uppercase leading-[.88] tracking-[-0.055em] text-[#14283B]">
               Delicious offers
-              <span className="mt-1 block text-[#C8102E]">you&apos;ll love!</span>
+              <span className="mt-1 block text-[#C8102E]">
+                you&apos;ll love!
+              </span>
             </h1>
 
             <p className="mt-6 max-w-[540px] text-base font-medium leading-7 text-[#403A34] sm:text-lg">
@@ -246,8 +260,12 @@ export function OffersPageClient({
                   <FontAwesomeIcon icon={faFire} className="h-4" />
                 </span>
                 <span>
-                  <strong className="block text-[11px] font-black uppercase">Fresh weekly deals</strong>
-                  <span className="text-[10px] text-[#6E655C]">Updated through the offers system</span>
+                  <strong className="block text-[11px] font-black uppercase">
+                    Fresh weekly deals
+                  </strong>
+                  <span className="text-[10px] text-[#6E655C]">
+                    Updated through the offers system
+                  </span>
                 </span>
               </div>
             </div>
@@ -272,144 +290,158 @@ export function OffersPageClient({
             </div>
           ) : null}
 
-          <div className={`relative min-w-0 overflow-hidden rounded-[1.6rem] border border-[#EDE3D8] bg-white p-2 shadow-[0_18px_45px_rgba(50,30,15,.06)] sm:p-5 ${everydayCoupons.length > 0 ? "mt-5" : "mt-7"}`}>
+          <div
+            className={`relative min-w-0 overflow-hidden rounded-[1.6rem] border border-[#EDE3D8] bg-white p-2 shadow-[0_18px_45px_rgba(50,30,15,.06)] sm:p-5 ${everydayCoupons.length > 0 ? "mt-5" : "mt-7"}`}
+          >
             {combos.length > 0 ? (
-            <div
-              ref={offersSliderRef}
-              onScroll={updateActiveOffer}
-              className="flex min-w-0 touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-4"
-              aria-label="Today's hot offers"
-            >
-              {combos.map((offer, index) => (
-                <article
-                  key={offer.id}
-                  data-offer-card
-                  className="group min-w-0 flex-[0_0_100%] snap-start snap-always overflow-hidden rounded-2xl border border-[#EDE3D8] bg-[#FFFDF9] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_35px_rgba(42,27,15,.1)] sm:flex-[0_0_calc(50%-0.5rem)] lg:flex-[0_0_calc(33.333%-0.67rem)] xl:flex-[0_0_calc(25%-0.75rem)]"
-                >
-                  <div className="relative h-44 p-3 sm:h-48">
-                    <div className="relative h-full overflow-hidden rounded-xl bg-[#f8f3ed]">
-                      {offer.thumbnail?.url ? (
-                        <Image
-                          src={offer.thumbnail.url}
-                          alt={offer.thumbnail.alt || offer.name}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
-                          className="object-cover transition duration-300 group-hover:scale-105"
-                        />
-                      ) : null}
+              <div
+                ref={offersSliderRef}
+                onScroll={updateActiveOffer}
+                className="flex min-w-0 touch-pan-x snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-4"
+                aria-label="Today's hot offers"
+              >
+                {combos.map((offer, index) => (
+                  <article
+                    key={offer.id}
+                    data-offer-card
+                    className="group min-w-0 flex-[0_0_100%] snap-start snap-always overflow-hidden rounded-2xl border border-[#EDE3D8] bg-[#FFFDF9] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_35px_rgba(42,27,15,.1)] sm:flex-[0_0_calc(50%-0.5rem)] lg:flex-[0_0_calc(33.333%-0.67rem)] xl:flex-[0_0_calc(25%-0.75rem)]"
+                  >
+                    <div className="relative h-44 p-3 sm:h-48">
+                      <div className="relative h-full overflow-hidden rounded-xl bg-[#f8f3ed]">
+                        {offer.thumbnail?.url ? (
+                          <Image
+                            src={offer.thumbnail.url}
+                            alt={offer.thumbnail.alt || offer.name}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 25vw"
+                            className="object-cover transition duration-300 group-hover:scale-105"
+                          />
+                        ) : null}
+                      </div>
+                      <span
+                        className={`absolute left-4 top-4 max-w-[calc(100%-2rem)] truncate rounded-lg px-3 py-2 text-[9px] font-black uppercase text-white ${
+                          index % 2 === 0 ? "bg-[#C8102E]" : "bg-[#14283B]"
+                        }`}
+                      >
+                        {offer.isBestseller
+                          ? "Bestseller Combo"
+                          : offer.isNew
+                            ? "New Combo"
+                            : "Combo Offer"}
+                      </span>
                     </div>
-                    <span
-                      className={`absolute left-4 top-4 max-w-[calc(100%-2rem)] truncate rounded-lg px-3 py-2 text-[9px] font-black uppercase text-white ${
-                        index % 2 === 0 ? "bg-[#C8102E]" : "bg-[#14283B]"
-                      }`}
-                    >
-                      {offer.isBestseller ? "Bestseller Combo" : offer.isNew ? "New Combo" : "Combo Offer"}
-                    </span>
-                  </div>
 
-                  <div className="px-4 pb-5 pt-2 sm:px-5">
-                    <h2 className="break-words text-base font-black uppercase tracking-[-0.03em] text-[#172536] sm:text-lg">
-                      {offer.name}
-                    </h2>
-                    <ul className="mt-3 min-h-[86px] space-y-1 text-[11px] font-medium leading-4 text-[#4F4943]">
-                      {comboDescription(offer).map((line) => (
-                        <li key={line} className="break-words">+ {line}</li>
-                      ))}
-                    </ul>
+                    <div className="px-4 pb-5 pt-2 sm:px-5">
+                      <h2 className="break-words text-base font-black uppercase tracking-[-0.03em] text-[#172536] sm:text-lg">
+                        {offer.name}
+                      </h2>
+                      <ul className="mt-3 min-h-[86px] space-y-1 text-[11px] font-medium leading-4 text-[#4F4943]">
+                        {comboDescription(offer).map((line) => (
+                          <li key={line} className="break-words">
+                            + {line}
+                          </li>
+                        ))}
+                      </ul>
 
-                    <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-                      <div className="min-w-0">
-                        <span className="text-2xl font-black text-[#C8102E]">
-                          {money(offer.priceFrom)}
-                        </span>
+                      <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+                        <div className="min-w-0">
+                          <span className="text-2xl font-black text-[#C8102E]">
+                            {money(offer.priceFrom)}
+                          </span>
+                          {offer.compareAtPriceFrom &&
+                          offer.compareAtPriceFrom > offer.priceFrom ? (
+                            <span className="ml-2 text-sm font-bold text-[#8C8580] line-through sm:ml-3">
+                              {money(offer.compareAtPriceFrom)}
+                            </span>
+                          ) : null}
+                        </div>
                         {offer.compareAtPriceFrom &&
                         offer.compareAtPriceFrom > offer.priceFrom ? (
-                          <span className="ml-2 text-sm font-bold text-[#8C8580] line-through sm:ml-3">
-                            {money(offer.compareAtPriceFrom)}
+                          <span
+                            className={`shrink-0 rounded-lg px-2.5 py-2 text-[9px] font-black uppercase text-white ${
+                              index % 2 === 0 ? "bg-[#C8102E]" : "bg-[#14283B]"
+                            }`}
+                          >
+                            {Math.round(
+                              ((offer.compareAtPriceFrom - offer.priceFrom) /
+                                offer.compareAtPriceFrom) *
+                                100,
+                            )}
+                            % off
                           </span>
                         ) : null}
                       </div>
-                      {offer.compareAtPriceFrom &&
-                      offer.compareAtPriceFrom > offer.priceFrom ? (
-                        <span
-                          className={`shrink-0 rounded-lg px-2.5 py-2 text-[9px] font-black uppercase text-white ${
-                            index % 2 === 0 ? "bg-[#C8102E]" : "bg-[#14283B]"
-                          }`}
-                        >
-                          {Math.round(
-                            ((offer.compareAtPriceFrom - offer.priceFrom) /
-                              offer.compareAtPriceFrom) *
-                              100,
-                          )}
-                          % off
-                        </span>
-                      ) : null}
-                    </div>
 
-                    <Link
-                      href={`/menu/${offer.slug}`}
-                      className="mt-5 flex h-11 items-center justify-center gap-3 rounded-xl border border-[#C8102E] text-[10px] font-black uppercase text-[#C8102E] transition hover:bg-[#C8102E] hover:text-white"
-                    >
-                      Order Now
-                      <FontAwesomeIcon icon={faArrowRight} className="h-3" />
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
+                      <Link
+                        href={`/menu/${offer.slug}`}
+                        className="mt-5 flex h-11 items-center justify-center gap-3 rounded-xl border border-[#C8102E] text-[10px] font-black uppercase text-[#C8102E] transition hover:bg-[#C8102E] hover:text-white"
+                      >
+                        Order Now
+                        <FontAwesomeIcon icon={faArrowRight} className="h-3" />
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-[#dfcbb9] bg-[#FFFDF9] px-6 py-12 text-center text-sm font-semibold text-[#756b63]">
-                No active combo items are available. Add or reactivate combo items from the admin menu dashboard.
+                No active combo items are available. Add or reactivate combo
+                items from the admin menu dashboard.
               </div>
             )}
 
             {combos.length > 1 ? (
-            <button
-              type="button"
-              onClick={() => scrollOffers("previous")}
-              aria-label="Show previous hot offer"
-              className="absolute left-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 rotate-180 place-items-center rounded-full border border-[#E5D9CD] bg-white/95 text-[#172536] shadow-lg transition hover:bg-[#C8102E] hover:text-white sm:grid"
-            >
-              <FontAwesomeIcon icon={faArrowRight} className="h-4" />
-            </button>
+              <button
+                type="button"
+                onClick={() => scrollOffers("previous")}
+                aria-label="Show previous hot offer"
+                className="absolute left-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 rotate-180 place-items-center rounded-full border border-[#E5D9CD] bg-white/95 text-[#172536] shadow-lg transition hover:bg-[#C8102E] hover:text-white sm:grid"
+              >
+                <FontAwesomeIcon icon={faArrowRight} className="h-4" />
+              </button>
             ) : null}
 
             {combos.length > 1 ? (
-            <button
-              type="button"
-              onClick={() => scrollOffers("next")}
-              aria-label="Show next hot offer"
-              className="absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-[#E5D9CD] bg-white/95 text-[#172536] shadow-lg transition hover:bg-[#C8102E] hover:text-white sm:grid"
-            >
-              <FontAwesomeIcon icon={faArrowRight} className="h-4" />
-            </button>
+              <button
+                type="button"
+                onClick={() => scrollOffers("next")}
+                aria-label="Show next hot offer"
+                className="absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-[#E5D9CD] bg-white/95 text-[#172536] shadow-lg transition hover:bg-[#C8102E] hover:text-white sm:grid"
+              >
+                <FontAwesomeIcon icon={faArrowRight} className="h-4" />
+              </button>
             ) : null}
           </div>
 
           {combos.length > 1 ? (
-          <div className="mt-4 flex justify-center gap-2">
-            {combos.map((offer, index) => (
-              <button
-                key={offer.id}
-                type="button"
-                onClick={() => {
-                  const slider = offersSliderRef.current;
-                  const card = slider?.querySelectorAll<HTMLElement>("[data-offer-card]")[index];
-                  if (slider && card) {
-                    slider.scrollTo({
-                      left: card.offsetLeft,
-                      behavior: "smooth",
-                    });
-                  }
-                }}
-                aria-label={`Show ${offer.name}`}
-                aria-current={index === activeOfferIndex ? "true" : undefined}
-                className={`h-2 rounded-full transition-all ${
-                  index === activeOfferIndex ? "w-6 bg-[#C8102E]" : "w-2 bg-[#E6D9CA]"
-                }`}
-              />
-            ))}
-          </div>
+            <div className="mt-4 flex justify-center gap-2">
+              {combos.map((offer, index) => (
+                <button
+                  key={offer.id}
+                  type="button"
+                  onClick={() => {
+                    const slider = offersSliderRef.current;
+                    const card =
+                      slider?.querySelectorAll<HTMLElement>(
+                        "[data-offer-card]",
+                      )[index];
+                    if (slider && card) {
+                      slider.scrollTo({
+                        left: card.offsetLeft,
+                        behavior: "smooth",
+                      });
+                    }
+                  }}
+                  aria-label={`Show ${offer.name}`}
+                  aria-current={index === activeOfferIndex ? "true" : undefined}
+                  className={`h-2 rounded-full transition-all ${
+                    index === activeOfferIndex
+                      ? "w-6 bg-[#C8102E]"
+                      : "w-2 bg-[#E6D9CA]"
+                  }`}
+                />
+              ))}
+            </div>
           ) : null}
         </div>
       </section>
@@ -471,57 +503,97 @@ export function OffersPageClient({
         <div className="mx-auto w-[min(100%-2rem,1320px)]">
           <SectionTitle title="More Exciting Offers" icon={faTags} />
 
-
           {permanentCombos.length > 0 ? (
             <div className="mt-7 grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {permanentCombos.map((combo) => (
-                <article key={combo.id} className="overflow-hidden rounded-2xl border border-[#EDE3D8] bg-white shadow-[0_12px_30px_rgba(50,30,15,.05)]">
-                  <div className="relative h-40 bg-[#f8f3ed]">{combo.thumbnail?.url ? <Image src={combo.thumbnail.url} alt={combo.thumbnail.alt || combo.name} fill className="object-cover" /> : null}</div>
-                  <div className="p-5"><span className="rounded-lg bg-[#14283B] px-2.5 py-1.5 text-[9px] font-black uppercase text-white">Permanent Combo</span><h3 className="mt-3 text-sm font-black uppercase text-[#172536]">{combo.name}</h3><p className="mt-2 text-xs text-[#6F665D]">{combo.shortDescription || "Open this combo to view included items and choices."}</p><div className="mt-4 flex items-center gap-2"><strong className="text-xl font-black text-[#C8102E]">{money(combo.priceFrom)}</strong>{combo.compareAtPriceFrom && combo.compareAtPriceFrom > combo.priceFrom ? <span className="text-sm font-bold text-[#8C8580] line-through">{money(combo.compareAtPriceFrom)}</span> : null}</div><Link href={`/menu/${combo.slug}`} className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase text-[#C8102E]">View combo <FontAwesomeIcon icon={faArrowRight} className="h-3" /></Link></div>
+                <article
+                  key={combo.id}
+                  className="overflow-hidden rounded-2xl border border-[#EDE3D8] bg-white shadow-[0_12px_30px_rgba(50,30,15,.05)]"
+                >
+                  <div className="relative h-40 bg-[#f8f3ed]">
+                    {combo.thumbnail?.url ? (
+                      <Image
+                        src={combo.thumbnail.url}
+                        alt={combo.thumbnail.alt || combo.name}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="p-5">
+                    <span className="rounded-lg bg-[#14283B] px-2.5 py-1.5 text-[9px] font-black uppercase text-white">
+                      Permanent Combo
+                    </span>
+                    <h3 className="mt-3 text-sm font-black uppercase text-[#172536]">
+                      {combo.name}
+                    </h3>
+                    <p className="mt-2 text-xs text-[#6F665D]">
+                      {combo.shortDescription ||
+                        "Open this combo to view included items and choices."}
+                    </p>
+                    <div className="mt-4 flex items-center gap-2">
+                      <strong className="text-xl font-black text-[#C8102E]">
+                        {money(combo.priceFrom)}
+                      </strong>
+                      {combo.compareAtPriceFrom &&
+                      combo.compareAtPriceFrom > combo.priceFrom ? (
+                        <span className="text-sm font-bold text-[#8C8580] line-through">
+                          {money(combo.compareAtPriceFrom)}
+                        </span>
+                      ) : null}
+                    </div>
+                    <Link
+                      href={`/menu/${combo.slug}`}
+                      className="mt-4 inline-flex items-center gap-2 text-[10px] font-black uppercase text-[#C8102E]"
+                    >
+                      View combo{" "}
+                      <FontAwesomeIcon icon={faArrowRight} className="h-3" />
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>
           ) : null}
 
           {permanentCoupons.length > 0 ? (
-          <div className="mt-7 grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {permanentCoupons.map((coupon) => (
-              <article
-                key={coupon.id}
-                className="min-w-0 rounded-2xl border border-[#EDE3D8] bg-white p-5 sm:p-6 shadow-[0_12px_30px_rgba(50,30,15,.05)] transition hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(50,30,15,.09)]"
-              >
-                <div className="flex min-w-0 gap-4">
-                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-[#F1D7BA] bg-[#FFF8ED] text-[#D27C0C]">
-                    <FontAwesomeIcon
-                      icon={coupon.firstOrderOnly ? faGift : faPercent}
-                      className="h-6"
-                    />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="break-words text-sm font-black uppercase text-[#172536]">
-                      {coupon.name}
-                    </h3>
-                    <p className="mt-2 text-[11px] leading-5 text-[#5D554E]">
-                      {coupon.description || couponSummary(coupon)}
-                    </p>
-                    <p className="mt-2 text-[10px] font-bold text-[#756b63]">
-                      {couponSummary(coupon)}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => copyCode(coupon.code)}
-                      className="mt-3 inline-flex items-center gap-2 text-[10px] font-black uppercase text-[#C8102E]"
-                    >
-                      <FontAwesomeIcon icon={faCopy} className="h-3" />
-                      {copiedCode === coupon.code
-                        ? "Copied"
-                        : `Use code: ${coupon.code}`}
-                    </button>
+            <div className="mt-7 grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {permanentCoupons.map((coupon) => (
+                <article
+                  key={coupon.id}
+                  className="min-w-0 rounded-2xl border border-[#EDE3D8] bg-white p-5 sm:p-6 shadow-[0_12px_30px_rgba(50,30,15,.05)] transition hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(50,30,15,.09)]"
+                >
+                  <div className="flex min-w-0 gap-4">
+                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-[#F1D7BA] bg-[#FFF8ED] text-[#D27C0C]">
+                      <FontAwesomeIcon
+                        icon={coupon.firstOrderOnly ? faGift : faPercent}
+                        className="h-6"
+                      />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="break-words text-sm font-black uppercase text-[#172536]">
+                        {coupon.name}
+                      </h3>
+                      <p className="mt-2 text-[11px] leading-5 text-[#5D554E]">
+                        {coupon.description || couponSummary(coupon)}
+                      </p>
+                      <p className="mt-2 text-[10px] font-bold text-[#756b63]">
+                        {couponSummary(coupon)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => copyCode(coupon.code)}
+                        className="mt-3 inline-flex items-center gap-2 text-[10px] font-black uppercase text-[#C8102E]"
+                      >
+                        <FontAwesomeIcon icon={faCopy} className="h-3" />
+                        {copiedCode === coupon.code
+                          ? "Copied"
+                          : `Use code: ${coupon.code}`}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                </article>
+              ))}
+            </div>
           ) : permanentCombos.length === 0 ? (
             <div className="mt-7 rounded-2xl border border-dashed border-[#dfcbb9] bg-white px-6 py-10 text-center text-sm font-semibold text-[#756b63]">
               No public coupons are active right now.
@@ -534,9 +606,12 @@ export function OffersPageClient({
                 <FontAwesomeIcon icon={faShieldHeart} className="h-5" />
               </span>
               <div>
-                <strong className="text-sm font-black uppercase text-[#C8102E]">Offer validity</strong>
+                <strong className="text-sm font-black uppercase text-[#C8102E]">
+                  Offer validity
+                </strong>
                 <p className="mt-1 text-[11px] leading-5 text-[#4E463E]">
-                  Offer dates, eligibility, usage limits and availability are controlled through the admin dashboard.
+                  Offer dates, eligibility, usage limits and availability are
+                  controlled through the admin dashboard.
                 </p>
               </div>
             </div>
@@ -554,7 +629,13 @@ export function OffersPageClient({
   );
 }
 
-function SectionTitle({ title, icon }: { title: string; icon: IconDefinition }) {
+function SectionTitle({
+  title,
+  icon,
+}: {
+  title: string;
+  icon: IconDefinition;
+}) {
   return (
     <div className="flex items-center justify-center gap-4 text-center">
       <span className="hidden h-px w-14 bg-[#D89B3A] sm:block" />

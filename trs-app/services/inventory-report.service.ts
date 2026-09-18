@@ -2,11 +2,7 @@ import { InventoryItem } from "@/models/InventoryItem";
 import { InventoryMovement } from "@/models/InventoryMovement";
 
 export type InventoryReportType =
-  | "valuation"
-  | "consumption"
-  | "expiry"
-  | "abc_analysis"
-  | "stock_ledger";
+  "valuation" | "consumption" | "expiry" | "abc_analysis" | "stock_ledger";
 
 export type InventoryReportFilters = {
   from?: Date;
@@ -72,10 +68,7 @@ export async function generateInventoryReport(
           stockValue: {
             $round: [
               {
-                $multiply: [
-                  "$currentStock",
-                  "$averageUnitCost",
-                ],
+                $multiply: ["$currentStock", "$averageUnitCost"],
               },
               2,
             ],
@@ -94,10 +87,9 @@ export async function generateInventoryReport(
           ...dateMatch(filters),
           ...(filters.inventoryItemId
             ? {
-                inventoryItemId:
-                  new InventoryMovement.base.Types.ObjectId(
-                    filters.inventoryItemId,
-                  ),
+                inventoryItemId: new InventoryMovement.base.Types.ObjectId(
+                  filters.inventoryItemId,
+                ),
               }
             : {}),
         },
@@ -163,10 +155,9 @@ export async function generateInventoryReport(
           },
           ...(filters.inventoryItemId
             ? {
-                inventoryItemId:
-                  new InventoryMovement.base.Types.ObjectId(
-                    filters.inventoryItemId,
-                  ),
+                inventoryItemId: new InventoryMovement.base.Types.ObjectId(
+                  filters.inventoryItemId,
+                ),
               }
             : {}),
         },
@@ -226,10 +217,9 @@ export async function generateInventoryReport(
           },
           ...(filters.inventoryItemId
             ? {
-                inventoryItemId:
-                  new InventoryMovement.base.Types.ObjectId(
-                    filters.inventoryItemId,
-                  ),
+                inventoryItemId: new InventoryMovement.base.Types.ObjectId(
+                  filters.inventoryItemId,
+                ),
               }
             : {}),
         },
@@ -326,8 +316,7 @@ export async function generateInventoryReport(
   ]);
 
   const totalValue = consumption.reduce(
-    (sum, row) =>
-      sum + Number(row.consumptionValue ?? 0),
+    (sum, row) => sum + Number(row.consumptionValue ?? 0),
     0,
   );
   let cumulative = 0;
@@ -346,9 +335,7 @@ export async function generateInventoryReport(
     const value = Number(row.consumptionValue ?? 0);
     cumulative += value;
     const cumulativePercentage =
-      totalValue > 0
-        ? (cumulative / totalValue) * 100
-        : 0;
+      totalValue > 0 ? (cumulative / totalValue) * 100 : 0;
     const item = itemMap.get(String(row._id));
 
     return {
@@ -356,13 +343,9 @@ export async function generateInventoryReport(
       item: item?.name ?? "Unknown item",
       sku: item?.sku ?? "",
       unit: item?.unit ?? "",
-      consumedQuantity: Number(
-        row.consumedQuantity ?? 0,
-      ),
-      consumptionValue:
-        Math.round(value * 100) / 100,
-      cumulativePercentage:
-        Math.round(cumulativePercentage * 100) / 100,
+      consumedQuantity: Number(row.consumedQuantity ?? 0),
+      consumptionValue: Math.round(value * 100) / 100,
+      cumulativePercentage: Math.round(cumulativePercentage * 100) / 100,
       classification:
         cumulativePercentage <= 80
           ? "A"

@@ -248,50 +248,63 @@ function PolicyColumn({
       </div>
 
       <div className="mt-4 overflow-hidden rounded-3xl border border-[#EDE3D8] bg-white shadow-[0_14px_34px_rgba(50,30,15,.05)]">
-        {items.map(({ number, title: itemTitle, icon: itemIcon, paragraphs, bullets }) => (
-          <article
-            key={itemTitle}
-            className="grid min-w-0 gap-4 border-b border-[#EDE3D8] p-5 last:border-b-0 sm:grid-cols-[52px_minmax(0,1fr)]"
-          >
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-[#FFF1E5] text-[#C8102E]">
-              <FontAwesomeIcon icon={itemIcon} className="h-4" />
-            </span>
+        {items.map(
+          ({
+            number,
+            title: itemTitle,
+            icon: itemIcon,
+            paragraphs,
+            bullets,
+          }) => (
+            <article
+              key={itemTitle}
+              className="grid min-w-0 gap-4 border-b border-[#EDE3D8] p-5 last:border-b-0 sm:grid-cols-[52px_minmax(0,1fr)]"
+            >
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-[#FFF1E5] text-[#C8102E]">
+                <FontAwesomeIcon icon={itemIcon} className="h-4" />
+              </span>
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-3">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#C8102E] text-[8px] font-black text-white">
-                  {number}
-                </span>
-                <h3 className="text-[11px] font-black uppercase">{itemTitle}</h3>
-              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#C8102E] text-[8px] font-black text-white">
+                    {number}
+                  </span>
+                  <h3 className="text-[11px] font-black uppercase">
+                    {itemTitle}
+                  </h3>
+                </div>
 
-              <div className="mt-3 grid gap-2">
-                {paragraphs.map((paragraph) => (
-                  <p key={paragraph} className="text-[10px] leading-5 text-[#625B55]">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-
-              {bullets && (
                 <div className="mt-3 grid gap-2">
-                  {bullets.map((bullet) => (
+                  {paragraphs.map((paragraph) => (
                     <p
-                      key={bullet}
-                      className="flex gap-2 text-[9px] leading-4 text-[#625B55]"
+                      key={paragraph}
+                      className="text-[10px] leading-5 text-[#625B55]"
                     >
-                      <FontAwesomeIcon
-                        icon={faCircleCheck}
-                        className="mt-0.5 h-3 shrink-0 text-[#D99219]"
-                      />
-                      {bullet}
+                      {paragraph}
                     </p>
                   ))}
                 </div>
-              )}
-            </div>
-          </article>
-        ))}
+
+                {bullets && (
+                  <div className="mt-3 grid gap-2">
+                    {bullets.map((bullet) => (
+                      <p
+                        key={bullet}
+                        className="flex gap-2 text-[9px] leading-4 text-[#625B55]"
+                      >
+                        <FontAwesomeIcon
+                          icon={faCircleCheck}
+                          className="mt-0.5 h-3 shrink-0 text-[#D99219]"
+                        />
+                        {bullet}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </article>
+          ),
+        )}
       </div>
     </section>
   );
@@ -320,8 +333,8 @@ export function RefundCancellationPolicyPage() {
             </h1>
 
             <p className="mt-6 max-w-[620px] text-base leading-8 text-[#4F4943] sm:text-lg">
-              This policy explains when an order may be cancelled, when a
-              refund may be available and how payment issues are reviewed.
+              This policy explains when an order may be cancelled, when a refund
+              may be available and how payment issues are reviewed.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3 text-[9px] font-black uppercase">
@@ -370,7 +383,10 @@ export function RefundCancellationPolicyPage() {
 
               <div className="mt-5 grid gap-5">
                 {importantNotes.map(({ icon, title, text }) => (
-                  <article key={title} className="flex min-w-0 items-start gap-3">
+                  <article
+                    key={title}
+                    className="flex min-w-0 items-start gap-3"
+                  >
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#FFF1E5] text-[#D99219]">
                       <FontAwesomeIcon icon={icon} className="h-4" />
                     </span>
@@ -399,7 +415,10 @@ export function RefundCancellationPolicyPage() {
 
               <div className="mt-5 grid gap-3 text-[10px]">
                 <a href="tel:+919166694786" className="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faPhone} className="h-4 text-[#C8102E]" />
+                  <FontAwesomeIcon
+                    icon={faPhone}
+                    className="h-4 text-[#C8102E]"
+                  />
                   +91 91666 94786
                 </a>
                 <a
@@ -438,8 +457,8 @@ export function RefundCancellationPolicyPage() {
                   TRS Coins
                 </p>
                 <p className="mt-2 text-[10px] leading-5 text-white/70">
-                  Refunded orders may lead to reversal of coins earned from
-                  that purchase.
+                  Refunded orders may lead to reversal of coins earned from that
+                  purchase.
                 </p>
                 <Link
                   href="/rewards"
@@ -490,8 +509,8 @@ export function RefundCancellationPolicyPage() {
                 Policy Acknowledgement
               </p>
               <h2 className="mt-2 text-xl font-black uppercase sm:text-2xl">
-                By placing an order, you agree to this Refund &amp;
-                Cancellation Policy.
+                By placing an order, you agree to this Refund &amp; Cancellation
+                Policy.
               </h2>
             </div>
           </div>

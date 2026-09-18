@@ -10,19 +10,11 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(
-  request: Request,
-  context: Context,
-) {
+export async function POST(request: Request, context: Context) {
   try {
-    const actor = await requirePermission(
-      "purchases.manage",
-    );
+    const actor = await requirePermission("purchases.manage");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      createGoodsReceiptSchema,
-    );
+    const input = await validateRequestBody(request, createGoodsReceiptSchema);
 
     await connectToDatabase();
 

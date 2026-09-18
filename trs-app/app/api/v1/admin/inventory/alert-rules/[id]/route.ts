@@ -12,10 +12,7 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(
-  _request: Request,
-  context: Context,
-) {
+export async function GET(_request: Request, context: Context) {
   try {
     await requirePermission("inventory.read");
     const { id } = await context.params;
@@ -32,10 +29,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
     const actor = await requirePermission("inventory.manage");
     const { id } = await context.params;
@@ -60,28 +54,21 @@ export async function PATCH(
       throw new AppError("Inventory alert rule not found.", 404);
     }
 
-    return successResponse(
-      rule,
-      "Inventory alert rule updated.",
-    );
+    return successResponse(rule, "Inventory alert rule updated.");
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  context: Context,
-) {
+export async function DELETE(_request: Request, context: Context) {
   try {
     await requirePermission("inventory.manage");
     const { id } = await context.params;
     await connectToDatabase();
 
-    const eventCount =
-      await InventoryAlertEvent.countDocuments({
-        ruleId: id,
-      });
+    const eventCount = await InventoryAlertEvent.countDocuments({
+      ruleId: id,
+    });
     if (eventCount > 0) {
       throw new AppError(
         "This rule has alert history and cannot be deleted. Disable it instead.",
@@ -94,10 +81,7 @@ export async function DELETE(
       throw new AppError("Inventory alert rule not found.", 404);
     }
 
-    return successResponse(
-      { id },
-      "Inventory alert rule deleted.",
-    );
+    return successResponse({ id }, "Inventory alert rule deleted.");
   } catch (error) {
     return handleApiError(error);
   }

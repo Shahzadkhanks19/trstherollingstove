@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { AdminMenuClient } from "@/components/admin/menu/AdminMenuClient";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
-export const metadata = createAdminMetadata("Menu Management", "Create and manage public menu items, pricing, variants and availability.");
+export const metadata = createAdminMetadata(
+  "Menu Management",
+  "Create and manage public menu items, pricing, variants and availability.",
+);
 
 export const dynamic = "force-dynamic";
 

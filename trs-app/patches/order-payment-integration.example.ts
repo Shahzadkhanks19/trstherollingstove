@@ -28,15 +28,11 @@ export async function recordPosCashSale(input: {
     type: "cash_sale",
     amount: input.amount,
     reason: "POS cash order payment",
-    referenceType: input.paymentId
-      ? "payment"
-      : "order",
+    referenceType: input.paymentId ? "payment" : "order",
     referenceId: input.paymentId ?? input.orderId,
     createdBy: input.actorId,
   });
 
-  shift.expectedCash = await calculateExpectedCash(
-    input.shiftId,
-  );
+  shift.expectedCash = await calculateExpectedCash(input.shiftId);
   await shift.save();
 }

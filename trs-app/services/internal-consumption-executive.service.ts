@@ -205,8 +205,7 @@ function buildMatch(
 ): Record<string, unknown> {
   return {
     createdAt: { $gte: from, $lte: to },
-    saleType:
-      saleType === "all" ? { $in: INTERNAL_SALE_TYPES } : saleType,
+    saleType: saleType === "all" ? { $in: INTERNAL_SALE_TYPES } : saleType,
     status: { $nin: ["cancelled", "rejected"] },
   };
 }
@@ -498,7 +497,8 @@ export async function getInternalConsumptionExecutiveReport(input: {
   const zeroCostOrders = summaryRaw?.zeroCostOrders ?? 0;
 
   const alerts: InternalConsumptionExecutiveReport["alerts"] = [];
-  const costCoverage = menuValue > 0 ? money((inventoryCost / menuValue) * 100) : 0;
+  const costCoverage =
+    menuValue > 0 ? money((inventoryCost / menuValue) * 100) : 0;
   const wastage = current.saleTypes?.find((row) => row._id === "food_wastage");
   const complimentary = current.saleTypes?.find(
     (row) => row._id === "complimentary",
@@ -510,7 +510,8 @@ export async function getInternalConsumptionExecutiveReport(input: {
   const completenessPercent =
     totalRequiredFields > 0
       ? money(
-          ((totalRequiredFields - Math.min(totalRequiredFields, dataIssueCount)) /
+          ((totalRequiredFields -
+            Math.min(totalRequiredFields, dataIssueCount)) /
             totalRequiredFields) *
             100,
         )
@@ -537,19 +538,16 @@ export async function getInternalConsumptionExecutiveReport(input: {
       severity: "critical",
       code: "WASTAGE_SPIKE",
       title: "Wastage requires attention",
-      description: `Food wastage represents ${money((((wastage?.menuValue ?? 0) / menuValue) * 100))}% of internal consumption value.`,
+      description: `Food wastage represents ${money(((wastage?.menuValue ?? 0) / menuValue) * 100)}% of internal consumption value.`,
     });
   }
 
-  if (
-    (complimentary?.menuValue ?? 0) > menuValue * 0.35 &&
-    menuValue > 0
-  ) {
+  if ((complimentary?.menuValue ?? 0) > menuValue * 0.35 && menuValue > 0) {
     alerts.push({
       severity: "warning",
       code: "COMPLIMENTARY_SPIKE",
       title: "Complimentary usage is high",
-      description: `Complimentary orders represent ${money((((complimentary?.menuValue ?? 0) / menuValue) * 100))}% of internal consumption value.`,
+      description: `Complimentary orders represent ${money(((complimentary?.menuValue ?? 0) / menuValue) * 100)}% of internal consumption value.`,
     });
   }
 
@@ -585,11 +583,14 @@ export async function getInternalConsumptionExecutiveReport(input: {
       severity: "info",
       code: "HEALTHY",
       title: "No material exceptions",
-      description: "The selected period is within the configured executive thresholds.",
+      description:
+        "The selected period is within the configured executive thresholds.",
     });
   }
 
-  const hourlyMap = new Map((current.hourly ?? []).map((row) => [row._id, row]));
+  const hourlyMap = new Map(
+    (current.hourly ?? []).map((row) => [row._id, row]),
+  );
   const weekdayMap = new Map(
     (current.weekdays ?? []).map((row) => [row._id, row]),
   );

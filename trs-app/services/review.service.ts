@@ -22,19 +22,34 @@ export async function createCustomerReview(input: {
   comment: string;
   images: string[];
 }) {
-  const order = await Order.findOne({ _id: input.orderId, customerId: input.customerId }).lean();
+  const order = await Order.findOne({
+    _id: input.orderId,
+    customerId: input.customerId,
+  }).lean();
   if (!order) throw new AppError("Order not found.", 404);
   if (order.status === "cancelled" || order.status === "rejected") {
     throw new AppError("Cancelled orders cannot be reviewed.", 400);
   }
   if (order.status !== "completed") {
-    throw new AppError("A review can only be submitted after the order is completed.", 400);
+    throw new AppError(
+      "A review can only be submitted after the order is completed.",
+      400,
+    );
   }
-  if (order.orderMode === "dine_in" && input.categoryRatings.packaging !== null) {
-    throw new AppError("Packaging rating is not applicable to dine-in orders.", 400);
+  if (
+    order.orderMode === "dine_in" &&
+    input.categoryRatings.packaging !== null
+  ) {
+    throw new AppError(
+      "Packaging rating is not applicable to dine-in orders.",
+      400,
+    );
   }
-  const existingReview = await Review.findOne({ orderId: input.orderId }).lean();
-  if (existingReview) throw new AppError("This order has already been reviewed.", 409);
+  const existingReview = await Review.findOne({
+    orderId: input.orderId,
+  }).lean();
+  if (existingReview)
+    throw new AppError("This order has already been reviewed.", 409);
 
   return Review.create({
     ...input,

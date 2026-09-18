@@ -4,11 +4,7 @@ import { Role } from "@/models/Role";
 import { User } from "@/models/User";
 import { publishRealtimeEventSafely } from "@/services/realtimePublisher.service";
 
-const ADMIN_ROLE_KEYS = [
-  "super_admin",
-  "admin",
-  "manager",
-];
+const ADMIN_ROLE_KEYS = ["super_admin", "admin", "manager"];
 
 export async function createInventoryAdminNotifications(input: {
   title: string;
@@ -41,9 +37,7 @@ export async function createInventoryAdminNotifications(input: {
       type: "system",
       title: input.title,
       message: input.message,
-      actionUrl:
-        input.actionUrl ??
-        "/admin/inventory-analytics",
+      actionUrl: input.actionUrl ?? "/admin/inventory-analytics",
       metadata: {
         module: "inventory",
         ...(input.metadata ?? {}),

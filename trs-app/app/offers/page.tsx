@@ -43,21 +43,42 @@ export default async function OffersPage() {
     getPublicOffers(),
     getAuthenticatedUser(),
   ]);
-  const membership = user?.roleKey === "customer" ? await LoyaltyMembership.findOne({ customerId: user.id }).select("tierKey").lean() : null;
-  const tierKey = (membership?.tierKey ?? "bronze") as "bronze" | "silver" | "gold" | "platinum";
+  const membership =
+    user?.roleKey === "customer"
+      ? await LoyaltyMembership.findOne({ customerId: user.id })
+          .select("tierKey")
+          .lean()
+      : null;
+  const tierKey = (membership?.tierKey ?? "bronze") as
+    "bronze" | "silver" | "gold" | "platinum";
   const now = await getCurrentTimestamp();
   const eligibleCombos = menuItems.filter((item) => {
-    if (!item.isCombo || !item.publishComboOnOffersPage || !item.isAvailable) return false;
+    if (!item.isCombo || !item.publishComboOnOffersPage || !item.isAvailable)
+      return false;
     if (!(item.eligibleTierKeys?.includes(tierKey) ?? true)) return false;
-    if (item.comboOfferStartsAt && new Date(item.comboOfferStartsAt).getTime() > now) return false;
-    if (item.comboOfferExpiresAt && new Date(item.comboOfferExpiresAt).getTime() <= now) return false;
+    if (
+      item.comboOfferStartsAt &&
+      new Date(item.comboOfferStartsAt).getTime() > now
+    )
+      return false;
+    if (
+      item.comboOfferExpiresAt &&
+      new Date(item.comboOfferExpiresAt).getTime() <= now
+    )
+      return false;
     return true;
   });
-  const combos = eligibleCombos.filter((item) => item.comboOffersPageSection === "todays");
-  const permanentCombos = eligibleCombos.filter((item) => item.comboOffersPageSection !== "todays");
+  const combos = eligibleCombos.filter(
+    (item) => item.comboOffersPageSection === "todays",
+  );
+  const permanentCombos = eligibleCombos.filter(
+    (item) => item.comboOffersPageSection !== "todays",
+  );
 
   const freeItemIds = (rawCoupons as RawCoupon[])
-    .filter((coupon) => coupon.discountType === "free_item" && coupon.freeMenuItemId)
+    .filter(
+      (coupon) => coupon.discountType === "free_item" && coupon.freeMenuItemId,
+    )
     .map((coupon) => String(coupon.freeMenuItemId));
   const freeItemNameById = new Map(
     menuItems
@@ -77,7 +98,8 @@ export default async function OffersPage() {
           ? ("free_item" as const)
           : ("percentage" as const),
     freeItemName: coupon.freeMenuItemId
-      ? freeItemNameById.get(String(coupon.freeMenuItemId)) ?? "selected menu item"
+      ? (freeItemNameById.get(String(coupon.freeMenuItemId)) ??
+        "selected menu item")
       : "",
     discountValue: Number(coupon.discountValue ?? 0),
     maxDiscountAmount:

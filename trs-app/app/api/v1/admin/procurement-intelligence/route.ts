@@ -17,7 +17,11 @@ export async function GET(request: Request) {
     const parsed = procurementIntelligenceQuerySchema.safeParse(
       Object.fromEntries(new URL(request.url).searchParams.entries()),
     );
-    if (!parsed.success) throw new AppError(parsed.error.issues[0]?.message ?? "Invalid procurement query.", 400);
+    if (!parsed.success)
+      throw new AppError(
+        parsed.error.issues[0]?.message ?? "Invalid procurement query.",
+        400,
+      );
     await connectToDatabase();
     const report = await getProcurementIntelligence({
       lookbackDays: parsed.data.lookbackDays,
@@ -26,19 +30,28 @@ export async function GET(request: Request) {
       refresh: parsed.data.refresh,
       requestedBy: actor.id,
     });
-    if (parsed.data.format === "json") return successResponse(report, "Procurement intelligence generated.");
+    if (parsed.data.format === "json")
+      return successResponse(report, "Procurement intelligence generated.");
     const filename = `trs-procurement-plan-${new Date().toISOString().slice(0, 10)}`;
     if (parsed.data.format === "csv") {
       return new Response(procurementIntelligenceToCsv(report), {
-        headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${filename}.csv"`, "Cache-Control": "private, no-store" },
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename}.csv"`,
+          "Cache-Control": "private, no-store",
+        },
       });
     }
-    const body = parsed.data.format === "xlsx"
-      ? await procurementIntelligenceToXlsx(report)
-      : await procurementIntelligenceToPdf(report);
+    const body =
+      parsed.data.format === "xlsx"
+        ? await procurementIntelligenceToXlsx(report)
+        : await procurementIntelligenceToPdf(report);
     return new Response(new Uint8Array(body), {
       headers: {
-        "Content-Type": parsed.data.format === "xlsx" ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" : "application/pdf",
+        "Content-Type":
+          parsed.data.format === "xlsx"
+            ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            : "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}.${parsed.data.format}"`,
         "Cache-Control": "private, no-store",
       },

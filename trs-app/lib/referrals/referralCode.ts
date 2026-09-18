@@ -12,18 +12,26 @@ function normalizeNamePrefix(name: string): string {
 
 function randomCodeSegment(length: number): string {
   const bytes = randomBytes(length);
-  return Array.from(bytes, (byte) => CODE_ALPHABET[byte % CODE_ALPHABET.length]).join("");
+  return Array.from(
+    bytes,
+    (byte) => CODE_ALPHABET[byte % CODE_ALPHABET.length],
+  ).join("");
 }
 
 export function normalizeReferralCode(value: string): string {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
 }
 
 export function createReferralCodeCandidate(customerName: string): string {
   return `${normalizeNamePrefix(customerName)}${randomCodeSegment(5)}`;
 }
 
-export async function generateUniqueReferralCode(customerName: string): Promise<string> {
+export async function generateUniqueReferralCode(
+  customerName: string,
+): Promise<string> {
   for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
     const candidate = createReferralCodeCandidate(customerName);
     const exists = await CustomerProfile.exists({ referralCode: candidate });

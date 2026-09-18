@@ -31,22 +31,14 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 function itemFilter(rule: Rule) {
   return {
     isActive: true,
-    ...(rule.inventoryItemId
-      ? { _id: rule.inventoryItemId }
-      : {}),
+    ...(rule.inventoryItemId ? { _id: rule.inventoryItemId } : {}),
   };
 }
 
-async function candidatesForRule(
-  rule: Rule,
-  now: Date,
-): Promise<Candidate[]> {
+async function candidatesForRule(rule: Rule, now: Date): Promise<Candidate[]> {
   const threshold = Number(rule.threshold ?? 0);
 
-  if (
-    rule.type === "low_stock" ||
-    rule.type === "reorder"
-  ) {
+  if (rule.type === "low_stock" || rule.type === "reorder") {
     const items = await InventoryItem.find({
       ...itemFilter(rule),
       $expr: {
@@ -56,8 +48,7 @@ async function candidatesForRule(
 
     return items.map((item) => ({
       inventoryItemId: item._id,
-      severity:
-        item.currentStock <= 0 ? "critical" : "warning",
+      severity: item.currentStock <= 0 ? "critical" : "warning",
       message: `${item.name} (${item.sku}) is at ${item.currentStock} ${item.unit}; reorder level is ${item.reorderLevel}.`,
       observedValue: item.currentStock,
       thresholdValue: item.reorderLevel,
@@ -93,10 +84,7 @@ async function candidatesForRule(
         $gt: [
           "$currentStock",
           {
-            $multiply: [
-              "$idealStockLevel",
-              threshold > 0 ? threshold : 1.5,
-            ],
+            $multiply: ["$idealStockLevel", threshold > 0 ? threshold : 1.5],
           },
         ],
       },
@@ -107,9 +95,7 @@ async function candidatesForRule(
       severity: "info",
       message: `${item.name} (${item.sku}) is above its configured overstock threshold.`,
       observedValue: item.currentStock,
-      thresholdValue:
-        item.idealStockLevel *
-        (threshold > 0 ? threshold : 1.5),
+      thresholdValue: item.idealStockLevel * (threshold > 0 ? threshold : 1.5),
       metadata: {
         sku: item.sku,
         unit: item.unit,
@@ -118,17 +104,11 @@ async function candidatesForRule(
     }));
   }
 
-  if (
-    rule.type === "near_expiry" ||
-    rule.type === "expired"
-  ) {
+  if (rule.type === "near_expiry" || rule.type === "expired") {
     const expiryBoundary =
       rule.type === "expired"
         ? now
-        : new Date(
-            now.getTime() +
-              (threshold > 0 ? threshold : 7) * DAY_MS,
-          );
+        : new Date(now.getTime() + (threshold > 0 ? threshold : 7) * DAY_MS);
 
     const movementFilter: Record<string, unknown> = {
       expiryDate:
@@ -141,9 +121,7 @@ async function candidatesForRule(
         : {}),
     };
 
-    const movements = await InventoryMovement.find(
-      movementFilter,
-    )
+    const movements = await InventoryMovement.find(movementFilter)
       .populate("inventoryItemId", "name sku unit")
       .lean();
 
@@ -162,19 +140,14 @@ async function candidatesForRule(
       return {
         inventoryItemId: item?._id,
         inventoryMovementId: movement._id,
-        severity:
-          rule.type === "expired" ? "critical" : "warning",
+        severity: rule.type === "expired" ? "critical" : "warning",
         message:
           rule.type === "expired"
             ? `${item?.name ?? "Inventory batch"} (${item?.sku ?? "unknown SKU"}) expired on ${expiryDate.toISOString().slice(0, 10)}.`
             : `${item?.name ?? "Inventory batch"} (${item?.sku ?? "unknown SKU"}) expires in ${daysRemaining} day(s).`,
         observedValue: daysRemaining,
         thresholdValue:
-          rule.type === "expired"
-            ? 0
-            : threshold > 0
-              ? threshold
-              : 7,
+          rule.type === "expired" ? 0 : threshold > 0 ? threshold : 7,
         discriminator: String(movement._id),
         metadata: {
           batchNumber: movement.batchNumber,
@@ -186,54 +159,33 @@ async function candidatesForRule(
     });
   }
 
-  if (
-    rule.type === "slow_moving" ||
-    rule.type === "dead_stock"
-  ) {
+  if (rule.type === "slow_moving" || rule.type === "dead_stock") {
     const days =
-      threshold > 0
-        ? threshold
-        : rule.type === "dead_stock"
-          ? 90
-          : 30;
+      threshold > 0 ? threshold : rule.type === "dead_stock" ? 90 : 30;
     const cutoff = new Date(now.getTime() - days * DAY_MS);
-    const items = await InventoryItem.find(
-      itemFilter(rule),
-    ).lean();
+    const items = await InventoryItem.find(itemFilter(rule)).lean();
     const itemIds = items.map((item) => item._id);
 
-    const recentOutbound = await InventoryMovement.distinct(
-      "inventoryItemId",
-      {
-        inventoryItemId: { $in: itemIds },
-        type: {
-          $in: [
-            "sale",
-            "adjustment_out",
-            "wastage",
-            "return_out",
-            "transfer_out",
-          ],
-        },
-        createdAt: { $gte: cutoff },
+    const recentOutbound = await InventoryMovement.distinct("inventoryItemId", {
+      inventoryItemId: { $in: itemIds },
+      type: {
+        $in: [
+          "sale",
+          "adjustment_out",
+          "wastage",
+          "return_out",
+          "transfer_out",
+        ],
       },
-    );
-    const moving = new Set(
-      recentOutbound.map((id) => String(id)),
-    );
+      createdAt: { $gte: cutoff },
+    });
+    const moving = new Set(recentOutbound.map((id) => String(id)));
 
     return items
-      .filter(
-        (item) =>
-          item.currentStock > 0 &&
-          !moving.has(String(item._id)),
-      )
+      .filter((item) => item.currentStock > 0 && !moving.has(String(item._id)))
       .map((item) => ({
         inventoryItemId: item._id,
-        severity:
-          rule.type === "dead_stock"
-            ? "warning"
-            : "info",
+        severity: rule.type === "dead_stock" ? "warning" : "info",
         message: `${item.name} (${item.sku}) has stock but no outbound movement in the last ${days} days.`,
         observedValue: days,
         thresholdValue: days,
@@ -248,15 +200,11 @@ async function candidatesForRule(
   return [];
 }
 
-export async function evaluateInventoryAlerts(
-  ruleIds?: string[],
-) {
+export async function evaluateInventoryAlerts(ruleIds?: string[]) {
   const now = new Date();
   const rules = (await InventoryAlertRule.find({
     enabled: true,
-    ...(ruleIds?.length
-      ? { _id: { $in: ruleIds } }
-      : {}),
+    ...(ruleIds?.length ? { _id: { $in: ruleIds } } : {}),
   }).lean()) as Rule[];
 
   let detected = 0;
@@ -271,42 +219,33 @@ export async function evaluateInventoryAlerts(
       const subject =
         candidate.discriminator ??
         String(candidate.inventoryItemId ?? "global");
-      const fingerprint = [
-        String(rule._id),
-        rule.type,
-        subject,
-      ].join(":");
+      const fingerprint = [String(rule._id), rule.type, subject].join(":");
 
-      const result =
-        await InventoryAlertEvent.updateOne(
-          { fingerprint },
-          {
-            $set: {
-              ruleId: rule._id,
-              inventoryItemId:
-                candidate.inventoryItemId ?? null,
-              inventoryMovementId:
-                candidate.inventoryMovementId ?? null,
-              type: rule.type,
-              severity: candidate.severity,
-              message: candidate.message,
-              observedValue:
-                candidate.observedValue ?? null,
-              thresholdValue:
-                candidate.thresholdValue ?? null,
-              metadata: candidate.metadata ?? {},
-              lastDetectedAt: now,
-            },
-            $setOnInsert: {
-              fingerprint,
-              status: "open",
-              firstDetectedAt: now,
-              occurrenceCount: 0,
-            },
-            $inc: { occurrenceCount: 1 },
+      const result = await InventoryAlertEvent.updateOne(
+        { fingerprint },
+        {
+          $set: {
+            ruleId: rule._id,
+            inventoryItemId: candidate.inventoryItemId ?? null,
+            inventoryMovementId: candidate.inventoryMovementId ?? null,
+            type: rule.type,
+            severity: candidate.severity,
+            message: candidate.message,
+            observedValue: candidate.observedValue ?? null,
+            thresholdValue: candidate.thresholdValue ?? null,
+            metadata: candidate.metadata ?? {},
+            lastDetectedAt: now,
           },
-          { upsert: true },
-        );
+          $setOnInsert: {
+            fingerprint,
+            status: "open",
+            firstDetectedAt: now,
+            occurrenceCount: 0,
+          },
+          $inc: { occurrenceCount: 1 },
+        },
+        { upsert: true },
+      );
 
       if (result.upsertedCount > 0) {
         created += 1;
@@ -326,10 +265,9 @@ export async function evaluateInventoryAlerts(
               alertEventId: String(event._id),
               alertType: rule.type,
               severity: candidate.severity,
-              inventoryItemId:
-                candidate.inventoryItemId
-                  ? String(candidate.inventoryItemId)
-                  : null,
+              inventoryItemId: candidate.inventoryItemId
+                ? String(candidate.inventoryItemId)
+                : null,
             },
           });
 
@@ -354,10 +292,9 @@ export async function evaluateInventoryAlerts(
               type: rule.type,
               severity: candidate.severity,
               message: candidate.message,
-              inventoryItemId:
-                candidate.inventoryItemId
-                  ? String(candidate.inventoryItemId)
-                  : null,
+              inventoryItemId: candidate.inventoryItemId
+                ? String(candidate.inventoryItemId)
+                : null,
             },
           });
         }

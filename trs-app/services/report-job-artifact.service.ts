@@ -38,15 +38,20 @@ export async function readReportJobArtifact(key: string): Promise<{
   contentType: string;
   length: number;
 }> {
-  if (!ObjectId.isValid(key)) throw new AppError("Report output is unavailable.", 404);
+  if (!ObjectId.isValid(key))
+    throw new AppError("Report output is unavailable.", 404);
   const id = new ObjectId(key);
-  const file = await mongoose.connection.db?.collection(`${BUCKET_NAME}.files`).findOne({ _id: id });
+  const file = await mongoose.connection.db
+    ?.collection(`${BUCKET_NAME}.files`)
+    .findOne({ _id: id });
   if (!file) throw new AppError("Report output is unavailable.", 404);
   return {
     stream: bucket().openDownloadStream(id),
     filename: String(file.filename || "report-output"),
     contentType: String(
-      file.metadata?.contentType || file.contentType || "application/octet-stream",
+      file.metadata?.contentType ||
+        file.contentType ||
+        "application/octet-stream",
     ),
     length: Number(file.length || 0),
   };
@@ -54,5 +59,9 @@ export async function readReportJobArtifact(key: string): Promise<{
 
 export async function deleteReportJobArtifact(key: string): Promise<void> {
   if (!ObjectId.isValid(key)) return;
-  try { await bucket().delete(new ObjectId(key)); } catch { /* already removed */ }
+  try {
+    await bucket().delete(new ObjectId(key));
+  } catch {
+    /* already removed */
+  }
 }

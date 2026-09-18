@@ -305,7 +305,10 @@ export function ErrorPageClient({
 
             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3 text-[10px] font-semibold text-[#172536]">
               <a href="tel:+919166694786" className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faPhone} className="h-4 text-[#C8102E]" />
+                <FontAwesomeIcon
+                  icon={faPhone}
+                  className="h-4 text-[#C8102E]"
+                />
                 +91 91666 94786
               </a>
               <p className="flex items-center gap-2">

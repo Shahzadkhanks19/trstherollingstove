@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useState,
-  type FormEvent,
-} from "react";
+import { useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAt,
@@ -25,22 +22,16 @@ type Props = {
   currentEmail: string;
 };
 
-export function AdminChangeEmailClient({
-  currentEmail,
-}: Props) {
+export function AdminChangeEmailClient({ currentEmail }: Props) {
   const [newEmail, setNewEmail] = useState("");
-  const [currentPassword, setCurrentPassword] =
-    useState("");
-  const [passwordVisible, setPasswordVisible] =
-    useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  const normalizedCurrentEmail =
-    currentEmail.trim().toLowerCase();
-  const normalizedNewEmail =
-    newEmail.trim().toLowerCase();
+  const normalizedCurrentEmail = currentEmail.trim().toLowerCase();
+  const normalizedNewEmail = newEmail.trim().toLowerCase();
 
   const canSubmit =
     !saving &&
@@ -48,9 +39,7 @@ export function AdminChangeEmailClient({
     normalizedNewEmail !== normalizedCurrentEmail &&
     currentPassword.length > 0;
 
-  async function submit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!canSubmit) return;
@@ -60,39 +49,29 @@ export function AdminChangeEmailClient({
     setNotice("");
 
     try {
-      const response = await fetch(
-        "/api/v1/auth/change-email",
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          credentials: "include",
-          cache: "no-store",
-          body: JSON.stringify({
-            newEmail: normalizedNewEmail,
-            currentPassword,
-          }),
+      const response = await fetch("/api/v1/auth/change-email", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-      );
+        credentials: "include",
+        cache: "no-store",
+        body: JSON.stringify({
+          newEmail: normalizedNewEmail,
+          currentPassword,
+        }),
+      });
 
-      const body =
-        (await response.json()) as ApiResponse<{
-          email: string;
-        }>;
+      const body = (await response.json()) as ApiResponse<{
+        email: string;
+      }>;
 
       if (!response.ok || !body.success) {
-        throw new Error(
-          body.message ||
-            "Unable to change the login email.",
-        );
+        throw new Error(body.message || "Unable to change the login email.");
       }
 
-      setNotice(
-        body.message ||
-          "Login email changed. Sign in again.",
-      );
+      setNotice(body.message || "Login email changed. Sign in again.");
 
       window.setTimeout(() => {
         window.location.assign(
@@ -129,8 +108,7 @@ export function AdminChangeEmailClient({
             Change login email
           </h2>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Update the email used to sign in to this
-            administrator account.
+            Update the email used to sign in to this administrator account.
           </p>
         </div>
       </div>
@@ -157,9 +135,7 @@ export function AdminChangeEmailClient({
             <input
               type="email"
               value={newEmail}
-              onChange={(event) =>
-                setNewEmail(event.currentTarget.value)
-              }
+              onChange={(event) => setNewEmail(event.currentTarget.value)}
               autoComplete="email"
               inputMode="email"
               placeholder="Enter new login email"
@@ -179,14 +155,10 @@ export function AdminChangeEmailClient({
               className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9a8f87]"
             />
             <input
-              type={
-                passwordVisible ? "text" : "password"
-              }
+              type={passwordVisible ? "text" : "password"}
               value={currentPassword}
               onChange={(event) =>
-                setCurrentPassword(
-                  event.currentTarget.value,
-                )
+                setCurrentPassword(event.currentTarget.value)
               }
               autoComplete="current-password"
               placeholder="Confirm with current password"
@@ -195,9 +167,7 @@ export function AdminChangeEmailClient({
             />
             <button
               type="button"
-              onClick={() =>
-                setPasswordVisible((current) => !current)
-              }
+              onClick={() => setPasswordVisible((current) => !current)}
               aria-label={
                 passwordVisible
                   ? "Hide current password"
@@ -205,13 +175,7 @@ export function AdminChangeEmailClient({
               }
               className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-[#756b63] transition hover:bg-[#f4ece6]"
             >
-              <FontAwesomeIcon
-                icon={
-                  passwordVisible
-                    ? faEyeSlash
-                    : faEye
-                }
-              />
+              <FontAwesomeIcon icon={passwordVisible ? faEyeSlash : faEye} />
             </button>
           </span>
         </label>
@@ -219,28 +183,21 @@ export function AdminChangeEmailClient({
 
       {error ? (
         <p className="mt-5 flex items-start gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-          <FontAwesomeIcon
-            icon={faTriangleExclamation}
-            className="mt-0.5"
-          />
+          <FontAwesomeIcon icon={faTriangleExclamation} className="mt-0.5" />
           {error}
         </p>
       ) : null}
 
       {notice ? (
         <p className="mt-5 flex items-start gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
-          <FontAwesomeIcon
-            icon={faCheck}
-            className="mt-0.5"
-          />
+          <FontAwesomeIcon icon={faCheck} className="mt-0.5" />
           {notice}
         </p>
       ) : null}
 
       <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-5 text-amber-900">
-        Changing the login email signs this account out
-        from every device. Use the new email for the next
-        login.
+        Changing the login email signs this account out from every device. Use
+        the new email for the next login.
       </div>
 
       <button
@@ -248,9 +205,7 @@ export function AdminChangeEmailClient({
         disabled={!canSubmit}
         className="mt-6 h-12 w-full rounded-xl bg-[#C8102E] px-5 text-xs font-black uppercase tracking-[.08em] text-white shadow-lg shadow-red-900/10 transition hover:bg-[#a90d27] disabled:cursor-not-allowed disabled:opacity-45"
       >
-        {saving
-          ? "Changing email…"
-          : "Change login email"}
+        {saving ? "Changing email…" : "Change login email"}
       </button>
     </form>
   );

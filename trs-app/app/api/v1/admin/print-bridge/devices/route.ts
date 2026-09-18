@@ -25,10 +25,13 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const actor = await requirePermission("settings.manage");
-    const body = await request.json() as { name?: string };
+    const body = (await request.json()) as { name?: string };
     const name = body.name?.trim() ?? "";
     if (name.length < 2 || name.length > 120) {
-      throw new AppError("Device name must be between 2 and 120 characters.", 400);
+      throw new AppError(
+        "Device name must be between 2 and 120 characters.",
+        400,
+      );
     }
 
     await connectToDatabase();
@@ -39,15 +42,19 @@ export async function POST(request: Request) {
       createdBy: actor.id,
     });
 
-    return successResponse({
-      device: {
-        _id: String(device._id),
-        name: device.name,
-        platform: device.platform,
-        isActive: device.isActive,
+    return successResponse(
+      {
+        device: {
+          _id: String(device._id),
+          name: device.name,
+          platform: device.platform,
+          isActive: device.isActive,
+        },
+        token: rawToken,
       },
-      token: rawToken,
-    }, "Print bridge device registered. Save the token now; it will not be shown again.", 201);
+      "Print bridge device registered. Save the token now; it will not be shown again.",
+      201,
+    );
   } catch (error) {
     return handleApiError(error);
   }

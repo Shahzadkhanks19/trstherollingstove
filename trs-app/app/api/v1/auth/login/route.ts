@@ -2,10 +2,7 @@ import { setAuthCookies } from "@/lib/auth/cookies";
 import { getRequestMetadata } from "@/lib/auth/requestMeta";
 import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
-import {
-  authenticate,
-  createSession,
-} from "@/services/auth.service";
+import { authenticate, createSession } from "@/services/auth.service";
 import { loginSchema } from "@/validators/auth";
 import { requirePublicOrderingEnabled } from "@/lib/public-ordering";
 
@@ -42,19 +39,16 @@ export async function POST(request: Request) {
       });
     }
 
-    const validationResult =
-      loginSchema.safeParse(requestBody);
+    const validationResult = loginSchema.safeParse(requestBody);
 
     if (!validationResult.success) {
       const responseBody: LoginErrorResponse = {
         success: false,
         message: "Validation failed.",
-        errors: validationResult.error.issues.map(
-          (issue) => ({
-            path: issue.path,
-            message: issue.message,
-          }),
-        ),
+        errors: validationResult.error.issues.map((issue) => ({
+          path: issue.path,
+          message: issue.message,
+        })),
       };
 
       return Response.json(responseBody, {
@@ -64,20 +58,13 @@ export async function POST(request: Request) {
 
     const input = validationResult.data;
 
-    const normalizedIdentifier =
-      input.identifier.trim().toLowerCase();
+    const normalizedIdentifier = input.identifier.trim().toLowerCase();
 
     const metadata = await getRequestMetadata();
 
-    const user = await authenticate(
-      normalizedIdentifier,
-      input.password,
-    );
+    const user = await authenticate(normalizedIdentifier, input.password);
 
-    const session = await createSession(
-      user,
-      metadata,
-    );
+    const session = await createSession(user, metadata);
 
     await setAuthCookies(
       session.accessToken,

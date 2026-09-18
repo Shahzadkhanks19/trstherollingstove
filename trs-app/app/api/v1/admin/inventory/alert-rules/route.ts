@@ -46,11 +46,7 @@ export async function POST(request: Request) {
       updatedBy: actor.id,
     });
 
-    return successResponse(
-      rule,
-      "Inventory alert rule created.",
-      201,
-    );
+    return successResponse(rule, "Inventory alert rule created.", 201);
   } catch (error) {
     return handleApiError(error);
   }

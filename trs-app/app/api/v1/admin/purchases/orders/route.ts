@@ -13,8 +13,7 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const supplierId =
-      url.searchParams.get("supplierId");
+    const supplierId = url.searchParams.get("supplierId");
     const status = url.searchParams.get("status");
 
     const filter: Record<string, unknown> = {};
@@ -27,11 +26,10 @@ export async function GET(request: Request) {
       filter.status = status;
     }
 
-    const purchaseOrders =
-      await PurchaseOrder.find(filter)
-.populate("supplierId", "name code phone")
-        .sort({ orderDate: -1 })
-        .lean();
+    const purchaseOrders = await PurchaseOrder.find(filter)
+      .populate("supplierId", "name code phone")
+      .sort({ orderDate: -1 })
+      .lean();
 
     return successResponse(purchaseOrders);
   } catch (error) {
@@ -41,27 +39,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const actor = await requirePermission(
-      "purchases.manage",
-    );
-    const input = await validateRequestBody(
-      request,
-      createPurchaseOrderSchema,
-    );
+    const actor = await requirePermission("purchases.manage");
+    const input = await validateRequestBody(request, createPurchaseOrderSchema);
 
     await connectToDatabase();
 
-    const purchaseOrder =
-      await createPurchaseOrder({
-        ...input,
-        actorId: actor.id,
-      });
+    const purchaseOrder = await createPurchaseOrder({
+      ...input,
+      actorId: actor.id,
+    });
 
-    return successResponse(
-      purchaseOrder,
-      "Purchase order created.",
-      201,
-    );
+    return successResponse(purchaseOrder, "Purchase order created.", 201);
   } catch (error) {
     return handleApiError(error);
   }

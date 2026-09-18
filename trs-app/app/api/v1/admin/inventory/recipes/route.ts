@@ -12,19 +12,13 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const menuItemId =
-      url.searchParams.get("menuItemId");
+    const menuItemId = url.searchParams.get("menuItemId");
 
-    const filter = menuItemId
-      ? { menuItemId }
-      : {};
+    const filter = menuItemId ? { menuItemId } : {};
 
     const recipes = await MenuItemRecipe.find(filter)
       .populate("menuItemId", "name slug")
-      .populate(
-        "ingredients.inventoryItemId",
-        "name sku unit currentStock",
-      )
+      .populate("ingredients.inventoryItemId", "name sku unit currentStock")
       .sort({ updatedAt: -1 })
       .lean();
 
@@ -36,9 +30,7 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const actor = await requirePermission(
-      "inventory.manage",
-    );
+    const actor = await requirePermission("inventory.manage");
     const input = await validateRequestBody(
       request,
       upsertMenuItemRecipeSchema,
@@ -69,10 +61,7 @@ export async function PUT(request: Request) {
       },
     );
 
-    return successResponse(
-      recipe,
-      "Menu item recipe saved.",
-    );
+    return successResponse(recipe, "Menu item recipe saved.");
   } catch (error) {
     return handleApiError(error);
   }

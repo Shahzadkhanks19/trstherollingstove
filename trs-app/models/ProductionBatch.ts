@@ -40,7 +40,7 @@ const BatchLineSchema = new Schema(
     actualQuantity: { type: Number, required: true, min: 0, default: 0 },
     unitCost: { type: Number, required: true, min: 0, default: 0 },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const ProductionBatchSchema = new Schema<ProductionBatchDocument>(
@@ -93,7 +93,7 @@ const ProductionBatchSchema = new Schema<ProductionBatchDocument>(
       required: true,
     },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 ProductionBatchSchema.index({ productionOrderId: 1, createdAt: -1 });

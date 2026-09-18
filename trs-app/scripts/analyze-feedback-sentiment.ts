@@ -5,9 +5,10 @@ async function main(): Promise<void> {
   await connectToDatabase();
 
   const requestedLimit = Number(process.argv[2] ?? 5000);
-  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
-    ? Math.floor(requestedLimit)
-    : 5000;
+  const limit =
+    Number.isFinite(requestedLimit) && requestedLimit > 0
+      ? Math.floor(requestedLimit)
+      : 5000;
 
   const result = await analyzeExistingReviews(limit);
   console.log(result);

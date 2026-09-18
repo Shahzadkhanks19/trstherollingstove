@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const CouponRedemptionSchema = new Schema(
   {
@@ -35,7 +41,4 @@ export type CouponRedemptionDocument = InferSchemaType<
 >;
 export const CouponRedemption: Model<CouponRedemptionDocument> =
   (models.CouponRedemption as Model<CouponRedemptionDocument>) ||
-  model<CouponRedemptionDocument>(
-    "CouponRedemption",
-    CouponRedemptionSchema,
-  );
+  model<CouponRedemptionDocument>("CouponRedemption", CouponRedemptionSchema);

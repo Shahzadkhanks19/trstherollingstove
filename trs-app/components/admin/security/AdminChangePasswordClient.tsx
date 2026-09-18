@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useMemo,
-  useState,
-  type FormEvent,
-} from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,
@@ -16,10 +12,7 @@ import {
   faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 
-type PasswordField =
-  | "current"
-  | "new"
-  | "confirm";
+type PasswordField = "current" | "new" | "confirm";
 
 type ApiResponse = {
   success?: boolean;
@@ -45,20 +38,15 @@ const rules = [
   },
   {
     label: "Special character",
-    test: (value: string) =>
-      /[^A-Za-z0-9]/.test(value),
+    test: (value: string) => /[^A-Za-z0-9]/.test(value),
   },
 ];
 
 export function AdminChangePasswordClient() {
-  const [currentPassword, setCurrentPassword] =
-    useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
-  const [visible, setVisible] = useState<
-    Record<PasswordField, boolean>
-  >({
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [visible, setVisible] = useState<Record<PasswordField, boolean>>({
     current: false,
     new: false,
     confirm: false,
@@ -68,19 +56,12 @@ export function AdminChangePasswordClient() {
   const [notice, setNotice] = useState("");
 
   const passedRules = useMemo(
-    () =>
-      rules.filter((rule) =>
-        rule.test(newPassword),
-      ).length,
+    () => rules.filter((rule) => rule.test(newPassword)).length,
     [newPassword],
   );
 
   const strengthLabel =
-    passedRules <= 2
-      ? "Weak"
-      : passedRules <= 4
-        ? "Good"
-        : "Strong";
+    passedRules <= 2 ? "Weak" : passedRules <= 4 ? "Good" : "Strong";
 
   function toggle(field: PasswordField) {
     setVisible((current) => ({
@@ -89,50 +70,37 @@ export function AdminChangePasswordClient() {
     }));
   }
 
-  async function submit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError("");
     setNotice("");
 
     try {
-      const response = await fetch(
-        "/api/v1/auth/change-password",
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            currentPassword,
-            newPassword,
-            confirmPassword,
-          }),
+      const response = await fetch("/api/v1/auth/change-password", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-      );
+        credentials: "include",
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+        }),
+      });
 
       const body = (await response.json()) as ApiResponse;
 
       if (!response.ok) {
-        throw new Error(
-          body.message ||
-            "Unable to change the password.",
-        );
+        throw new Error(body.message || "Unable to change the password.");
       }
 
-      setNotice(
-        body.message ||
-          "Password changed. Sign in again.",
-      );
+      setNotice(body.message || "Password changed. Sign in again.");
 
       window.setTimeout(() => {
-        window.location.assign(
-          "/admin/login?message=password-changed",
-        );
+        window.location.assign("/admin/login?message=password-changed");
       }, 1200);
     } catch (cause) {
       setError(
@@ -157,9 +125,8 @@ export function AdminChangePasswordClient() {
           Change Admin Password
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-          Verify your current password and create a
-          stronger replacement. For security, changing
-          the password signs this account out from every
+          Verify your current password and create a stronger replacement. For
+          security, changing the password signs this account out from every
           device.
         </p>
       </header>
@@ -208,9 +175,7 @@ export function AdminChangePasswordClient() {
 
             <div>
               <div className="mb-2 flex items-center justify-between text-xs font-black">
-                <span className="text-slate-500">
-                  Password strength
-                </span>
+                <span className="text-slate-500">Password strength</span>
                 <span
                   className={
                     passedRules === rules.length
@@ -263,10 +228,7 @@ export function AdminChangePasswordClient() {
 
           {notice ? (
             <p className="mt-5 flex items-start gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
-              <FontAwesomeIcon
-                icon={faCheck}
-                className="mt-0.5"
-              />
+              <FontAwesomeIcon icon={faCheck} className="mt-0.5" />
               {notice}
             </p>
           ) : null}
@@ -274,17 +236,12 @@ export function AdminChangePasswordClient() {
           <button
             type="submit"
             disabled={
-              saving ||
-              !currentPassword ||
-              !newPassword ||
-              !confirmPassword
+              saving || !currentPassword || !newPassword || !confirmPassword
             }
             className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C8102E] px-5 text-sm font-black text-white shadow-lg transition hover:bg-[#a90d27] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <FontAwesomeIcon icon={faLock} />
-            {saving
-              ? "Updating password..."
-              : "Change password"}
+            {saving ? "Updating password..." : "Change password"}
           </button>
         </form>
 
@@ -294,17 +251,12 @@ export function AdminChangePasswordClient() {
               icon={faShieldHalved}
               className="text-2xl text-[#E8A53A]"
             />
-            <h2 className="mt-4 text-xl font-black">
-              Password requirements
-            </h2>
+            <h2 className="mt-4 text-xl font-black">Password requirements</h2>
             <div className="mt-5 space-y-3">
               {rules.map((rule) => {
                 const passed = rule.test(newPassword);
                 return (
-                  <div
-                    key={rule.label}
-                    className="flex items-center gap-3"
-                  >
+                  <div key={rule.label} className="flex items-center gap-3">
                     <span
                       className={`grid h-6 w-6 place-items-center rounded-full text-[10px] ${
                         passed
@@ -316,9 +268,7 @@ export function AdminChangePasswordClient() {
                     </span>
                     <span
                       className={`text-sm font-bold ${
-                        passed
-                          ? "text-white"
-                          : "text-white/55"
+                        passed ? "text-white" : "text-white/55"
                       }`}
                     >
                       {rule.label}
@@ -334,9 +284,8 @@ export function AdminChangePasswordClient() {
               After changing the password
             </h3>
             <p className="mt-2 text-sm leading-6 text-amber-900/75">
-              Every active session is revoked. You will
-              be redirected to the admin login page and
-              must sign in using the new password.
+              Every active session is revoked. You will be redirected to the
+              admin login page and must sign in using the new password.
             </p>
           </section>
         </aside>
@@ -380,22 +329,16 @@ function PasswordInput({
           required
           autoComplete={autoComplete}
           placeholder={placeholder}
-          onChange={(event) =>
-            onChange(event.currentTarget.value)
-          }
+          onChange={(event) => onChange(event.currentTarget.value)}
           className={inputClass}
         />
         <button
           type="button"
           onClick={onToggle}
           className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-[#756960] hover:bg-[#f3ece5]"
-          aria-label={
-            visible ? `Hide ${label}` : `Show ${label}`
-          }
+          aria-label={visible ? `Hide ${label}` : `Show ${label}`}
         >
-          <FontAwesomeIcon
-            icon={visible ? faEyeSlash : faEye}
-          />
+          <FontAwesomeIcon icon={visible ? faEyeSlash : faEye} />
         </button>
       </span>
     </label>

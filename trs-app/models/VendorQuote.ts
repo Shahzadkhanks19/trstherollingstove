@@ -1,5 +1,8 @@
 import { Schema, model, models, type Model, type Types } from "mongoose";
-import type { VendorQuoteLine, VendorQuoteStatus } from "@/types/production-vendor";
+import type {
+  VendorQuoteLine,
+  VendorQuoteStatus,
+} from "@/types/production-vendor";
 
 export interface VendorQuoteDocument {
   _id: Types.ObjectId;
@@ -42,7 +45,7 @@ const VendorQuoteLineSchema = new Schema(
     taxRate: { type: Number, required: true, min: 0, max: 100, default: 0 },
     leadTimeDays: { type: Number, required: true, min: 0, default: 0 },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const VendorQuoteSchema = new Schema<VendorQuoteDocument>(
@@ -75,13 +78,26 @@ const VendorQuoteSchema = new Schema<VendorQuoteDocument>(
     },
     status: {
       type: String,
-      enum: ["draft", "submitted", "under_review", "accepted", "rejected", "withdrawn"],
+      enum: [
+        "draft",
+        "submitted",
+        "under_review",
+        "accepted",
+        "rejected",
+        "withdrawn",
+      ],
       default: "draft",
       required: true,
       index: true,
     },
     validUntil: { type: Date, default: null, index: true },
-    currency: { type: String, required: true, trim: true, uppercase: true, default: "INR" },
+    currency: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+      default: "INR",
+    },
     lines: { type: [VendorQuoteLineSchema], default: [] },
     subtotal: { type: Number, required: true, min: 0, default: 0 },
     taxTotal: { type: Number, required: true, min: 0, default: 0 },
@@ -91,11 +107,15 @@ const VendorQuoteSchema = new Schema<VendorQuoteDocument>(
     notes: { type: String, trim: true, default: "", maxlength: 2000 },
     submittedAt: { type: Date, default: null },
     reviewedAt: { type: Date, default: null },
-    reviewedBy: { type: Schema.Types.ObjectId, ref: "AdminUser", default: null },
+    reviewedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "AdminUser",
+      default: null,
+    },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 VendorQuoteSchema.index({ vendorId: 1, createdAt: -1 });

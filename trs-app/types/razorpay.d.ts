@@ -2,12 +2,17 @@ export {};
 
 declare global {
   interface Window {
-    Razorpay?: new (options: RazorpayCheckoutOptions) => RazorpayCheckoutInstance;
+    Razorpay?: new (
+      options: RazorpayCheckoutOptions,
+    ) => RazorpayCheckoutInstance;
   }
 
   interface RazorpayCheckoutInstance {
     open(): void;
-    on(event: "payment.failed", handler: (response: RazorpayFailureResponse) => void): void;
+    on(
+      event: "payment.failed",
+      handler: (response: RazorpayFailureResponse) => void,
+    ): void;
   }
 
   interface RazorpayCheckoutOptions {
@@ -20,7 +25,11 @@ declare global {
     image?: string;
     prefill?: { name?: string; email?: string; contact?: string };
     theme?: { color?: string };
-    modal?: { ondismiss?: () => void; escape?: boolean; backdropclose?: boolean };
+    modal?: {
+      ondismiss?: () => void;
+      escape?: boolean;
+      backdropclose?: boolean;
+    };
     handler(response: RazorpaySuccessResponse): void | Promise<void>;
   }
 

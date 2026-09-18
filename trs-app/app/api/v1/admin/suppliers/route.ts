@@ -48,9 +48,7 @@ export async function GET(request: Request) {
       filter.isActive = false;
     }
 
-    const suppliers = await Supplier.find(filter)
-      .sort({ name: 1 })
-      .lean();
+    const suppliers = await Supplier.find(filter).sort({ name: 1 }).lean();
 
     return successResponse(suppliers);
   } catch (error) {
@@ -60,13 +58,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const actor = await requirePermission(
-      "suppliers.manage",
-    );
-    const input = await validateRequestBody(
-      request,
-      createSupplierSchema,
-    );
+    const actor = await requirePermission("suppliers.manage");
+    const input = await validateRequestBody(request, createSupplierSchema);
 
     await connectToDatabase();
 
@@ -77,11 +70,7 @@ export async function POST(request: Request) {
       updatedBy: actor.id,
     });
 
-    return successResponse(
-      supplier,
-      "Supplier created.",
-      201,
-    );
+    return successResponse(supplier, "Supplier created.", 201);
   } catch (error) {
     return handleApiError(error);
   }

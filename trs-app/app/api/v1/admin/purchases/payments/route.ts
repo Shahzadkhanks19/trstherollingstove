@@ -13,10 +13,8 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const supplierId =
-      url.searchParams.get("supplierId");
-    const purchaseOrderId =
-      url.searchParams.get("purchaseOrderId");
+    const supplierId = url.searchParams.get("supplierId");
+    const purchaseOrderId = url.searchParams.get("purchaseOrderId");
 
     const filter: Record<string, unknown> = {};
 
@@ -25,26 +23,18 @@ export async function GET(request: Request) {
     }
 
     if (purchaseOrderId) {
-      filter.purchaseOrderId =
-        purchaseOrderId;
+      filter.purchaseOrderId = purchaseOrderId;
     }
 
-    const payments =
-      await SupplierPayment.find(filter)
-        .populate(
-          "supplierId",
-          "name code",
-        )
-        .populate(
-          "purchaseOrderId",
-          "purchaseOrderNumber grandTotal balanceAmount",
-        )
-        .populate(
-          "recordedBy",
-          "name",
-        )
-        .sort({ paymentDate: -1 })
-        .lean();
+    const payments = await SupplierPayment.find(filter)
+      .populate("supplierId", "name code")
+      .populate(
+        "purchaseOrderId",
+        "purchaseOrderNumber grandTotal balanceAmount",
+      )
+      .populate("recordedBy", "name")
+      .sort({ paymentDate: -1 })
+      .lean();
 
     return successResponse(payments);
   } catch (error) {
@@ -54,9 +44,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const actor = await requirePermission(
-      "purchases.manage",
-    );
+    const actor = await requirePermission("purchases.manage");
     const input = await validateRequestBody(
       request,
       createSupplierPaymentSchema,
@@ -69,11 +57,7 @@ export async function POST(request: Request) {
       actorId: actor.id,
     });
 
-    return successResponse(
-      payment,
-      "Supplier payment recorded.",
-      201,
-    );
+    return successResponse(payment, "Supplier payment recorded.", 201);
   } catch (error) {
     return handleApiError(error);
   }

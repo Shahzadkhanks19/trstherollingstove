@@ -13,10 +13,7 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(
-  _request: Request,
-  context: Context,
-) {
+export async function GET(_request: Request, context: Context) {
   try {
     await requirePermission("pos.use");
     const { id } = await context.params;
@@ -35,17 +32,11 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: Request,
-  context: Context,
-) {
+export async function POST(request: Request, context: Context) {
   try {
     const actor = await requirePermission("pos.use");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      createCashMovementSchema,
-    );
+    const input = await validateRequestBody(request, createCashMovementSchema);
 
     await connectToDatabase();
 
@@ -55,10 +46,7 @@ export async function POST(
     });
 
     if (!shift) {
-      throw new AppError(
-        "Open POS shift not found.",
-        404,
-      );
+      throw new AppError("Open POS shift not found.", 404);
     }
 
     const movement = await POSCashMovement.create({

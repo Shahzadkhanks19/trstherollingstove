@@ -10,7 +10,9 @@ export async function GET() {
   try {
     await requirePermission("settings.manage");
     await connectToDatabase();
-    const integration = await ReputationIntegration.findOne({ provider: "google_business_profile" }).lean();
+    const integration = await ReputationIntegration.findOne({
+      provider: "google_business_profile",
+    }).lean();
     return successResponse(integration);
   } catch (error) {
     return handleApiError(error);
@@ -27,7 +29,10 @@ export async function PUT(request: Request) {
       { $set: input, $setOnInsert: { provider: "google_business_profile" } },
       { new: true, upsert: true, runValidators: true, returnDocument: "after" },
     ).lean();
-    return successResponse(integration, "Google review integration settings updated.");
+    return successResponse(
+      integration,
+      "Google review integration settings updated.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

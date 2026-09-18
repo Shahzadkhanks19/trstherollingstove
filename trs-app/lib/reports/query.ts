@@ -7,15 +7,10 @@ export type ReportRange = {
   to: Date;
 };
 
-export function resolveReportRange(
-  from?: string,
-  to?: string,
-): ReportRange {
+export function resolveReportRange(from?: string, to?: string): ReportRange {
   const now = new Date();
 
-  const resolvedTo = to
-    ? new Date(`${to}T23:59:59.999+05:30`)
-    : now;
+  const resolvedTo = to ? new Date(`${to}T23:59:59.999+05:30`) : now;
 
   const resolvedFrom = from
     ? new Date(`${from}T00:00:00.000+05:30`)
@@ -29,22 +24,13 @@ export function resolveReportRange(
   }
 
   if (resolvedFrom > resolvedTo) {
-    throw new AppError(
-      "Report start date must be before the end date.",
-      400,
-    );
+    throw new AppError("Report start date must be before the end date.", 400);
   }
 
   const maximumRangeMs = 366 * DAY_MS;
 
-  if (
-    resolvedTo.getTime() - resolvedFrom.getTime() >
-    maximumRangeMs
-  ) {
-    throw new AppError(
-      "Report date range cannot exceed 366 days.",
-      400,
-    );
+  if (resolvedTo.getTime() - resolvedFrom.getTime() > maximumRangeMs) {
+    throw new AppError("Report date range cannot exceed 366 days.", 400);
   }
 
   return {
@@ -53,11 +39,8 @@ export function resolveReportRange(
   };
 }
 
-export function getPreviousRange(
-  range: ReportRange,
-): ReportRange {
-  const duration =
-    range.to.getTime() - range.from.getTime();
+export function getPreviousRange(range: ReportRange): ReportRange {
+  const duration = range.to.getTime() - range.from.getTime();
 
   return {
     from: new Date(range.from.getTime() - duration - 1),
@@ -65,15 +48,10 @@ export function getPreviousRange(
   };
 }
 
-export function percentageChange(
-  current: number,
-  previous: number,
-) {
+export function percentageChange(current: number, previous: number) {
   if (previous === 0) {
     return current === 0 ? 0 : 100;
   }
 
-  return Number(
-    (((current - previous) / previous) * 100).toFixed(2),
-  );
+  return Number((((current - previous) / previous) * 100).toFixed(2));
 }

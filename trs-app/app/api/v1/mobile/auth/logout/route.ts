@@ -2,7 +2,10 @@ import { requireMobileCustomer } from "@/lib/auth/mobileSession";
 import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
 import { validateRequestBody } from "@/lib/validation/validateRequest";
-import { revokeMobileDevice, revokeMobileSession } from "@/services/mobile.service";
+import {
+  revokeMobileDevice,
+  revokeMobileSession,
+} from "@/services/mobile.service";
 import { mobileLogoutSchema } from "@/validators/mobile";
 
 export async function POST(request: Request) {

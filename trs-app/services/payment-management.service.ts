@@ -11,7 +11,8 @@ import type {
   paymentReverseSchema,
 } from "@/validators/payment-management";
 
-const round = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+const round = (value: number) =>
+  Math.round((value + Number.EPSILON) * 100) / 100;
 const dayKey = (date: Date) => date.toISOString().slice(0, 10);
 
 export function getPaymentManagementRange(days: number) {
@@ -24,7 +25,11 @@ export function getPaymentManagementRange(days: number) {
 }
 
 type Breakdown = { count: number; amount: number };
-function addBreakdown(map: Map<string, Breakdown>, key: string, amount: number) {
+function addBreakdown(
+  map: Map<string, Breakdown>,
+  key: string,
+  amount: number,
+) {
   const current = map.get(key) ?? { count: 0, amount: 0 };
   current.count += 1;
   current.amount += amount;
@@ -32,7 +37,11 @@ function addBreakdown(map: Map<string, Breakdown>, key: string, amount: number) 
 }
 function finishBreakdown(map: Map<string, Breakdown>) {
   return [...map.entries()]
-    .map(([key, value]) => ({ key, count: value.count, amount: round(value.amount) }))
+    .map(([key, value]) => ({
+      key,
+      count: value.count,
+      amount: round(value.amount),
+    }))
     .sort((a, b) => b.amount - a.amount);
 }
 
@@ -48,17 +57,26 @@ export async function refundManagedPayment(
     throw new AppError("Only captured payments can be refunded.", 409);
   }
   const refundable = round(payment.amount - payment.amountRefunded);
-  if (input.amount > refundable) throw new AppError("Refund amount exceeds the refundable balance.", 400);
+  if (input.amount > refundable)
+    throw new AppError("Refund amount exceeds the refundable balance.", 400);
 
   payment.amountRefunded = round(payment.amountRefunded + input.amount);
-  payment.status = payment.amountRefunded >= payment.amount ? "refunded" : "partially_refunded";
+  payment.status =
+    payment.amountRefunded >= payment.amount
+      ? "refunded"
+      : "partially_refunded";
   payment.refundedAt = new Date();
   payment.providerRefundId = input.providerRefundId;
-  if (input.providerRefundId && !payment.providerRefundIds.includes(input.providerRefundId)) {
+  if (
+    input.providerRefundId &&
+    !payment.providerRefundIds.includes(input.providerRefundId)
+  ) {
     payment.providerRefundIds.push(input.providerRefundId);
   }
   payment.rawMetadata = {
-    ...(payment.rawMetadata && typeof payment.rawMetadata === "object" ? payment.rawMetadata : {}),
+    ...(payment.rawMetadata && typeof payment.rawMetadata === "object"
+      ? payment.rawMetadata
+      : {}),
     lastFinanceRefund: {
       amount: input.amount,
       reason: input.reason,
@@ -82,14 +100,21 @@ export async function reverseManagedPayment(
   if (["refunded", "partially_refunded"].includes(payment.status)) {
     throw new AppError("Refunded payments cannot be reversed.", 409);
   }
-  if (payment.status === "failed") throw new AppError("Payment is already marked as failed.", 409);
+  if (payment.status === "failed")
+    throw new AppError("Payment is already marked as failed.", 409);
 
   payment.status = "failed";
   payment.failureCode = "finance_reversal";
   payment.failureDescription = input.reason;
   payment.rawMetadata = {
-    ...(payment.rawMetadata && typeof payment.rawMetadata === "object" ? payment.rawMetadata : {}),
-    financeReversal: { reason: input.reason, actorId, reversedAt: new Date().toISOString() },
+    ...(payment.rawMetadata && typeof payment.rawMetadata === "object"
+      ? payment.rawMetadata
+      : {}),
+    financeReversal: {
+      reason: input.reason,
+      actorId,
+      reversedAt: new Date().toISOString(),
+    },
   };
   payment.updatedBy = new Types.ObjectId(actorId);
   await payment.save();
@@ -103,9 +128,16 @@ export async function reconcileManagedPayment(
   await connectToDatabase();
   const payment = await Payment.findById(input.paymentId);
   if (!payment) throw new AppError("Payment not found.", 404);
-  const expectedAmount = round(Math.max(0, payment.amount - payment.amountRefunded));
+  const expectedAmount = round(
+    Math.max(0, payment.amount - payment.amountRefunded),
+  );
   const differenceAmount = round(input.settledAmount - expectedAmount);
-  const status = Math.abs(differenceAmount) < 0.01 ? "matched" : input.settledAmount === 0 ? "unmatched" : "difference";
+  const status =
+    Math.abs(differenceAmount) < 0.01
+      ? "matched"
+      : input.settledAmount === 0
+        ? "unmatched"
+        : "difference";
 
   return PaymentReconciliation.create({
     paymentId: payment._id,
@@ -132,7 +164,9 @@ export async function buildPaymentManagementSnapshot(input: {
   const range = getPaymentManagementRange(input.days);
   const [payments, reconciliations] = await Promise.all([
     Payment.find({ createdAt: { $gte: range.start, $lte: range.end } }).lean(),
-    PaymentReconciliation.find({ reconciledAt: { $gte: range.start, $lte: range.end } }).lean(),
+    PaymentReconciliation.find({
+      reconciledAt: { $gte: range.start, $lte: range.end },
+    }).lean(),
   ]);
 
   const byStatus = new Map<string, Breakdown>();
@@ -152,20 +186,26 @@ export async function buildPaymentManagementSnapshot(input: {
     const refunded = Number(payment.amountRefunded);
     grossAmount += amount;
     refundedAmount += refunded;
-    if (["captured", "partially_refunded", "refunded"].includes(payment.status)) {
+    if (
+      ["captured", "partially_refunded", "refunded"].includes(payment.status)
+    ) {
       capturedCount += 1;
       capturedAmount += amount;
     }
     if (payment.status === "failed") failedCount += 1;
-    if (["created", "authorized", "refund_pending"].includes(payment.status)) pendingCount += 1;
-    if (["partially_refunded", "refunded"].includes(payment.status)) refundedCount += 1;
+    if (["created", "authorized", "refund_pending"].includes(payment.status))
+      pendingCount += 1;
+    if (["partially_refunded", "refunded"].includes(payment.status))
+      refundedCount += 1;
     addBreakdown(byStatus, payment.status, amount);
     addBreakdown(byMethod, payment.method || "unknown", amount);
     addBreakdown(byProvider, payment.provider || "unknown", amount);
     addBreakdown(byDay, dayKey(new Date(payment.createdAt)), amount);
   }
 
-  const matchedReconciliationCount = reconciliations.filter((row) => row.status === "matched").length;
+  const matchedReconciliationCount = reconciliations.filter(
+    (row) => row.status === "matched",
+  ).length;
   const unmatchedAmount = reconciliations
     .filter((row) => row.status !== "matched")
     .reduce((sum, row) => sum + Math.abs(Number(row.differenceAmount)), 0);
@@ -180,8 +220,12 @@ export async function buildPaymentManagementSnapshot(input: {
     capturedAmount: round(capturedAmount),
     refundedAmount: round(refundedAmount),
     netCollectedAmount: round(capturedAmount - refundedAmount),
-    successRate: attemptedCount ? round((capturedCount / attemptedCount) * 100) : 0,
-    failureRate: attemptedCount ? round((failedCount / attemptedCount) * 100) : 0,
+    successRate: attemptedCount
+      ? round((capturedCount / attemptedCount) * 100)
+      : 0,
+    failureRate: attemptedCount
+      ? round((failedCount / attemptedCount) * 100)
+      : 0,
     reconciliationCount: reconciliations.length,
     matchedReconciliationCount,
     unmatchedAmount: round(unmatchedAmount),
@@ -199,9 +243,13 @@ export async function buildPaymentManagementSnapshot(input: {
         byStatus: finishBreakdown(byStatus),
         byMethod: finishBreakdown(byMethod),
         byProvider: finishBreakdown(byProvider),
-        byDay: finishBreakdown(byDay).sort((a, b) => a.key.localeCompare(b.key)),
+        byDay: finishBreakdown(byDay).sort((a, b) =>
+          a.key.localeCompare(b.key),
+        ),
         generatedAt: new Date(),
-        generatedBy: input.generatedBy ? new Types.ObjectId(input.generatedBy) : null,
+        generatedBy: input.generatedBy
+          ? new Types.ObjectId(input.generatedBy)
+          : null,
         source: input.source,
       },
     },
@@ -213,17 +261,22 @@ export async function getPaymentManagementSummary(days: number) {
   await connectToDatabase();
   const range = getPaymentManagementRange(days);
   const periodKey = `${dayKey(range.start)}_${dayKey(range.end)}`;
-  const [existingSnapshot, recentPayments, recentReconciliations] = await Promise.all([
-    PaymentManagementSnapshot.findOne({ periodKey }).lean(),
-    Payment.find({ createdAt: { $gte: range.start, $lte: range.end } })
-      .sort({ createdAt: -1 })
-      .limit(30)
-      .lean(),
-    PaymentReconciliation.find({ reconciledAt: { $gte: range.start, $lte: range.end } })
-      .sort({ reconciledAt: -1 })
-      .limit(20)
-      .lean(),
-  ]);
-  const snapshot = existingSnapshot ?? await buildPaymentManagementSnapshot({ days, source: "system" });
+  const [existingSnapshot, recentPayments, recentReconciliations] =
+    await Promise.all([
+      PaymentManagementSnapshot.findOne({ periodKey }).lean(),
+      Payment.find({ createdAt: { $gte: range.start, $lte: range.end } })
+        .sort({ createdAt: -1 })
+        .limit(30)
+        .lean(),
+      PaymentReconciliation.find({
+        reconciledAt: { $gte: range.start, $lte: range.end },
+      })
+        .sort({ reconciledAt: -1 })
+        .limit(20)
+        .lean(),
+    ]);
+  const snapshot =
+    existingSnapshot ??
+    (await buildPaymentManagementSnapshot({ days, source: "system" }));
   return { snapshot, recentPayments, recentReconciliations };
 }

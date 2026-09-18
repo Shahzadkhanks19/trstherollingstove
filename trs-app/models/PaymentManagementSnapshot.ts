@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const BreakdownSchema = new Schema(
   {
@@ -37,12 +43,21 @@ const PaymentManagementSnapshotSchema = new Schema(
     byDay: { type: [BreakdownSchema], default: [] },
     generatedAt: { type: Date, required: true, default: Date.now },
     generatedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
-    source: { type: String, enum: ["manual", "scheduled", "system"], default: "system" },
+    source: {
+      type: String,
+      enum: ["manual", "scheduled", "system"],
+      default: "system",
+    },
   },
   { timestamps: true, versionKey: false },
 );
 
-export type PaymentManagementSnapshotRecord = InferSchemaType<typeof PaymentManagementSnapshotSchema>;
+export type PaymentManagementSnapshotRecord = InferSchemaType<
+  typeof PaymentManagementSnapshotSchema
+>;
 export const PaymentManagementSnapshot: Model<PaymentManagementSnapshotRecord> =
   (models.PaymentManagementSnapshot as Model<PaymentManagementSnapshotRecord>) ||
-  model<PaymentManagementSnapshotRecord>("PaymentManagementSnapshot", PaymentManagementSnapshotSchema);
+  model<PaymentManagementSnapshotRecord>(
+    "PaymentManagementSnapshot",
+    PaymentManagementSnapshotSchema,
+  );

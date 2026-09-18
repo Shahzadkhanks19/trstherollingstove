@@ -140,9 +140,8 @@ export function NotFoundPageClient() {
             </div>
 
             <p className="mt-6 max-w-[560px] text-base leading-8 text-[#4F4943] sm:text-lg">
-              Looks like you wandered off the menu. The page you are looking
-              for does not exist, may have moved or is temporarily
-              unavailable.
+              Looks like you wandered off the menu. The page you are looking for
+              does not exist, may have moved or is temporarily unavailable.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3">

@@ -1,10 +1,16 @@
 import { z } from "zod";
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid identifier.");
-const urlField = z.string().max(500).refine(
-  (value) => value === "" || value.startsWith("/uploads/") || z.url().safeParse(value).success,
-  "Enter a valid image URL.",
-);
+const urlField = z
+  .string()
+  .max(500)
+  .refine(
+    (value) =>
+      value === "" ||
+      value.startsWith("/uploads/") ||
+      z.url().safeParse(value).success,
+    "Enter a valid image URL.",
+  );
 const timeField = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time. Use HH:mm.");
@@ -102,10 +108,7 @@ function validModifierSelectionRange(value: {
   minSelections?: number;
   maxSelections?: number;
 }) {
-  if (
-    value.minSelections === undefined ||
-    value.maxSelections === undefined
-  ) {
+  if (value.minSelections === undefined || value.maxSelections === undefined) {
     return true;
   }
 
@@ -139,19 +142,29 @@ const combinationPriceEntrySchema = z.object({
   price: z.number().min(0),
 });
 
-const combinationPricingSchema = z.object({
-  enabled: z.boolean().default(false),
-  modifierGroupId: objectId.nullable().default(null),
-  entries: z.array(combinationPriceEntrySchema).max(100).default([]),
-}).superRefine((value, context) => {
-  if (!value.enabled) return;
-  if (!value.modifierGroupId) {
-    context.addIssue({ code: "custom", message: "Select the combination-pricing modifier group.", path: ["modifierGroupId"] });
-  }
-  if (value.entries.length === 0) {
-    context.addIssue({ code: "custom", message: "Add combination prices.", path: ["entries"] });
-  }
-});
+const combinationPricingSchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    modifierGroupId: objectId.nullable().default(null),
+    entries: z.array(combinationPriceEntrySchema).max(100).default([]),
+  })
+  .superRefine((value, context) => {
+    if (!value.enabled) return;
+    if (!value.modifierGroupId) {
+      context.addIssue({
+        code: "custom",
+        message: "Select the combination-pricing modifier group.",
+        path: ["modifierGroupId"],
+      });
+    }
+    if (value.entries.length === 0) {
+      context.addIssue({
+        code: "custom",
+        message: "Add combination prices.",
+        path: ["entries"],
+      });
+    }
+  });
 
 const pizzaConfigurationSchema = z.object({
   thinCrustAvailable: z.boolean().default(true),
@@ -170,8 +183,15 @@ const menuItemBaseSchema = z.object({
   basePrice: z.number().min(0),
   compareAtPrice: z.number().min(0).nullable().optional(),
   variants: z.array(variantSchema).max(30).default([]),
-  combinationPricing: combinationPricingSchema.default({ enabled: false, modifierGroupId: null, entries: [] }),
-  pizzaConfiguration: pizzaConfigurationSchema.default({ thinCrustAvailable: true, thinCrustPriceAdjustment: 0 }),
+  combinationPricing: combinationPricingSchema.default({
+    enabled: false,
+    modifierGroupId: null,
+    entries: [],
+  }),
+  pizzaConfiguration: pizzaConfigurationSchema.default({
+    thinCrustAvailable: true,
+    thinCrustPriceAdjustment: 0,
+  }),
   modifierGroupIds: z
     .array(objectId)
     .max(30)
@@ -185,18 +205,9 @@ const menuItemBaseSchema = z.object({
   spiceLevel: z.enum(["none", "mild", "medium", "hot"]).default("none"),
   preparationTimeMinutes: z.number().int().min(0).max(240).default(15),
   calories: z.number().min(0).nullable().optional(),
-  allergens: z
-    .array(z.string().trim().min(1).max(50))
-    .max(30)
-    .default([]),
-  tags: z
-    .array(z.string().trim().min(1).max(50))
-    .max(30)
-    .default([]),
-  availabilityWindows: z
-    .array(availabilityWindowSchema)
-    .max(30)
-    .default([]),
+  allergens: z.array(z.string().trim().min(1).max(50)).max(30).default([]),
+  tags: z.array(z.string().trim().min(1).max(50)).max(30).default([]),
+  availabilityWindows: z.array(availabilityWindowSchema).max(30).default([]),
   availableForDineIn: z.boolean().default(true),
   availableForTakeaway: z.boolean().default(true),
   isAvailable: z.boolean().default(true),
@@ -204,32 +215,73 @@ const menuItemBaseSchema = z.object({
   isFeatured: z.boolean().default(false),
   isBestseller: z.boolean().default(false),
   isCombo: z.boolean().default(false),
-  comboComponents: z.array(z.object({ menuItemId: objectId, variantId: objectId.nullable().optional(), quantity: z.number().int().min(1).max(50) })).max(50).default([]),
+  comboComponents: z
+    .array(
+      z.object({
+        menuItemId: objectId,
+        variantId: objectId.nullable().optional(),
+        quantity: z.number().int().min(1).max(50),
+      }),
+    )
+    .max(50)
+    .default([]),
   comboOfferType: z.enum(["permanent", "limited"]).default("permanent"),
   comboOfferStartsAt: z.iso.datetime().nullable().optional(),
   comboOfferExpiresAt: z.iso.datetime().nullable().optional(),
   publishComboOnMenuPage: z.boolean().default(true),
   publishComboOnOffersPage: z.boolean().default(false),
   comboOffersPageSection: z.enum(["permanent", "todays"]).default("permanent"),
-  eligibleTierKeys: z.array(z.enum(["bronze", "silver", "gold", "platinum"])).min(1).max(4).default(["bronze", "silver", "gold", "platinum"]),
+  eligibleTierKeys: z
+    .array(z.enum(["bronze", "silver", "gold", "platinum"]))
+    .min(1)
+    .max(4)
+    .default(["bronze", "silver", "gold", "platinum"]),
   isTodaysSpecialOffer: z.boolean().default(false),
   todaysSpecialOfferStartsAt: z.iso.datetime().nullable().optional(),
   trackInventory: z.boolean().default(false),
   sortOrder: z.number().int().default(0),
 });
 
-function validateComboOffer(value: { isCombo?: boolean; comboOfferType?: "permanent" | "limited"; comboOfferStartsAt?: string | null; comboOfferExpiresAt?: string | null; comboOffersPageSection?: "permanent" | "todays"; publishComboOnOffersPage?: boolean }, context: z.RefinementCtx) {
+function validateComboOffer(
+  value: {
+    isCombo?: boolean;
+    comboOfferType?: "permanent" | "limited";
+    comboOfferStartsAt?: string | null;
+    comboOfferExpiresAt?: string | null;
+    comboOffersPageSection?: "permanent" | "todays";
+    publishComboOnOffersPage?: boolean;
+  },
+  context: z.RefinementCtx,
+) {
   if (!value.isCombo) return;
-  if (value.comboOfferType === "limited" && (!value.comboOfferStartsAt || !value.comboOfferExpiresAt)) {
-    context.addIssue({ code: "custom", path: ["comboOfferExpiresAt"], message: "Limited-time combos require start and expiry dates." });
+  if (
+    value.comboOfferType === "limited" &&
+    (!value.comboOfferStartsAt || !value.comboOfferExpiresAt)
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["comboOfferExpiresAt"],
+      message: "Limited-time combos require start and expiry dates.",
+    });
   }
-  if (value.comboOfferStartsAt && value.comboOfferExpiresAt && new Date(value.comboOfferExpiresAt) <= new Date(value.comboOfferStartsAt)) {
-    context.addIssue({ code: "custom", path: ["comboOfferExpiresAt"], message: "Combo expiry must be after its start date." });
+  if (
+    value.comboOfferStartsAt &&
+    value.comboOfferExpiresAt &&
+    new Date(value.comboOfferExpiresAt) <= new Date(value.comboOfferStartsAt)
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["comboOfferExpiresAt"],
+      message: "Combo expiry must be after its start date.",
+    });
   }
 }
 
 function validateTodaysSpecialOffer(
-  value: { isTodaysSpecialOffer?: boolean; todaysSpecialOfferStartsAt?: string | null },
+  value: {
+    isTodaysSpecialOffer?: boolean;
+    todaysSpecialOfferStartsAt?: string | null;
+  },
   context: z.RefinementCtx,
 ) {
   if (value.isTodaysSpecialOffer && !value.todaysSpecialOfferStartsAt) {
@@ -241,8 +293,9 @@ function validateTodaysSpecialOffer(
   }
 }
 
-export const menuItemCreateSchema =
-  menuItemBaseSchema.superRefine(validateTodaysSpecialOffer).superRefine(validateComboOffer);
+export const menuItemCreateSchema = menuItemBaseSchema
+  .superRefine(validateTodaysSpecialOffer)
+  .superRefine(validateComboOffer);
 
 export const menuItemUpdateSchema = menuItemBaseSchema
   .partial()

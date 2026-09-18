@@ -9,7 +9,8 @@ import { updateCartPreferencesSchema } from "@/validators/order";
 
 async function customer() {
   const actor = await requireAuthenticatedUser();
-  if (actor.roleKey !== "customer") throw new AppError("Customer access required.", 403);
+  if (actor.roleKey !== "customer")
+    throw new AppError("Customer access required.", 403);
   return actor;
 }
 
@@ -27,7 +28,10 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const actor = await customer();
-    const input = await validateRequestBody(request, updateCartPreferencesSchema);
+    const input = await validateRequestBody(
+      request,
+      updateCartPreferencesSchema,
+    );
     await connectToDatabase();
     const cart = await getOrCreateCart(actor.id);
 
@@ -38,11 +42,15 @@ export async function PATCH(request: Request) {
         ? new Date(input.requestedPickupAt)
         : null;
     }
-    if (input.customerNote !== undefined) cart.customerNote = input.customerNote;
+    if (input.customerNote !== undefined)
+      cart.customerNote = input.customerNote;
 
     if (cart.orderMode === "takeaway") cart.tableNumber = "";
     await cart.save();
-    return successResponse(await recalculateCart(actor.id), "Cart preferences updated.");
+    return successResponse(
+      await recalculateCart(actor.id),
+      "Cart preferences updated.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

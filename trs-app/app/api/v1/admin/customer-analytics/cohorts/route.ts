@@ -1,1 +1,15 @@
-import { requirePermission } from "@/lib/auth/session";import { connectToDatabase } from "@/lib/db/mongoose";import { handleApiError } from "@/lib/errors/handleApiError";import { successResponse } from "@/lib/http/apiResponse";import { getCustomerAnalytics } from "@/services/customer-analytics.service";export async function GET(){try{await requirePermission("reports.read");await connectToDatabase();const data=await getCustomerAnalytics();return successResponse(data.cohorts);}catch(error){return handleApiError(error)}}
+import { requirePermission } from "@/lib/auth/session";
+import { connectToDatabase } from "@/lib/db/mongoose";
+import { handleApiError } from "@/lib/errors/handleApiError";
+import { successResponse } from "@/lib/http/apiResponse";
+import { getCustomerAnalytics } from "@/services/customer-analytics.service";
+export async function GET() {
+  try {
+    await requirePermission("reports.read");
+    await connectToDatabase();
+    const data = await getCustomerAnalytics();
+    return successResponse(data.cohorts);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

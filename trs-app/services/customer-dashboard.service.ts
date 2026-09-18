@@ -12,25 +12,38 @@ export async function getCustomerDashboardSummary(customerId: string) {
   const id = new Types.ObjectId(customerId);
   const now = new Date();
 
-  const [customer, orderCount, completedOrders, activeOrders, upcomingReservations, wallet, membership, recentOrders] =
-    await Promise.all([
-      serializeCustomer(customerId),
-      Order.countDocuments({ customerId: id }),
-      Order.countDocuments({ customerId: id, status: "completed" }),
-      Order.countDocuments({ customerId: id, status: { $in: ["placed", "accepted", "preparing", "ready"] } }),
-      Reservation.countDocuments({
-        customerId: id,
-        reservationDate: { $gte: now },
-        status: { $in: ["pending", "confirmed"] },
-      }),
-      CoinWallet.findOne({ customerId: id }).lean(),
-      LoyaltyMembership.findOne({ customerId: id }).lean(),
-      Order.find({ customerId: id })
-        .select("orderNumber status orderMode grandTotal itemCount createdAt estimatedReadyAt")
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .lean(),
-    ]);
+  const [
+    customer,
+    orderCount,
+    completedOrders,
+    activeOrders,
+    upcomingReservations,
+    wallet,
+    membership,
+    recentOrders,
+  ] = await Promise.all([
+    serializeCustomer(customerId),
+    Order.countDocuments({ customerId: id }),
+    Order.countDocuments({ customerId: id, status: "completed" }),
+    Order.countDocuments({
+      customerId: id,
+      status: { $in: ["placed", "accepted", "preparing", "ready"] },
+    }),
+    Reservation.countDocuments({
+      customerId: id,
+      reservationDate: { $gte: now },
+      status: { $in: ["pending", "confirmed"] },
+    }),
+    CoinWallet.findOne({ customerId: id }).lean(),
+    LoyaltyMembership.findOne({ customerId: id }).lean(),
+    Order.find({ customerId: id })
+      .select(
+        "orderNumber status orderMode grandTotal itemCount createdAt estimatedReadyAt",
+      )
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean(),
+  ]);
 
   return {
     customer,

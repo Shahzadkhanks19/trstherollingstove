@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-const objectId = z
-  .string()
-  .regex(/^[a-f\d]{24}$/i, "Invalid ID.");
+const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid ID.");
 
 const inventoryUnitSchema = z.enum([
   "kg",
@@ -34,10 +32,9 @@ export const createInventoryItemSchema = z.object({
   notes: z.string().trim().max(1000).default(""),
 });
 
-export const updateInventoryItemSchema =
-  createInventoryItemSchema
-    .omit({ currentStock: true, averageUnitCost: true })
-    .partial();
+export const updateInventoryItemSchema = createInventoryItemSchema
+  .omit({ currentStock: true, averageUnitCost: true })
+  .partial();
 
 export const createInventoryMovementSchema = z.object({
   inventoryItemId: objectId,
@@ -54,13 +51,7 @@ export const createInventoryMovementSchema = z.object({
   quantity: z.number().positive(),
   unitCost: z.number().min(0).default(0),
   referenceType: z
-    .enum([
-      "manual",
-      "order",
-      "purchase",
-      "return",
-      "opening",
-    ])
+    .enum(["manual", "order", "purchase", "return", "opening"])
     .default("manual"),
   referenceId: objectId.nullable().default(null),
   reason: z.string().trim().max(500).default(""),
@@ -76,9 +67,6 @@ const recipeIngredientSchema = z.object({
 export const upsertMenuItemRecipeSchema = z.object({
   menuItemId: objectId,
   yieldQuantity: z.number().positive().default(1),
-  ingredients: z
-    .array(recipeIngredientSchema)
-    .min(1)
-    .max(100),
+  ingredients: z.array(recipeIngredientSchema).min(1).max(100),
   isActive: z.boolean().default(true),
 });

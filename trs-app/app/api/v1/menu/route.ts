@@ -35,10 +35,14 @@ export async function GET(request: Request) {
       .sort({ sortOrder: 1, name: 1 })
       .lean();
 
-    const grouped = categories.map((category) => ({
-      category,
-      items: items.filter((item) => String(item.categoryId) === String(category._id)),
-    })).filter((group) => group.items.length > 0);
+    const grouped = categories
+      .map((category) => ({
+        category,
+        items: items.filter(
+          (item) => String(item.categoryId) === String(category._id),
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
 
     return successResponse(grouped, "Menu loaded.");
   } catch (error) {

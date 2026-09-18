@@ -24,10 +24,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const actor = await requirePermission("pos.manage");
-    const input = await validateRequestBody(
-      request,
-      createRegisterSchema,
-    );
+    const input = await validateRequestBody(request, createRegisterSchema);
 
     await connectToDatabase();
 
@@ -38,11 +35,7 @@ export async function POST(request: Request) {
       updatedBy: actor.id,
     });
 
-    return successResponse(
-      register,
-      "POS register created.",
-      201,
-    );
+    return successResponse(register, "POS register created.", 201);
   } catch (error) {
     return handleApiError(error);
   }

@@ -88,7 +88,15 @@ export type MenuItemSummary = {
   isBestseller?: boolean;
   isNew?: boolean;
   isCombo?: boolean;
-  comboComponents?: Array<{ menuItemId: string; name: string; variantId?: string | null; variantName?: string; quantity: number; unitPrice: number; isMissing?: boolean }>;
+  comboComponents?: Array<{
+    menuItemId: string;
+    name: string;
+    variantId?: string | null;
+    variantName?: string;
+    quantity: number;
+    unitPrice: number;
+    isMissing?: boolean;
+  }>;
   comboOriginalPrice?: number | null;
   comboSavings?: number | null;
   comboDiscountPercent?: number | null;

@@ -8,12 +8,8 @@ const dateString = z
 export const reportRangeQuerySchema = z.object({
   from: dateString.optional(),
   to: dateString.optional(),
-  source: z
-    .enum(["website", "pos", "admin"])
-    .optional(),
-  fulfilmentType: z
-    .enum(["dine_in", "pickup"])
-    .optional(),
+  source: z.enum(["website", "pos", "admin"]).optional(),
+  fulfilmentType: z.enum(["dine_in", "pickup"]).optional(),
   status: z.string().trim().min(1).max(60).optional(),
   limit: z.coerce.number().int().min(1).max(500).default(100),
 });

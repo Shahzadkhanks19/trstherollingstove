@@ -3,10 +3,7 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
 import { SystemAuditLog } from "@/models/SystemAuditLog";
-import type {
-  AuditOutcome,
-  AuditSeverity,
-} from "@/types/audit";
+import type { AuditOutcome, AuditSeverity } from "@/types/audit";
 import { auditLogQuerySchema } from "@/validators/audit";
 
 type DateRangeFilter = {
@@ -42,9 +39,7 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const parsed = auditLogQuerySchema.parse(
-      Object.fromEntries(
-        url.searchParams.entries(),
-      ),
+      Object.fromEntries(url.searchParams.entries()),
     );
 
     const filter: AuditLogFilter = {};
@@ -88,18 +83,15 @@ export async function GET(request: Request) {
       filter.createdAt = {};
 
       if (parsed.dateFrom) {
-        filter.createdAt.$gte =
-          parsed.dateFrom;
+        filter.createdAt.$gte = parsed.dateFrom;
       }
 
       if (parsed.dateTo) {
-        filter.createdAt.$lte =
-          parsed.dateTo;
+        filter.createdAt.$lte = parsed.dateTo;
       }
     }
 
-    const skip =
-      (parsed.page - 1) * parsed.limit;
+    const skip = (parsed.page - 1) * parsed.limit;
 
     const [logs, total] = await Promise.all([
       SystemAuditLog.find(filter)
@@ -116,9 +108,7 @@ export async function GET(request: Request) {
         page: parsed.page,
         limit: parsed.limit,
         total,
-        totalPages: Math.ceil(
-          total / parsed.limit,
-        ),
+        totalPages: Math.ceil(total / parsed.limit),
       },
     });
   } catch (error) {

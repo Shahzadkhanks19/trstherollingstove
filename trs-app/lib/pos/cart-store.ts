@@ -17,7 +17,14 @@ import {
   updateCartLineNote,
   updateCartAdjustments,
 } from "@/lib/pos/cart";
-import type { PosCartAdjustments, PosCartState, PosCatalogItem, PosCustomer, PosInternalConsumption, PosOrderType } from "@/types/pos";
+import type {
+  PosCartAdjustments,
+  PosCartState,
+  PosCatalogItem,
+  PosCustomer,
+  PosInternalConsumption,
+  PosOrderType,
+} from "@/types/pos";
 
 type Listener = () => void;
 
@@ -34,7 +41,10 @@ function initializeFromStorage() {
 function persist(nextState: PosCartState) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(POS_CART_STORAGE_KEY, JSON.stringify(nextState));
+    window.localStorage.setItem(
+      POS_CART_STORAGE_KEY,
+      JSON.stringify(nextState),
+    );
   } catch {
     // The cart remains usable even when storage is blocked or full.
   }
@@ -74,7 +84,10 @@ export function usePosCart(): PosCartState {
 }
 
 export const posCartActions = {
-  addItem(item: PosCatalogItem, configuration?: import("@/types/pos").PosConfiguredItem) {
+  addItem(
+    item: PosCatalogItem,
+    configuration?: import("@/types/pos").PosConfiguredItem,
+  ) {
     setState((current) => addCatalogItemToCart(current, item, configuration));
   },
   changeQuantity(lineId: string, change: number) {

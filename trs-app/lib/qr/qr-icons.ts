@@ -1,8 +1,4 @@
-export type SocialQrIconName =
-  | "instagram"
-  | "maps"
-  | "reviews"
-  | "whatsapp";
+export type SocialQrIconName = "instagram" | "maps" | "reviews" | "whatsapp";
 
 export interface SocialQrIconDefinition {
   readonly viewBoxSize: number;

@@ -12,9 +12,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const days = Number(url.searchParams.get("days") ?? 30);
 
-    return successResponse(
-      await getInventoryDashboardTrends(days),
-    );
+    return successResponse(await getInventoryDashboardTrends(days));
   } catch (error) {
     return handleApiError(error);
   }

@@ -14,7 +14,10 @@ export async function POST(request: Request, context: Context) {
     const input = await validateRequestBody(request, cancelPaidPosOrderSchema);
     const { id } = await context.params;
     await connectToDatabase();
-    return successResponse(await cancelPaidPosOrder(id, input, actor.id), "Order cancelled and refund recorded.");
+    return successResponse(
+      await cancelPaidPosOrder(id, input, actor.id),
+      "Order cancelled and refund recorded.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

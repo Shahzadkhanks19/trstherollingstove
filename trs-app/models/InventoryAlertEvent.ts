@@ -126,15 +126,14 @@ InventoryAlertEventSchema.index({
   status: 1,
 });
 
-export type InventoryAlertEventDocument =
-  InferSchemaType<typeof InventoryAlertEventSchema>;
+export type InventoryAlertEventDocument = InferSchemaType<
+  typeof InventoryAlertEventSchema
+>;
 
-export const InventoryAlertEvent:
-  Model<InventoryAlertEventDocument> =
-    (models.InventoryAlertEvent as
-      | Model<InventoryAlertEventDocument>
-      | undefined) ??
-    model<InventoryAlertEventDocument>(
-      "InventoryAlertEvent",
-      InventoryAlertEventSchema,
-    );
+export const InventoryAlertEvent: Model<InventoryAlertEventDocument> =
+  (models.InventoryAlertEvent as
+    Model<InventoryAlertEventDocument> | undefined) ??
+  model<InventoryAlertEventDocument>(
+    "InventoryAlertEvent",
+    InventoryAlertEventSchema,
+  );

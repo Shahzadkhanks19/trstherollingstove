@@ -34,15 +34,9 @@ export async function GET(request: Request) {
 
     const filter: Record<string, unknown> = {
       runId: run._id,
-      ...(input.riskLevel
-        ? { riskLevel: input.riskLevel }
-        : {}),
-      ...(input.velocityClass
-        ? { velocityClass: input.velocityClass }
-        : {}),
-      ...(input.category
-        ? { category: input.category }
-        : {}),
+      ...(input.riskLevel ? { riskLevel: input.riskLevel } : {}),
+      ...(input.velocityClass ? { velocityClass: input.velocityClass } : {}),
+      ...(input.category ? { category: input.category } : {}),
     };
 
     if (input.search) {

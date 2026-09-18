@@ -1,10 +1,7 @@
 "use client";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faFacebookF,
-  faWhatsapp,
-} from "@fortawesome/free-brands-svg-icons";
+import { faFacebookF, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { GoogleIcon } from "@/components/site/GoogleReviews";
 
 type SocialAuthButtonsProps = {

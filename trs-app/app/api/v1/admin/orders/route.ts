@@ -22,7 +22,10 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const page = Math.max(Number(url.searchParams.get("page") ?? 1), 1);
-    const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 25), 1), 100);
+    const limit = Math.min(
+      Math.max(Number(url.searchParams.get("limit") ?? 25), 1),
+      100,
+    );
     const status = url.searchParams.get("status")?.trim();
     const orderMode = url.searchParams.get("orderMode")?.trim();
     const paymentStatus = url.searchParams.get("paymentStatus")?.trim();
@@ -31,15 +34,20 @@ export async function GET(request: Request) {
     const from = url.searchParams.get("from")?.trim();
     const to = url.searchParams.get("to")?.trim();
     const requestedSort = url.searchParams.get("sortBy")?.trim() || "createdAt";
-    const sortBy = allowedSortFields.has(requestedSort) ? requestedSort : "createdAt";
+    const sortBy = allowedSortFields.has(requestedSort)
+      ? requestedSort
+      : "createdAt";
     const sortOrder = url.searchParams.get("sortOrder") === "asc" ? 1 : -1;
 
     const filter: Record<string, unknown> = {};
-    if (status === "live") filter.status = { $in: ["placed", "accepted", "preparing", "ready"] };
+    if (status === "live")
+      filter.status = { $in: ["placed", "accepted", "preparing", "ready"] };
     else if (status && status !== "all") filter.status = status;
     if (orderMode && orderMode !== "all") filter.orderMode = orderMode;
-    if (paymentStatus && paymentStatus !== "all") filter.paymentStatus = paymentStatus;
-    if (paymentMethod && paymentMethod !== "all") filter.paymentMethod = paymentMethod;
+    if (paymentStatus && paymentStatus !== "all")
+      filter.paymentStatus = paymentStatus;
+    if (paymentMethod && paymentMethod !== "all")
+      filter.paymentMethod = paymentMethod;
     if (search) {
       const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = { $regex: escaped, $options: "i" };
@@ -80,7 +88,9 @@ export async function GET(request: Request) {
         { $group: { _id: "$status", count: { $sum: 1 } } },
       ]),
       includeRunningOrders
-        ? POSRunningOrder.find({ status: { $in: ["open", "sent_to_kitchen", "partially_paid"] } })
+        ? POSRunningOrder.find({
+            status: { $in: ["open", "sent_to_kitchen", "partially_paid"] },
+          })
             .sort({ openedAt: 1 })
             .lean()
         : Promise.resolve([]),
@@ -120,7 +130,13 @@ export async function GET(request: Request) {
         tableNumber: running.tableName || "",
         customerNote: running.cart.orderNote,
         status: "preparing",
-        statusHistory: [{ status: "preparing", note: "Pay Later order sent to kitchen.", changedAt: running.openedAt }],
+        statusHistory: [
+          {
+            status: "preparing",
+            note: "Pay Later order sent to kitchen.",
+            changedAt: running.openedAt,
+          },
+        ],
         paymentStatus: "pending",
         paymentMethod: "cash",
         paymentBreakdown: [],
@@ -141,7 +157,8 @@ export async function GET(request: Request) {
 
     const combinedOrders = includeRunningOrders
       ? [...orders, ...runningOrderRows].sort(
-          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
         )
       : orders;
 
@@ -152,7 +169,10 @@ export async function GET(request: Request) {
       },
       {},
     );
-    statusCounts.all = groupedStatuses.reduce((sum, item) => sum + item.count, 0);
+    statusCounts.all = groupedStatuses.reduce(
+      (sum, item) => sum + item.count,
+      0,
+    );
 
     return successResponse(
       {

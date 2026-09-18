@@ -77,15 +77,14 @@ InventoryReportRequestSchema.index({
   createdAt: -1,
 });
 
-export type InventoryReportRequestDocument =
-  InferSchemaType<typeof InventoryReportRequestSchema>;
+export type InventoryReportRequestDocument = InferSchemaType<
+  typeof InventoryReportRequestSchema
+>;
 
-export const InventoryReportRequest:
-  Model<InventoryReportRequestDocument> =
-    (models.InventoryReportRequest as
-      | Model<InventoryReportRequestDocument>
-      | undefined) ??
-    model<InventoryReportRequestDocument>(
-      "InventoryReportRequest",
-      InventoryReportRequestSchema,
-    );
+export const InventoryReportRequest: Model<InventoryReportRequestDocument> =
+  (models.InventoryReportRequest as
+    Model<InventoryReportRequestDocument> | undefined) ??
+  model<InventoryReportRequestDocument>(
+    "InventoryReportRequest",
+    InventoryReportRequestSchema,
+  );

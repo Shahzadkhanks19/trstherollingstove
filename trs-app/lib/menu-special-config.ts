@@ -22,7 +22,10 @@ export function isMediumPizzaVariant(label: string): boolean {
 }
 
 export function isThinCrustExcludedPizza(name: string): boolean {
-  const normalized = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ");
+  const normalized = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ");
   return normalized.includes("cheese burst");
 }
 
@@ -34,7 +37,10 @@ export function isThinCrustEnabled(
   return configuration?.thinCrustAvailable !== false;
 }
 
-export function isAllowedNaanModifierGroup(name: string, internalName = ""): boolean {
+export function isAllowedNaanModifierGroup(
+  name: string,
+  internalName = "",
+): boolean {
   const value = `${name} ${internalName}`.toLowerCase();
   return (
     value.includes("platter") ||

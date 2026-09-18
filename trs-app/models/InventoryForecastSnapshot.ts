@@ -155,15 +155,14 @@ InventoryForecastSnapshotSchema.index({
   generatedAt: -1,
 });
 
-export type InventoryForecastSnapshotDocument =
-  InferSchemaType<typeof InventoryForecastSnapshotSchema>;
+export type InventoryForecastSnapshotDocument = InferSchemaType<
+  typeof InventoryForecastSnapshotSchema
+>;
 
-export const InventoryForecastSnapshot:
-  Model<InventoryForecastSnapshotDocument> =
-    (models.InventoryForecastSnapshot as
-      | Model<InventoryForecastSnapshotDocument>
-      | undefined) ??
-    model<InventoryForecastSnapshotDocument>(
-      "InventoryForecastSnapshot",
-      InventoryForecastSnapshotSchema,
-    );
+export const InventoryForecastSnapshot: Model<InventoryForecastSnapshotDocument> =
+  (models.InventoryForecastSnapshot as
+    Model<InventoryForecastSnapshotDocument> | undefined) ??
+  model<InventoryForecastSnapshotDocument>(
+    "InventoryForecastSnapshot",
+    InventoryForecastSnapshotSchema,
+  );

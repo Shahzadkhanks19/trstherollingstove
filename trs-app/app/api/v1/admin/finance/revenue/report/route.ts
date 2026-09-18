@@ -4,7 +4,8 @@ import { handleApiError } from "@/lib/errors/handleApiError";
 import { getRevenueSummary } from "@/services/revenue-management.service";
 import { revenueRangeSchema } from "@/validators/revenue-management";
 
-const csvCell = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+const csvCell = (value: unknown) =>
+  `"${String(value ?? "").replaceAll('"', '""')}"`;
 
 export async function GET(request: Request) {
   try {
@@ -19,7 +20,10 @@ export async function GET(request: Request) {
     const metrics = snapshot.metrics;
 
     if (!metrics) {
-      throw new AppError("Revenue metrics are unavailable for the selected period.", 500);
+      throw new AppError(
+        "Revenue metrics are unavailable for the selected period.",
+        500,
+      );
     }
 
     const rows = [
@@ -35,7 +39,15 @@ export async function GET(request: Request) {
       ["Refunds", metrics.refundTotal],
       ["Average order value", metrics.averageOrderValue],
       [],
-      ["Day", "Orders", "Gross revenue", "Recognized revenue", "Tax", "Discounts", "Refunds"],
+      [
+        "Day",
+        "Orders",
+        "Gross revenue",
+        "Recognized revenue",
+        "Tax",
+        "Discounts",
+        "Refunds",
+      ],
       ...snapshot.byDay.map((row) => [
         row.key,
         row.orders,

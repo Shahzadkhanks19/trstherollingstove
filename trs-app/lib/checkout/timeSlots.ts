@@ -27,7 +27,8 @@ export const DEFAULT_PUBLIC_ORDERING_SETTINGS: PublicOrderingSettings = {
   storeStatus: "open",
   acceptingOrders: true,
   statusMessage: "Open and accepting online orders.",
-  delayMessage: "We’re sorry—your order is taking longer than expected due to higher demand.",
+  delayMessage:
+    "We’re sorry—your order is taking longer than expected due to higher demand.",
 };
 
 function dateAtClock(base: Date, clock: string): Date {
@@ -54,7 +55,8 @@ export function generateSameDayOrderSlots(
     !settings.acceptingOrders ||
     settings.storeStatus === "closed" ||
     settings.storeStatus === "not_accepting_orders"
-  ) return [];
+  )
+    return [];
 
   const opening = dateAtClock(now, settings.openingTime);
   const closing = dateAtClock(now, settings.closingTime);
@@ -71,7 +73,9 @@ export function generateSameDayOrderSlots(
 
   while (cursor <= closing) {
     slots.push(new Date(cursor));
-    cursor = new Date(cursor.getTime() + settings.orderSlotIntervalMinutes * 60_000);
+    cursor = new Date(
+      cursor.getTime() + settings.orderSlotIntervalMinutes * 60_000,
+    );
   }
 
   return slots;

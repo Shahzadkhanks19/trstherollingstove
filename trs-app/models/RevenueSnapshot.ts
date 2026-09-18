@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const RevenueBreakdownSchema = new Schema(
   {
@@ -42,14 +48,20 @@ const RevenueSnapshotSchema = new Schema(
     bySource: { type: [RevenueBreakdownSchema], default: [] },
     generatedAt: { type: Date, required: true, default: Date.now, index: true },
     generatedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
-    source: { type: String, enum: ["scheduled", "manual", "system"], default: "system" },
+    source: {
+      type: String,
+      enum: ["scheduled", "manual", "system"],
+      default: "system",
+    },
   },
   { timestamps: true, versionKey: false },
 );
 
 RevenueSnapshotSchema.index({ periodStart: -1, periodEnd: -1 });
 
-export type RevenueSnapshotDocument = InferSchemaType<typeof RevenueSnapshotSchema>;
+export type RevenueSnapshotDocument = InferSchemaType<
+  typeof RevenueSnapshotSchema
+>;
 export const RevenueSnapshot: Model<RevenueSnapshotDocument> =
   (models.RevenueSnapshot as Model<RevenueSnapshotDocument>) ||
   model<RevenueSnapshotDocument>("RevenueSnapshot", RevenueSnapshotSchema);

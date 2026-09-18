@@ -10,8 +10,7 @@ export async function GET() {
     await connectToDatabase();
 
     return successResponse({
-      breakdown:
-        await getInventoryDashboardAlertBreakdown(),
+      breakdown: await getInventoryDashboardAlertBreakdown(),
     });
   } catch (error) {
     return handleApiError(error);

@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const InternalConsumptionSettingsSchema = new Schema(
   {
@@ -16,7 +22,12 @@ const InternalConsumptionSettingsSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-export type InternalConsumptionSettingsDocument = InferSchemaType<typeof InternalConsumptionSettingsSchema>;
+export type InternalConsumptionSettingsDocument = InferSchemaType<
+  typeof InternalConsumptionSettingsSchema
+>;
 export const InternalConsumptionSettings: Model<InternalConsumptionSettingsDocument> =
   (models.InternalConsumptionSettings as Model<InternalConsumptionSettingsDocument>) ||
-  model<InternalConsumptionSettingsDocument>("InternalConsumptionSettings", InternalConsumptionSettingsSchema);
+  model<InternalConsumptionSettingsDocument>(
+    "InternalConsumptionSettings",
+    InternalConsumptionSettingsSchema,
+  );

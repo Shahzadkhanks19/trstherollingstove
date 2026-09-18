@@ -1,24 +1,14 @@
 import { z } from "zod";
 
-const mobilePlatformSchema = z.enum([
-  "ios",
-  "android",
-]);
+const mobilePlatformSchema = z.enum(["ios", "android"]);
 
 const installationIdSchema = z
   .string()
   .trim()
   .min(1, "Installation ID is required.")
-  .max(
-    255,
-    "Installation ID must not exceed 255 characters.",
-  );
+  .max(255, "Installation ID must not exceed 255 characters.");
 
-const optionalDeviceTextSchema = z
-  .string()
-  .trim()
-  .max(255)
-  .optional();
+const optionalDeviceTextSchema = z.string().trim().max(255).optional();
 
 export const mobileLoginSchema = z.object({
   identifier: z
@@ -26,10 +16,7 @@ export const mobileLoginSchema = z.object({
       error: "Email address or phone number is required.",
     })
     .trim()
-    .min(
-      5,
-      "Enter your registered email address or phone number.",
-    ),
+    .min(5, "Enter your registered email address or phone number."),
 
   password: z
     .string({
@@ -61,10 +48,7 @@ export const mobileLogoutSchema = z.object({
 });
 
 export const mobileRefreshSchema = z.object({
-  refreshToken: z
-    .string()
-    .trim()
-    .min(1, "Refresh token is required."),
+  refreshToken: z.string().trim().min(1, "Refresh token is required."),
 });
 
 export const mobileDeviceSchema = z.object({

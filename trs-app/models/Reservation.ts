@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const ReservationStatusHistorySchema = new Schema(
   {
@@ -55,14 +61,7 @@ const ReservationSchema = new Schema(
     tableNumber: { type: String, trim: true, maxlength: 30, default: "" },
     occasion: {
       type: String,
-      enum: [
-        "none",
-        "birthday",
-        "anniversary",
-        "business",
-        "family",
-        "other",
-      ],
+      enum: ["none", "birthday", "anniversary", "business", "family", "other"],
       default: "none",
     },
     specialRequest: { type: String, trim: true, maxlength: 700, default: "" },

@@ -14,10 +14,7 @@ import { openShiftSchema } from "@/validators/pos";
 export async function POST(request: Request) {
   try {
     const actor = await requirePermission("pos.use");
-    const input = await validateRequestBody(
-      request,
-      openShiftSchema,
-    );
+    const input = await validateRequestBody(request, openShiftSchema);
 
     await connectToDatabase();
     await assertActiveRegister(input.registerId);
@@ -37,7 +34,8 @@ export async function POST(request: Request) {
           status: "closed",
           closedAt: new Date(),
           closedBy: actor.id,
-          closingNote: "Automatically closed when a new India business day shift was opened.",
+          closingNote:
+            "Automatically closed when a new India business day shift was opened.",
         },
       },
     );
@@ -65,11 +63,7 @@ export async function POST(request: Request) {
       openedAt: new Date(),
     });
 
-    return successResponse(
-      shift,
-      "POS shift opened.",
-      201,
-    );
+    return successResponse(shift, "POS shift opened.", 201);
   } catch (error) {
     return handleApiError(error);
   }

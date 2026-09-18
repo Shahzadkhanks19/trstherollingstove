@@ -12,21 +12,35 @@ export async function GET() {
   try {
     await requirePermission("orders.manage");
     await connectToDatabase();
-    const orders = await Order.find({ isRevenueOrder: false, "internalConsumption.approvalStatus": "required" })
-      .select("orderNumber saleType items internalConsumption createdAt cashierId")
+    const orders = await Order.find({
+      isRevenueOrder: false,
+      "internalConsumption.approvalStatus": "required",
+    })
+      .select(
+        "orderNumber saleType items internalConsumption createdAt cashierId",
+      )
       .populate("cashierId", "name email")
-      .sort({ createdAt: 1 }).limit(200).lean();
+      .sort({ createdAt: 1 })
+      .limit(200)
+      .lean();
     return successResponse(orders, "Pending approvals loaded.");
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 export async function PATCH(request: Request) {
   try {
     const actor = await requirePermission("orders.manage");
     const input = internalApprovalDecisionSchema.parse(await request.json());
-    if (!Types.ObjectId.isValid(input.orderId)) throw new AppError("Invalid order.", 422);
+    if (!Types.ObjectId.isValid(input.orderId))
+      throw new AppError("Invalid order.", 422);
     await connectToDatabase();
-    const order = await Order.findOne({ _id: input.orderId, isRevenueOrder: false, "internalConsumption.approvalStatus": "required" });
+    const order = await Order.findOne({
+      _id: input.orderId,
+      isRevenueOrder: false,
+      "internalConsumption.approvalStatus": "required",
+    });
     if (!order) throw new AppError("Pending approval not found.", 404);
     if (input.decision === "approve") {
       order.set("internalConsumption.approvalStatus", "approved");
@@ -41,7 +55,19 @@ export async function PATCH(request: Request) {
       order.status = "cancelled";
     }
     await order.save();
-    await InternalConsumptionAudit.create({ action: input.decision === "approve" ? "approved" : "rejected", actorId: actor.id, actorName: "", subjectId: order._id, subjectName: order.orderNumber, metadata: { comments: input.comments, saleType: order.saleType } });
-    return successResponse(order, input.decision === "approve" ? "Order approved." : "Order rejected.");
-  } catch (error) { return handleApiError(error); }
+    await InternalConsumptionAudit.create({
+      action: input.decision === "approve" ? "approved" : "rejected",
+      actorId: actor.id,
+      actorName: "",
+      subjectId: order._id,
+      subjectName: order.orderNumber,
+      metadata: { comments: input.comments, saleType: order.saleType },
+    });
+    return successResponse(
+      order,
+      input.decision === "approve" ? "Order approved." : "Order rejected.",
+    );
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

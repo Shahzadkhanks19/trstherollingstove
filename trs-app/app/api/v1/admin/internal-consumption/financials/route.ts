@@ -23,9 +23,14 @@ export async function GET(request: Request) {
   try {
     const actor = await requirePermission("reports.read");
     const url = new URL(request.url);
-    const parsed = internalConsumptionFinancialsQuerySchema.safeParse(Object.fromEntries(url.searchParams));
+    const parsed = internalConsumptionFinancialsQuerySchema.safeParse(
+      Object.fromEntries(url.searchParams),
+    );
     if (!parsed.success) {
-      throw new AppError(parsed.error.issues[0]?.message ?? "Invalid financial report query.", 400);
+      throw new AppError(
+        parsed.error.issues[0]?.message ?? "Invalid financial report query.",
+        400,
+      );
     }
 
     const report = await getInternalConsumptionFinancialReport({
@@ -42,7 +47,11 @@ export async function GET(request: Request) {
       actorId: actor.id,
       actorName: actor.name,
       reason: `financial_${parsed.data.format}_export`,
-      metadata: { from: parsed.data.from, to: parsed.data.to, report: "phase_4_2_2_financials" },
+      metadata: {
+        from: parsed.data.from,
+        to: parsed.data.to,
+        report: "phase_4_2_2_financials",
+      },
     });
 
     const filename = `trs-financials-${parsed.data.from}-to-${parsed.data.to}`;
@@ -56,21 +65,28 @@ export async function GET(request: Request) {
       });
     }
     if (parsed.data.format === "xlsx") {
-      return new Response(new Uint8Array(await internalConsumptionFinancialsToXlsx(report)), {
+      return new Response(
+        new Uint8Array(await internalConsumptionFinancialsToXlsx(report)),
+        {
+          headers: {
+            "Content-Type":
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Content-Disposition": `attachment; filename="${filename}.xlsx"`,
+            "Cache-Control": "private, no-store",
+          },
+        },
+      );
+    }
+    return new Response(
+      new Uint8Array(await internalConsumptionFinancialsToPdf(report)),
+      {
         headers: {
-          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": `attachment; filename="${filename}.xlsx"`,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${filename}.pdf"`,
           "Cache-Control": "private, no-store",
         },
-      });
-    }
-    return new Response(new Uint8Array(await internalConsumptionFinancialsToPdf(report)), {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}.pdf"`,
-        "Cache-Control": "private, no-store",
       },
-    });
+    );
   } catch (error) {
     return handleApiError(error);
   }

@@ -26,14 +26,20 @@ function extractHtmlTitle(body: string): string | null {
 async function requestOnce<T>(
   url: string,
   init: RequestInit,
-): Promise<{ response: Response; payload: ApiEnvelope<T> | null; rawBody: string }> {
+): Promise<{
+  response: Response;
+  payload: ApiEnvelope<T> | null;
+  rawBody: string;
+}> {
   const response = await authenticatedFetch(url, {
     ...init,
     cache: init.cache ?? "no-store",
     credentials: init.credentials ?? "include",
     headers: {
       Accept: "application/json",
-      ...(init.body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(init.body !== undefined
+        ? { "Content-Type": "application/json" }
+        : {}),
       ...(init.headers ?? {}),
     },
   });
@@ -74,15 +80,20 @@ export async function financeApi<T>(
 
   if (payload === null) {
     const title = extractHtmlTitle(rawBody);
-    const redirectedTo = response.redirected ? new URL(response.url).pathname : null;
+    const redirectedTo = response.redirected
+      ? new URL(response.url).pathname
+      : null;
 
     if (redirectedTo?.includes("login") || response.status === 401) {
-      throw new Error("Your admin session has expired. Sign in again and reload this page.");
+      throw new Error(
+        "Your admin session has expired. Sign in again and reload this page.",
+      );
     }
 
-    const detail = title && !title.toLowerCase().includes("the rolling stove")
-      ? ` ${title}`
-      : "";
+    const detail =
+      title && !title.toLowerCase().includes("the rolling stove")
+        ? ` ${title}`
+        : "";
 
     throw new Error(
       `Finance API returned an invalid response (${response.status || "unknown status"}) for ${url}.${detail} Restart the Next.js development server if this route was just added.`,
@@ -90,11 +101,16 @@ export async function financeApi<T>(
   }
 
   if (!response.ok || payload.success === false) {
-    throw new Error(payload.message ?? `Finance request failed with status ${response.status}.`);
+    throw new Error(
+      payload.message ??
+        `Finance request failed with status ${response.status}.`,
+    );
   }
 
   if (!("data" in payload)) {
-    throw new Error(`Finance API response for ${url} did not contain a data field.`);
+    throw new Error(
+      `Finance API response for ${url} did not contain a data field.`,
+    );
   }
 
   return payload.data as T;

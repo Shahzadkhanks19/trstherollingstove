@@ -26,9 +26,8 @@ export function HomeHero() {
             <span>crafted like a signature.</span>
           </h1>
           <p>
-            Handmade pizzas, comforting pastas, loaded fries, indulgent
-            desserts and bold Indian favourites—served fresh from the
-            truck.
+            Handmade pizzas, comforting pastas, loaded fries, indulgent desserts
+            and bold Indian favourites—served fresh from the truck.
           </p>
 
           <div className="hero-actions">

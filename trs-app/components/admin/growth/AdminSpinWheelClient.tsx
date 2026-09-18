@@ -102,10 +102,14 @@ export function AdminSpinWheelClient() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
+  const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(
+    null,
+  );
 
   const load = useCallback(async () => {
-    const response = await fetch("/api/v1/admin/spin-wheel", { cache: "no-store" });
+    const response = await fetch("/api/v1/admin/spin-wheel", {
+      cache: "no-store",
+    });
     const json = await response.json();
     if (response.ok) setRows(json.data || []);
   }, []);
@@ -194,7 +198,9 @@ export function AdminSpinWheelClient() {
       (prize) => !prize.label.trim() || Number(prize.weight) < 1,
     );
     if (invalidPrize) {
-      setMessage("Every prize segment needs a label and a weight of at least 1.");
+      setMessage(
+        "Every prize segment needs a label and a weight of at least 1.",
+      );
       return;
     }
 
@@ -202,7 +208,9 @@ export function AdminSpinWheelClient() {
       (prize) => prize.type === "coupon" && !prize.couponCode.trim(),
     );
     if (missingCoupon) {
-      setMessage("Select a Spin Wheel Only coupon for every coupon prize segment.");
+      setMessage(
+        "Select a Spin Wheel Only coupon for every coupon prize segment.",
+      );
       return;
     }
 
@@ -234,7 +242,9 @@ export function AdminSpinWheelClient() {
       setSaving(false);
       setMessage(
         json.message ||
-          (editingId ? "Unable to update campaign." : "Unable to create campaign."),
+          (editingId
+            ? "Unable to update campaign."
+            : "Unable to create campaign."),
       );
       return;
     }
@@ -245,7 +255,9 @@ export function AdminSpinWheelClient() {
     setForm(createInitialForm());
     setSaving(false);
     setMessage(
-      wasEditing ? "Spin wheel campaign updated." : "Spin wheel campaign created.",
+      wasEditing
+        ? "Spin wheel campaign updated."
+        : "Spin wheel campaign created.",
     );
     await load();
   }
@@ -299,7 +311,11 @@ export function AdminSpinWheelClient() {
     await load();
   }
 
-  function updatePrize(index: number, key: keyof Prize, value: string | number | boolean) {
+  function updatePrize(
+    index: number,
+    key: keyof Prize,
+    value: string | number | boolean,
+  ) {
     setForm((current) => ({
       ...current,
       prizes: current.prizes.map((prize, prizeIndex) =>
@@ -351,29 +367,40 @@ export function AdminSpinWheelClient() {
       )}
 
       {show && (
-        <SectionCard title={editingId ? "Edit spin wheel campaign" : "Create spin wheel campaign"}>
+        <SectionCard
+          title={
+            editingId
+              ? "Edit spin wheel campaign"
+              : "Create spin wheel campaign"
+          }
+        >
           <div className="grid gap-3 md:grid-cols-2">
-            {(["name", "description", "startsAt", "expiresAt"] as const).map((key) => (
-              <label key={key}>
-                <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
-                  {key}
-                </span>
-                <input
-                  type={key.includes("At") ? "datetime-local" : "text"}
-                  required
-                  min={
-                    key === "expiresAt" || (!editingId && key === "startsAt")
-                      ? localDateTimeInputValue()
-                      : undefined
-                  }
-                  value={String(form[key])}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, [key]: event.target.value }))
-                  }
-                  className="w-full rounded-xl border px-3 py-2.5"
-                />
-              </label>
-            ))}
+            {(["name", "description", "startsAt", "expiresAt"] as const).map(
+              (key) => (
+                <label key={key}>
+                  <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
+                    {key}
+                  </span>
+                  <input
+                    type={key.includes("At") ? "datetime-local" : "text"}
+                    required
+                    min={
+                      key === "expiresAt" || (!editingId && key === "startsAt")
+                        ? localDateTimeInputValue()
+                        : undefined
+                    }
+                    value={String(form[key])}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        [key]: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border px-3 py-2.5"
+                  />
+                </label>
+              ),
+            )}
 
             <label>
               <span className="mb-1 block text-[10px] font-black uppercase text-slate-500">
@@ -450,7 +477,9 @@ export function AdminSpinWheelClient() {
                     </span>
                     <input
                       value={prize.label}
-                      onChange={(event) => updatePrize(index, "label", event.target.value)}
+                      onChange={(event) =>
+                        updatePrize(index, "label", event.target.value)
+                      }
                       className="w-full rounded-lg border px-2 py-2"
                       placeholder="e.g. 10 TRS Coins"
                     />
@@ -463,7 +492,11 @@ export function AdminSpinWheelClient() {
                     <select
                       value={prize.type}
                       onChange={(event) =>
-                        updatePrize(index, "type", event.target.value as Prize["type"])
+                        updatePrize(
+                          index,
+                          "type",
+                          event.target.value as Prize["type"],
+                        )
                       }
                       className="w-full rounded-lg border px-2 py-2"
                     >
@@ -485,7 +518,9 @@ export function AdminSpinWheelClient() {
                         updatePrize(index, "value", Number(event.target.value))
                       }
                       className="w-full rounded-lg border px-2 py-2 disabled:bg-slate-100"
-                      placeholder={prize.type === "coins" ? "Number of coins" : "0"}
+                      placeholder={
+                        prize.type === "coins" ? "Number of coins" : "0"
+                      }
                       disabled={prize.type === "try_again"}
                     />
                     <span className="mt-1 block text-[10px] font-semibold leading-4 text-slate-400">
@@ -511,7 +546,9 @@ export function AdminSpinWheelClient() {
                     >
                       <option value="">Select coupon</option>
                       {prize.couponCode &&
-                        !spinCoupons.some((coupon) => coupon.code === prize.couponCode) && (
+                        !spinCoupons.some(
+                          (coupon) => coupon.code === prize.couponCode,
+                        ) && (
                           <option value={prize.couponCode}>
                             {prize.couponCode} (currently unavailable)
                           </option>
@@ -568,7 +605,11 @@ export function AdminSpinWheelClient() {
                 disabled={saving}
                 className="rounded-xl bg-[#C8102E] px-4 py-2.5 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {saving ? "Saving…" : editingId ? "Update campaign" : "Save campaign"}
+                {saving
+                  ? "Saving…"
+                  : editingId
+                    ? "Update campaign"
+                    : "Save campaign"}
               </button>
             </div>
           </div>
@@ -576,7 +617,10 @@ export function AdminSpinWheelClient() {
       )}
 
       <div className="mt-5">
-        <SectionCard title="Wheel campaigns" subtitle={`${rows.length} configured`}>
+        <SectionCard
+          title="Wheel campaigns"
+          subtitle={`${rows.length} configured`}
+        >
           <div className="space-y-3">
             {rows.map((row) => (
               <article
@@ -599,7 +643,9 @@ export function AdminSpinWheelClient() {
                   <button
                     type="button"
                     onClick={() =>
-                      setViewingId((current) => (current === row._id ? null : row._id))
+                      setViewingId((current) =>
+                        current === row._id ? null : row._id,
+                      )
                     }
                     className="rounded-xl border px-4 py-2 text-xs font-black text-[#173044]"
                     aria-expanded={viewingId === row._id}
@@ -645,25 +691,33 @@ export function AdminSpinWheelClient() {
                   >
                     <div className="grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
                       <div>
-                        <p className="font-black uppercase text-slate-400">Description</p>
+                        <p className="font-black uppercase text-slate-400">
+                          Description
+                        </p>
                         <p className="mt-1 font-semibold text-slate-700">
                           {row.description || "No description"}
                         </p>
                       </div>
                       <div>
-                        <p className="font-black uppercase text-slate-400">Starts</p>
+                        <p className="font-black uppercase text-slate-400">
+                          Starts
+                        </p>
                         <p className="mt-1 font-semibold text-slate-700">
                           {new Date(row.startsAt).toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="font-black uppercase text-slate-400">Expires</p>
+                        <p className="font-black uppercase text-slate-400">
+                          Expires
+                        </p>
                         <p className="mt-1 font-semibold text-slate-700">
                           {new Date(row.expiresAt).toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="font-black uppercase text-slate-400">Daily limit</p>
+                        <p className="font-black uppercase text-slate-400">
+                          Daily limit
+                        </p>
                         <p className="mt-1 font-semibold text-slate-700">
                           {row.dailySpinLimit} spin(s)
                         </p>
@@ -671,15 +725,23 @@ export function AdminSpinWheelClient() {
                     </div>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                       {row.prizes.map((prize, index) => (
-                        <div key={`${row._id}-${index}`} className="rounded-xl border bg-white p-3">
+                        <div
+                          key={`${row._id}-${index}`}
+                          className="rounded-xl border bg-white p-3"
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="text-xs font-black text-[#173044]">{prize.label}</p>
+                              <p className="text-xs font-black text-[#173044]">
+                                {prize.label}
+                              </p>
                               <p className="mt-1 text-[10px] font-bold uppercase text-slate-500">
-                                {prize.type.replaceAll("_", " ")} · Weight {prize.weight}
+                                {prize.type.replaceAll("_", " ")} · Weight{" "}
+                                {prize.weight}
                               </p>
                             </div>
-                            <StatusBadge value={prize.isActive ? "active" : "inactive"} />
+                            <StatusBadge
+                              value={prize.isActive ? "active" : "inactive"}
+                            />
                           </div>
                           {prize.type === "coins" && (
                             <p className="mt-2 text-xs font-semibold text-slate-600">

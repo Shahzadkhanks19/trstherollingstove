@@ -17,26 +17,15 @@ export function InvoiceActions({
       : `/api/v1/customer/orders/${orderId}/invoice`;
 
   function openPrintableInvoice() {
-    window.open(
-      endpoint,
-      "_blank",
-      "noopener,noreferrer",
-    );
+    window.open(endpoint, "_blank", "noopener,noreferrer");
   }
 
   function downloadInvoice() {
-    window.location.assign(
-      `${endpoint}?download=true`,
-    );
+    window.location.assign(`${endpoint}?download=true`);
   }
 
   return (
-    <div
-      className={
-        className ??
-        "flex flex-wrap items-center gap-3"
-      }
-    >
+    <div className={className ?? "flex flex-wrap items-center gap-3"}>
       <button
         type="button"
         onClick={openPrintableInvoice}

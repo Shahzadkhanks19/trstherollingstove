@@ -22,7 +22,10 @@ export async function PATCH(
     const taxClass = await TaxClass.findById(taxClassId);
     if (!taxClass) throw new AppError("Tax class not found.", 404);
 
-    if (input.code && await TaxClass.exists({ code: input.code, _id: { $ne: taxClass._id } })) {
+    if (
+      input.code &&
+      (await TaxClass.exists({ code: input.code, _id: { $ne: taxClass._id } }))
+    ) {
       throw new AppError("A tax class with this code already exists.", 409);
     }
 
@@ -53,7 +56,10 @@ export async function DELETE(
     await connectToDatabase();
 
     if (await MenuItem.exists({ taxClassId, deletedAt: null })) {
-      throw new AppError("Remove this tax class from all menu items first.", 409);
+      throw new AppError(
+        "Remove this tax class from all menu items first.",
+        409,
+      );
     }
 
     const taxClass = await TaxClass.findByIdAndDelete(taxClassId);

@@ -14,12 +14,9 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const search = url.searchParams.get("search")?.trim();
-    const category =
-      url.searchParams.get("category")?.trim();
-    const lowStock =
-      url.searchParams.get("lowStock") === "true";
-    const includeArchived =
-      url.searchParams.get("includeArchived") === "true";
+    const category = url.searchParams.get("category")?.trim();
+    const lowStock = url.searchParams.get("lowStock") === "true";
+    const includeArchived = url.searchParams.get("includeArchived") === "true";
 
     const filter: Record<string, unknown> = includeArchived
       ? {}
@@ -64,13 +61,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const actor = await requirePermission(
-      "inventory.manage",
-    );
-    const input = await validateRequestBody(
-      request,
-      createInventoryItemSchema,
-    );
+    const actor = await requirePermission("inventory.manage");
+    const input = await validateRequestBody(request, createInventoryItemSchema);
 
     const database = await connectToDatabase();
     const session = await database.startSession();
@@ -99,7 +91,8 @@ export async function POST(request: Request) {
             quantity: input.currentStock,
             unitCost: input.averageUnitCost,
             referenceType: "opening",
-            reason: "Opening stock recorded when the inventory item was created.",
+            reason:
+              "Opening stock recorded when the inventory item was created.",
             actorId: actor.id,
             session,
           });
@@ -113,11 +106,7 @@ export async function POST(request: Request) {
       await session.endSession();
     }
 
-    return successResponse(
-      item,
-      "Inventory item created.",
-      201,
-    );
+    return successResponse(item, "Inventory item created.", 201);
   } catch (error) {
     return handleApiError(error);
   }

@@ -54,12 +54,10 @@ const POSCashMovementSchema = new Schema(
 
 POSCashMovementSchema.index({ shiftId: 1, createdAt: -1 });
 
-export type POSCashMovementDocument =
-  InferSchemaType<typeof POSCashMovementSchema>;
+export type POSCashMovementDocument = InferSchemaType<
+  typeof POSCashMovementSchema
+>;
 
 export const POSCashMovement: Model<POSCashMovementDocument> =
   (models.POSCashMovement as Model<POSCashMovementDocument>) ||
-  model<POSCashMovementDocument>(
-    "POSCashMovement",
-    POSCashMovementSchema,
-  );
+  model<POSCashMovementDocument>("POSCashMovement", POSCashMovementSchema);

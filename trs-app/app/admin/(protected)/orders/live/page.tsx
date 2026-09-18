@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { AdminLiveOrdersClient } from "@/components/admin/orders/AdminLiveOrdersClient";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
-export const metadata = createAdminMetadata("Live Orders", "Monitor active dine-in and pickup orders in real time.");
+export const metadata = createAdminMetadata(
+  "Live Orders",
+  "Monitor active dine-in and pickup orders in real time.",
+);
 
 export const dynamic = "force-dynamic";
 
@@ -15,5 +18,9 @@ export default async function AdminLiveOrdersPage() {
     redirect("/admin/dashboard?error=unauthorized");
   }
 
-  return <AdminLiveOrdersClient canManage={user.permissions.includes("orders.manage")} />;
+  return (
+    <AdminLiveOrdersClient
+      canManage={user.permissions.includes("orders.manage")}
+    />
+  );
 }

@@ -10,8 +10,8 @@ export default async function ApiDrivenMenuPageExample() {
         <h1 className="text-4xl font-black uppercase">Menu</h1>
 
         <p className="mt-3 text-sm text-[#655E57]">
-          All items, prices, availability and customisations are loaded from
-          the backend and managed through the admin dashboard.
+          All items, prices, availability and customisations are loaded from the
+          backend and managed through the admin dashboard.
         </p>
 
         <div className="mt-8">

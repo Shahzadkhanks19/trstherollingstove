@@ -1,9 +1,7 @@
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
-import {
-  getPublicMenuItem,
-} from "@/services/publicWebsite.service";
+import { getPublicMenuItem } from "@/services/publicWebsite.service";
 
 type RouteContext = {
   params: Promise<{
@@ -11,25 +9,19 @@ type RouteContext = {
   }>;
 };
 
-export async function GET(
-  _request: Request,
-  context: RouteContext,
-) {
+export async function GET(_request: Request, context: RouteContext) {
   try {
     await connectToDatabase();
 
-    const { slug } =
-      await context.params;
+    const { slug } = await context.params;
 
-    const item =
-      await getPublicMenuItem(slug);
+    const item = await getPublicMenuItem(slug);
 
     if (!item) {
       return Response.json(
         {
           success: false,
-          message:
-            "Menu item not found.",
+          message: "Menu item not found.",
         },
         {
           status: 404,

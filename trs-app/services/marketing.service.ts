@@ -60,16 +60,13 @@ export async function getMarketingSummary() {
 
   const totals = campaigns.reduce(
     (accumulator, campaign) => ({
-      audience:
-        accumulator.audience + (campaign.metrics?.audienceSize ?? 0),
+      audience: accumulator.audience + (campaign.metrics?.audienceSize ?? 0),
       sent: accumulator.sent + (campaign.metrics?.sent ?? 0),
-      delivered:
-        accumulator.delivered + (campaign.metrics?.delivered ?? 0),
+      delivered: accumulator.delivered + (campaign.metrics?.delivered ?? 0),
       failed: accumulator.failed + (campaign.metrics?.failed ?? 0),
       opened: accumulator.opened + (campaign.metrics?.opened ?? 0),
       clicked: accumulator.clicked + (campaign.metrics?.clicked ?? 0),
-      converted:
-        accumulator.converted + (campaign.metrics?.converted ?? 0),
+      converted: accumulator.converted + (campaign.metrics?.converted ?? 0),
     }),
     {
       audience: 0,
@@ -84,15 +81,13 @@ export async function getMarketingSummary() {
 
   return {
     campaignCount: campaigns.length,
-    draftCampaigns: campaigns.filter(
-      (campaign) => campaign.status === "draft",
-    ).length,
+    draftCampaigns: campaigns.filter((campaign) => campaign.status === "draft")
+      .length,
     scheduledCampaigns: campaigns.filter(
       (campaign) => campaign.status === "scheduled",
     ).length,
-    activeAutomations: automations.filter(
-      (automation) => automation.isActive,
-    ).length,
+    activeAutomations: automations.filter((automation) => automation.isActive)
+      .length,
     automationRuns: automations.reduce(
       (sum, automation) => sum + (automation.runCount ?? 0),
       0,
@@ -113,10 +108,7 @@ export async function getMarketingSummary() {
 
 export async function listCampaigns(params: URLSearchParams) {
   const page = Math.max(1, Number(params.get("page") || 1));
-  const limit = Math.min(
-    100,
-    Math.max(1, Number(params.get("limit") || 20)),
-  );
+  const limit = Math.min(100, Math.max(1, Number(params.get("limit") || 20)));
   const status = params.get("status") || "";
 
   const filter: Record<string, unknown> = {};
@@ -144,10 +136,7 @@ export async function listCampaigns(params: URLSearchParams) {
   };
 }
 
-export async function createCampaign(
-  input: CampaignInput,
-  userId: string,
-) {
+export async function createCampaign(input: CampaignInput, userId: string) {
   return MarketingCampaign.create({
     ...input,
     schedule: {
@@ -196,9 +185,7 @@ export async function deleteCampaign(id: string) {
   }
 
   if (["running", "completed"].includes(campaign.status)) {
-    throw new Error(
-      "Running or completed campaigns cannot be deleted.",
-    );
+    throw new Error("Running or completed campaigns cannot be deleted.");
   }
 
   await Promise.all([
@@ -228,19 +215,13 @@ async function resolveAudience(
 
   const filter: Record<string, unknown> = {};
 
-  if (
-    audience.type === "segment" &&
-    (audience.segmentKeys?.length ?? 0) > 0
-  ) {
+  if (audience.type === "segment" && (audience.segmentKeys?.length ?? 0) > 0) {
     filter.segmentKeys = {
       $in: audience.segmentKeys,
     };
   }
 
-  if (
-    audience.type === "risk" &&
-    (audience.riskLevels?.length ?? 0) > 0
-  ) {
+  if (audience.type === "risk" && (audience.riskLevels?.length ?? 0) > 0) {
     filter.riskLevel = {
       $in: audience.riskLevels,
     };
@@ -250,9 +231,7 @@ async function resolveAudience(
     .select("customerId")
     .lean();
 
-  return insights.map(
-    (insight) => insight.customerId as Types.ObjectId,
-  );
+  return insights.map((insight) => insight.customerId as Types.ObjectId);
 }
 
 function destinationFor(
@@ -268,15 +247,11 @@ function destinationFor(
   } | null,
 ) {
   if (channel === "email") {
-    return profile?.marketingEmailOptIn && user.email
-      ? user.email
-      : "";
+    return profile?.marketingEmailOptIn && user.email ? user.email : "";
   }
 
   if (channel === "whatsapp") {
-    return profile?.marketingWhatsAppOptIn && user.phone
-      ? user.phone
-      : "";
+    return profile?.marketingWhatsAppOptIn && user.phone ? user.phone : "";
   }
 
   if (channel === "sms") {
@@ -286,24 +261,15 @@ function destinationFor(
   return String(user._id ?? "");
 }
 
-export async function runCampaign(
-  id: string,
-  dryRun = false,
-) {
+export async function runCampaign(id: string, dryRun = false) {
   const campaign = await MarketingCampaign.findById(id);
 
   if (!campaign) {
     throw new Error("Campaign not found.");
   }
 
-  if (
-    ["running", "completed", "cancelled"].includes(
-      campaign.status,
-    )
-  ) {
-    throw new Error(
-      `Campaign cannot run while ${campaign.status}.`,
-    );
+  if (["running", "completed", "cancelled"].includes(campaign.status)) {
+    throw new Error(`Campaign cannot run while ${campaign.status}.`);
   }
 
   const customerIds = await resolveAudience(campaign);
@@ -328,15 +294,11 @@ export async function runCampaign(
 
   for (const customerId of customerIds) {
     const [user, profile] = await Promise.all([
-      User.findById(customerId)
-        .select("_id email phone")
-        .lean(),
+      User.findById(customerId).select("_id email phone").lean(),
       CustomerProfile.findOne({
         userId: customerId,
       })
-        .select(
-          "marketingEmailOptIn marketingWhatsAppOptIn",
-        )
+        .select("marketingEmailOptIn marketingWhatsAppOptIn")
         .lean(),
     ]);
 
@@ -345,11 +307,7 @@ export async function runCampaign(
       continue;
     }
 
-    const destination = destinationFor(
-      campaign.channel,
-      user,
-      profile,
-    );
+    const destination = destinationFor(campaign.channel, user, profile);
     const status = destination ? "queued" : "skipped";
 
     await CampaignExecution.findOneAndUpdate(
@@ -400,9 +358,7 @@ export async function runCampaign(
   };
 }
 
-export async function processQueuedExecutions(
-  limit = 100,
-) {
+export async function processQueuedExecutions(limit = 100) {
   const rows = await CampaignExecution.find({
     status: "queued",
   })
@@ -445,9 +401,7 @@ export async function processQueuedExecutions(
   };
 }
 
-export async function listExecutions(
-  campaignId: string,
-) {
+export async function listExecutions(campaignId: string) {
   return CampaignExecution.find({
     campaignId,
   })
@@ -491,9 +445,7 @@ export async function updateAutomation(
 }
 
 export async function deleteAutomation(id: string) {
-  return Boolean(
-    await AutomationRule.findByIdAndDelete(id),
-  );
+  return Boolean(await AutomationRule.findByIdAndDelete(id));
 }
 
 export async function listAudiences() {
@@ -514,9 +466,7 @@ export async function createAudience(
 }
 
 export async function deleteAudience(id: string) {
-  return Boolean(
-    await CampaignAudience.findByIdAndDelete(id),
-  );
+  return Boolean(await CampaignAudience.findByIdAndDelete(id));
 }
 
 export async function runDueCampaigns() {
@@ -532,9 +482,7 @@ export async function runDueCampaigns() {
   const results = [];
 
   for (const campaign of dueCampaigns) {
-    results.push(
-      await runCampaign(String(campaign._id)),
-    );
+    results.push(await runCampaign(String(campaign._id)));
   }
 
   return {

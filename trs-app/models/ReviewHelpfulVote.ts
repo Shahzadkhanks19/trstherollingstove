@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const ReviewHelpfulVoteSchema = new Schema(
   {
@@ -18,10 +24,7 @@ const ReviewHelpfulVoteSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-ReviewHelpfulVoteSchema.index(
-  { reviewId: 1, userId: 1 },
-  { unique: true },
-);
+ReviewHelpfulVoteSchema.index({ reviewId: 1, userId: 1 }, { unique: true });
 
 export type ReviewHelpfulVoteDocument = InferSchemaType<
   typeof ReviewHelpfulVoteSchema

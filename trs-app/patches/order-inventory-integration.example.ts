@@ -9,14 +9,17 @@
 
 import { deductInventoryForOrder } from "@/services/inventory.service";
 
-export async function consumeOrderInventory(order: {
-  id: string;
-  inventoryDeducted: boolean;
-  items: Array<{
-    menuItemId: string;
-    quantity: number;
-  }>;
-}, actorId: string) {
+export async function consumeOrderInventory(
+  order: {
+    id: string;
+    inventoryDeducted: boolean;
+    items: Array<{
+      menuItemId: string;
+      quantity: number;
+    }>;
+  },
+  actorId: string,
+) {
   if (order.inventoryDeducted) {
     return [];
   }

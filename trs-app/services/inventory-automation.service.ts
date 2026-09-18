@@ -18,9 +18,7 @@ type JobType =
   | "consumption_report"
   | "abc_analysis";
 
-function reportTypeForJob(
-  jobType: JobType,
-): InventoryReportType | null {
+function reportTypeForJob(jobType: JobType): InventoryReportType | null {
   if (jobType === "monthly_valuation") return "valuation";
   if (jobType === "expiry_report") return "expiry";
   if (jobType === "consumption_report") return "consumption";
@@ -29,10 +27,7 @@ function reportTypeForJob(
   return null;
 }
 
-function nextRunDate(
-  current: Date,
-  frequency: "daily" | "weekly" | "monthly",
-) {
+function nextRunDate(current: Date, frequency: "daily" | "weekly" | "monthly") {
   const next = new Date(current);
 
   if (frequency === "daily") {
@@ -124,9 +119,7 @@ export async function createAndRunInventoryJob(input: {
   return executeInventoryAutomationJob(String(job._id));
 }
 
-export async function executeInventoryAutomationJob(
-  jobId: string,
-) {
+export async function executeInventoryAutomationJob(jobId: string) {
   const job = await InventoryAutomationJob.findOneAndUpdate(
     {
       _id: jobId,
@@ -191,9 +184,7 @@ export async function executeInventoryAutomationJob(
     job.errorMessage = message;
     job.failedAt = new Date();
     job.durationMs = Date.now() - startedAt;
-    job.nextRetryAt = shouldRetry
-      ? new Date(Date.now() + 5 * 60 * 1000)
-      : null;
+    job.nextRetryAt = shouldRetry ? new Date(Date.now() + 5 * 60 * 1000) : null;
     await job.save();
 
     throw error;
@@ -217,9 +208,7 @@ export async function runDueInventoryJobs(limit = 20) {
 
   for (const retry of retryJobs) {
     try {
-      const result = await executeInventoryAutomationJob(
-        String(retry._id),
-      );
+      const result = await executeInventoryAutomationJob(String(retry._id));
       results.push({
         jobId: String(retry._id),
         status: result?.status ?? "skipped",
@@ -228,10 +217,7 @@ export async function runDueInventoryJobs(limit = 20) {
       results.push({
         jobId: String(retry._id),
         status: "failed",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -282,10 +268,7 @@ export async function runDueScheduledReports(limit = 20) {
 
       schedule.lastRunAt = now;
       schedule.lastJobId = job?._id ?? null;
-      schedule.nextRunAt = nextRunDate(
-        schedule.nextRunAt,
-        schedule.frequency,
-      );
+      schedule.nextRunAt = nextRunDate(schedule.nextRunAt, schedule.frequency);
       await schedule.save();
 
       results.push({
@@ -297,10 +280,7 @@ export async function runDueScheduledReports(limit = 20) {
       results.push({
         scheduleId: String(schedule._id),
         status: "failed",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }

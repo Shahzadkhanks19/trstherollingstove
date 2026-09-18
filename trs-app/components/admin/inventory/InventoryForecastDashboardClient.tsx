@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type ApiEnvelope<T> = {
   data: T;
@@ -74,17 +69,12 @@ const money = new Intl.NumberFormat("en-IN", {
 });
 
 function unwrap<T>(payload: ApiEnvelope<T> | T): T {
-  return typeof payload === "object" &&
-    payload !== null &&
-    "data" in payload
+  return typeof payload === "object" && payload !== null && "data" in payload
     ? (payload as ApiEnvelope<T>).data
     : (payload as T);
 }
 
-async function request<T>(
-  url: string,
-  init?: RequestInit,
-): Promise<T> {
+async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...init,
     headers: {
@@ -95,11 +85,7 @@ async function request<T>(
   const payload = (await response.json()) as ApiEnvelope<T>;
 
   if (!response.ok) {
-    throw new Error(
-      payload.message ??
-        payload.error ??
-        "Request failed.",
-    );
+    throw new Error(payload.message ?? payload.error ?? "Request failed.");
   }
 
   return unwrap(payload);
@@ -112,8 +98,7 @@ export function InventoryForecastDashboardClient({
   canManage: boolean;
   canExport: boolean;
 }) {
-  const [summary, setSummary] =
-    useState<SummaryPayload | null>(null);
+  const [summary, setSummary] = useState<SummaryPayload | null>(null);
   const [items, setItems] = useState<ForecastItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
@@ -133,15 +118,11 @@ export function InventoryForecastDashboardClient({
       const query = new URLSearchParams({
         limit: "100",
         ...(risk ? { riskLevel: risk } : {}),
-        ...(search.trim()
-          ? { search: search.trim() }
-          : {}),
+        ...(search.trim() ? { search: search.trim() } : {}),
       });
 
       const [summaryData, itemData] = await Promise.all([
-        request<SummaryPayload>(
-          "/api/v1/admin/inventory/forecast/summary",
-        ),
+        request<SummaryPayload>("/api/v1/admin/inventory/forecast/summary"),
         request<{ rows: ForecastItem[] }>(
           `/api/v1/admin/inventory/forecast/items?${query}`,
         ),
@@ -161,10 +142,7 @@ export function InventoryForecastDashboardClient({
   }, [risk, search]);
 
   useEffect(() => {
-    const timer = window.setTimeout(
-      () => void load(),
-      0,
-    );
+    const timer = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(timer);
   }, [load]);
 
@@ -174,22 +152,17 @@ export function InventoryForecastDashboardClient({
     setNotice("");
 
     try {
-      await request(
-        "/api/v1/admin/inventory/forecast/run",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            lookbackDays,
-            horizonDays,
-            leadTimeDays,
-            serviceLevelFactor: 1.65,
-            source: "manual",
-          }),
-        },
-      );
-      setNotice(
-        "Forecast generated with updated reorder recommendations.",
-      );
+      await request("/api/v1/admin/inventory/forecast/run", {
+        method: "POST",
+        body: JSON.stringify({
+          lookbackDays,
+          horizonDays,
+          leadTimeDays,
+          serviceLevelFactor: 1.65,
+          source: "manual",
+        }),
+      });
+      setNotice("Forecast generated with updated reorder recommendations.");
       await load();
     } catch (caught) {
       setError(
@@ -204,39 +177,24 @@ export function InventoryForecastDashboardClient({
 
   const cards = useMemo(
     () => [
-      [
-        "Forecasted items",
-        String(summary?.summary.itemCount ?? 0),
-      ],
+      ["Forecasted items", String(summary?.summary.itemCount ?? 0)],
       [
         "Critical / high risk",
-        String(
-          (summary?.summary.critical ?? 0) +
-            (summary?.summary.high ?? 0),
-        ),
+        String((summary?.summary.critical ?? 0) + (summary?.summary.high ?? 0)),
       ],
       [
         "Stockout within 7 days",
-        String(
-          summary?.summary.stockoutWithin7Days ?? 0,
-        ),
+        String(summary?.summary.stockoutWithin7Days ?? 0),
       ],
       [
         "Recommended purchase value",
-        money.format(
-          summary?.summary.recommendedOrderValue ?? 0,
-        ),
+        money.format(summary?.summary.recommendedOrderValue ?? 0),
       ],
       [
         "Average confidence",
-        `${Number(
-          summary?.summary.averageConfidence ?? 0,
-        ).toFixed(1)}%`,
+        `${Number(summary?.summary.averageConfidence ?? 0).toFixed(1)}%`,
       ],
-      [
-        "Fast-moving items",
-        String(summary?.summary.fastMoving ?? 0),
-      ],
+      ["Fast-moving items", String(summary?.summary.fastMoving ?? 0)],
     ],
     [summary],
   );
@@ -261,9 +219,9 @@ export function InventoryForecastDashboardClient({
               Inventory Demand Forecasting
             </h1>
             <p className="mt-2 max-w-3xl text-sm text-neutral-300">
-              Predict consumption, estimate stockout dates,
-              calculate safety stock, and generate actionable
-              purchase recommendations from actual movement data.
+              Predict consumption, estimate stockout dates, calculate safety
+              stock, and generate actionable purchase recommendations from
+              actual movement data.
             </p>
           </div>
 
@@ -274,9 +232,7 @@ export function InventoryForecastDashboardClient({
                 <select
                   value={lookbackDays}
                   onChange={(event) =>
-                    setLookbackDays(
-                      Number(event.target.value),
-                    )
+                    setLookbackDays(Number(event.target.value))
                   }
                   className="mt-1 w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-white"
                 >
@@ -300,9 +256,7 @@ export function InventoryForecastDashboardClient({
                 <select
                   value={horizonDays}
                   onChange={(event) =>
-                    setHorizonDays(
-                      Number(event.target.value),
-                    )
+                    setHorizonDays(Number(event.target.value))
                   }
                   className="mt-1 w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-white"
                 >
@@ -326,9 +280,7 @@ export function InventoryForecastDashboardClient({
                 <select
                   value={leadTimeDays}
                   onChange={(event) =>
-                    setLeadTimeDays(
-                      Number(event.target.value),
-                    )
+                    setLeadTimeDays(Number(event.target.value))
                   }
                   className="mt-1 w-full rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-white"
                 >
@@ -353,9 +305,7 @@ export function InventoryForecastDashboardClient({
                 onClick={() => void generate()}
                 className="self-end rounded-xl bg-red-600 px-4 py-2.5 text-sm font-black hover:bg-red-500 disabled:opacity-50"
               >
-                {working
-                  ? "Generating…"
-                  : "Generate forecast"}
+                {working ? "Generating…" : "Generate forecast"}
               </button>
             </div>
           ) : null}
@@ -380,8 +330,8 @@ export function InventoryForecastDashboardClient({
             No forecast has been generated yet
           </h2>
           <p className="mt-2 text-sm text-neutral-500">
-            Generate the first forecast to calculate demand,
-            safety stock, reorder points, and stockout risk.
+            Generate the first forecast to calculate demand, safety stock,
+            reorder points, and stockout risk.
           </p>
         </section>
       ) : (
@@ -392,9 +342,7 @@ export function InventoryForecastDashboardClient({
                 key={label}
                 className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm"
               >
-                <p className="text-sm text-neutral-500">
-                  {label}
-                </p>
+                <p className="text-sm text-neutral-500">{label}</p>
                 <p className="mt-2 text-3xl font-black text-neutral-950">
                   {value}
                 </p>
@@ -405,35 +353,26 @@ export function InventoryForecastDashboardClient({
           <section className="rounded-3xl border border-neutral-200 bg-white p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-black">
-                  Forecast recommendations
-                </h2>
+                <h2 className="text-xl font-black">Forecast recommendations</h2>
                 <p className="mt-1 text-xs text-neutral-500">
                   Last generated{" "}
                   {summary.run.completedAt
-                    ? new Date(
-                        summary.run.completedAt,
-                      ).toLocaleString()
+                    ? new Date(summary.run.completedAt).toLocaleString()
                     : "recently"}{" "}
-                  using {summary.run.lookbackDays} days of
-                  history.
+                  using {summary.run.lookbackDays} days of history.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 <input
                   value={search}
-                  onChange={(event) =>
-                    setSearch(event.target.value)
-                  }
+                  onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search item or SKU"
                   className="rounded-xl border border-neutral-200 px-3 py-2 text-sm"
                 />
                 <select
                   value={risk}
-                  onChange={(event) =>
-                    setRisk(event.target.value)
-                  }
+                  onChange={(event) => setRisk(event.target.value)}
                   className="rounded-xl border border-neutral-200 px-3 py-2 text-sm"
                 >
                   <option value="">All risks</option>
@@ -491,68 +430,38 @@ export function InventoryForecastDashboardClient({
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr
-                      key={item._id}
-                      className="border-b border-neutral-100"
-                    >
+                    <tr key={item._id} className="border-b border-neutral-100">
                       <td className="py-3">
-                        <p className="font-bold">
-                          {item.itemName}
-                        </p>
+                        <p className="font-bold">{item.itemName}</p>
                         <p className="text-xs text-neutral-500">
                           {item.sku} · {item.category}
                         </p>
                       </td>
-                      <td className="font-bold capitalize">
-                        {item.riskLevel}
-                      </td>
-                      <td className="capitalize">
-                        {item.velocityClass}
-                      </td>
+                      <td className="font-bold capitalize">{item.riskLevel}</td>
+                      <td className="capitalize">{item.velocityClass}</td>
                       <td>
-                        {item.currentStock.toFixed(2)}{" "}
-                        {item.unit}
+                        {item.currentStock.toFixed(2)} {item.unit}
                       </td>
-                      <td>
-                        {item.forecastDailyDemand.toFixed(
-                          2,
-                        )}
-                      </td>
-                      <td>
-                        {item.forecastMonthlyDemand.toFixed(
-                          2,
-                        )}
-                      </td>
+                      <td>{item.forecastDailyDemand.toFixed(2)}</td>
+                      <td>{item.forecastMonthlyDemand.toFixed(2)}</td>
                       <td>
                         {item.trendPercent >= 0 ? "+" : ""}
                         {item.trendPercent.toFixed(1)}%
                       </td>
-                      <td>
-                        {item.safetyStock.toFixed(2)}
-                      </td>
-                      <td>
-                        {item.reorderPoint.toFixed(2)}
+                      <td>{item.safetyStock.toFixed(2)}</td>
+                      <td>{item.reorderPoint.toFixed(2)}</td>
+                      <td className="font-black">
+                        {item.recommendedOrderQuantity.toFixed(2)}
                       </td>
                       <td className="font-black">
-                        {item.recommendedOrderQuantity.toFixed(
-                          2,
-                        )}
-                      </td>
-                      <td className="font-black">
-                        {money.format(
-                          item.recommendedOrderValue,
-                        )}
+                        {money.format(item.recommendedOrderValue)}
                       </td>
                       <td>
                         {item.daysUntilStockout === null
                           ? "No demand"
-                          : `${item.daysUntilStockout.toFixed(
-                              1,
-                            )} days`}
+                          : `${item.daysUntilStockout.toFixed(1)} days`}
                       </td>
-                      <td>
-                        {item.confidenceScore.toFixed(1)}%
-                      </td>
+                      <td>{item.confidenceScore.toFixed(1)}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -567,29 +476,21 @@ export function InventoryForecastDashboardClient({
           </section>
 
           <section className="rounded-3xl border border-neutral-200 bg-white p-6">
-            <h2 className="text-xl font-black">
-              Category purchase exposure
-            </h2>
+            <h2 className="text-xl font-black">Category purchase exposure</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {summary.categories.map((category) => (
                 <div
                   key={category._id}
                   className="rounded-2xl bg-neutral-50 p-4"
                 >
-                  <p className="font-bold">
-                    {category._id}
-                  </p>
+                  <p className="font-bold">{category._id}</p>
                   <p className="mt-2 text-2xl font-black">
-                    {money.format(
-                      category.recommendedOrderValue,
-                    )}
+                    {money.format(category.recommendedOrderValue)}
                   </p>
                   <p className="mt-1 text-xs text-neutral-500">
                     {category.items} items ·{" "}
-                    {Number(
-                      category.forecastMonthlyDemand,
-                    ).toFixed(2)}{" "}
-                    forecast units
+                    {Number(category.forecastMonthlyDemand).toFixed(2)} forecast
+                    units
                   </p>
                 </div>
               ))}

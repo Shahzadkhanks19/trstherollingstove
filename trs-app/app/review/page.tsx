@@ -9,5 +9,15 @@ export const metadata: Metadata = {
 };
 
 export default function ReviewPage() {
-  return <Suspense fallback={<main className="min-h-[70vh] bg-[#fffaf0] p-6"><div className="mx-auto h-[620px] max-w-5xl animate-pulse rounded-[2rem] bg-white" /></main>}><ReviewExperienceClient /></Suspense>;
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-[70vh] bg-[#fffaf0] p-6">
+          <div className="mx-auto h-[620px] max-w-5xl animate-pulse rounded-[2rem] bg-white" />
+        </main>
+      }
+    >
+      <ReviewExperienceClient />
+    </Suspense>
+  );
 }

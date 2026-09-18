@@ -7,8 +7,15 @@ export async function POST(request: Request) {
   try {
     const signature = request.headers.get("x-trs-webhook-secret") ?? "";
     await connectToDatabase();
-    const integration = await ReputationIntegration.findOne({ provider: "google_business_profile", isEnabled: true }).select("+webhookSecret");
-    if (!integration || !integration.webhookSecret || signature !== integration.webhookSecret) {
+    const integration = await ReputationIntegration.findOne({
+      provider: "google_business_profile",
+      isEnabled: true,
+    }).select("+webhookSecret");
+    if (
+      !integration ||
+      !integration.webhookSecret ||
+      signature !== integration.webhookSecret
+    ) {
       return new Response("Unauthorized", { status: 401 });
     }
     const payload = await request.json();

@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const ExpenseBreakdownSchema = new Schema(
   {
@@ -27,7 +33,12 @@ const ExpenseSnapshotSchema = new Schema(
       paidExpenses: { type: Number, required: true, min: 0, default: 0 },
       outstandingExpenses: { type: Number, required: true, min: 0, default: 0 },
       taxPaid: { type: Number, required: true, min: 0, default: 0 },
-      recurringCommitments: { type: Number, required: true, min: 0, default: 0 },
+      recurringCommitments: {
+        type: Number,
+        required: true,
+        min: 0,
+        default: 0,
+      },
       averageExpense: { type: Number, required: true, min: 0, default: 0 },
     },
     byDay: { type: [ExpenseBreakdownSchema], default: [] },
@@ -36,12 +47,19 @@ const ExpenseSnapshotSchema = new Schema(
     byPaymentMethod: { type: [ExpenseBreakdownSchema], default: [] },
     generatedAt: { type: Date, required: true, default: Date.now, index: true },
     generatedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
-    source: { type: String, enum: ["scheduled", "manual", "system"], default: "system" },
+    source: {
+      type: String,
+      enum: ["scheduled", "manual", "system"],
+      default: "system",
+    },
   },
   { timestamps: true, versionKey: false },
 );
 
 ExpenseSnapshotSchema.index({ periodStart: -1, periodEnd: -1 });
-export type ExpenseSnapshotDocument = InferSchemaType<typeof ExpenseSnapshotSchema>;
+export type ExpenseSnapshotDocument = InferSchemaType<
+  typeof ExpenseSnapshotSchema
+>;
 export const ExpenseSnapshot: Model<ExpenseSnapshotDocument> =
-  (models.ExpenseSnapshot as Model<ExpenseSnapshotDocument>) || model<ExpenseSnapshotDocument>("ExpenseSnapshot", ExpenseSnapshotSchema);
+  (models.ExpenseSnapshot as Model<ExpenseSnapshotDocument>) ||
+  model<ExpenseSnapshotDocument>("ExpenseSnapshot", ExpenseSnapshotSchema);

@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "Invalid MongoDB id.");
+const objectIdSchema = z
+  .string()
+  .regex(/^[a-f\d]{24}$/i, "Invalid MongoDB id.");
 
 export const vendorProfileSchema = z.object({
   supplierId: objectIdSchema,

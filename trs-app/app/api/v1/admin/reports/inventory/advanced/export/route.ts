@@ -16,8 +16,7 @@ export async function GET(request: Request) {
 
     if (!parsed.success) {
       throw new AppError(
-        parsed.error.issues[0]?.message ??
-          "Invalid inventory report query.",
+        parsed.error.issues[0]?.message ?? "Invalid inventory report query.",
         400,
       );
     }
@@ -32,8 +31,7 @@ export async function GET(request: Request) {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition":
-          `attachment; filename="trs-inventory-${type}-${date}.csv"`,
+        "Content-Disposition": `attachment; filename="trs-inventory-${type}-${date}.csv"`,
         "Cache-Control": "no-store",
       },
     });

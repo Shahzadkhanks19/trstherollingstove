@@ -13,7 +13,8 @@ type Context = { params: Promise<{ cartItemId: string }> };
 
 async function actorCustomer() {
   const actor = await requireAuthenticatedUser();
-  if (actor.roleKey !== "customer") throw new AppError("Customer access required.", 403);
+  if (actor.roleKey !== "customer")
+    throw new AppError("Customer access required.", 403);
   return actor;
 }
 
@@ -35,7 +36,7 @@ export async function PATCH(request: Request, context: Context) {
       variantId:
         input.variantId !== undefined
           ? input.variantId
-          : current.variantId?.toString() ?? null,
+          : (current.variantId?.toString() ?? null),
       modifiers:
         input.modifiers ??
         current.modifiers.map((entry) => ({
@@ -49,7 +50,10 @@ export async function PATCH(request: Request, context: Context) {
 
     Object.assign(current, line);
     await cart.save();
-    return successResponse(await recalculateCart(actor.id), "Cart item updated.");
+    return successResponse(
+      await recalculateCart(actor.id),
+      "Cart item updated.",
+    );
   } catch (error) {
     return handleApiError(error);
   }
@@ -69,7 +73,10 @@ export async function DELETE(_request: Request, context: Context) {
     current.deleteOne();
     await cart.save();
 
-    return successResponse(await recalculateCart(actor.id), "Cart item removed.");
+    return successResponse(
+      await recalculateCart(actor.id),
+      "Cart item removed.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

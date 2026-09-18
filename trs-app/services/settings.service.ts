@@ -12,10 +12,7 @@ import {
 } from "@/types/settings";
 import { settingsSchemas } from "@/validators/settings";
 
-const PUBLIC_FIELD_ALLOWLIST: Record<
-  SettingSection,
-  readonly string[]
-> = {
+const PUBLIC_FIELD_ALLOWLIST: Record<SettingSection, readonly string[]> = {
   business: [
     "tradeName",
     "phone",
@@ -74,10 +71,7 @@ const PUBLIC_FIELD_ALLOWLIST: Record<
     "cardEnabled",
     "onlinePaymentEnabled",
   ],
-  operations: [
-    "maintenanceMode",
-    "maintenanceMessage",
-  ],
+  operations: ["maintenanceMode", "maintenanceMessage"],
   seo: [
     "siteName",
     "defaultTitle",
@@ -96,17 +90,11 @@ function pickPublicData(
   section: SettingSection,
   data: SettingPayload,
 ): SettingPayload {
-  const allowedFields =
-    PUBLIC_FIELD_ALLOWLIST[section];
+  const allowedFields = PUBLIC_FIELD_ALLOWLIST[section];
 
   return Object.fromEntries(
     allowedFields
-      .filter((field) =>
-        Object.prototype.hasOwnProperty.call(
-          data,
-          field,
-        ),
-      )
+      .filter((field) => Object.prototype.hasOwnProperty.call(data, field))
       .map((field) => [field, data[field]]),
   );
 }
@@ -115,15 +103,13 @@ export function validateSettingData(
   section: SettingSection,
   data: SettingPayload,
 ): SettingPayload {
-  const result =
-    settingsSchemas[section].safeParse(data);
+  const result = settingsSchemas[section].safeParse(data);
 
   if (!result.success) {
     const firstIssue = result.error.issues[0];
 
     throw new AppError(
-      firstIssue?.message ??
-        `Invalid ${section} settings.`,
+      firstIssue?.message ?? `Invalid ${section} settings.`,
       400,
     );
   }
@@ -141,9 +127,7 @@ function publishSettingsUpdated(section: SettingSection, actorId: string) {
   });
 }
 
-export async function ensureDefaultSettings(
-  actorId: string,
-) {
+export async function ensureDefaultSettings(actorId: string) {
   await Promise.all(
     SETTING_SECTIONS.map((section) => {
       const defaults = DEFAULT_SETTINGS[section];
@@ -169,9 +153,7 @@ export async function ensureDefaultSettings(
   );
 }
 
-export async function getSetting(
-  section: SettingSection,
-) {
+export async function getSetting(section: SettingSection) {
   const existing = await SystemSetting.findOne({
     section,
   }).lean();
@@ -193,8 +175,7 @@ export async function getSetting(
   return {
     section,
     data: DEFAULT_SETTINGS[section].data,
-    publicData:
-      DEFAULT_SETTINGS[section].publicData,
+    publicData: DEFAULT_SETTINGS[section].publicData,
     revision: 0,
     createdAt: null,
     updatedAt: null,
@@ -209,23 +190,15 @@ type UpdateSettingInput = {
   actorId: string;
 };
 
-export async function updateSetting(
-  input: UpdateSettingInput,
-) {
+export async function updateSetting(input: UpdateSettingInput) {
   const normalizedData: SettingPayload = {
     ...DEFAULT_SETTINGS[input.section].data,
     ...input.data,
   };
 
-  const validatedData = validateSettingData(
-    input.section,
-    normalizedData,
-  );
+  const validatedData = validateSettingData(input.section, normalizedData);
 
-  const publicData = pickPublicData(
-    input.section,
-    validatedData,
-  );
+  const publicData = pickPublicData(input.section, validatedData);
 
   const existing = await SystemSetting.findOne({
     section: input.section,
@@ -233,8 +206,7 @@ export async function updateSetting(
 
   if (
     input.expectedRevision !== undefined &&
-    (existing?.revision ?? 0) !==
-      input.expectedRevision
+    (existing?.revision ?? 0) !== input.expectedRevision
   ) {
     throw new AppError(
       "Settings were changed by another user. Refresh and try again.",
@@ -248,9 +220,7 @@ export async function updateSetting(
       data: validatedData,
       publicData,
       revision: 1,
-      updatedBy: new Types.ObjectId(
-        input.actorId,
-      ),
+      updatedBy: new Types.ObjectId(input.actorId),
     });
     publishSettingsUpdated(input.section, input.actorId);
     return created;
@@ -259,9 +229,7 @@ export async function updateSetting(
   existing.data = validatedData;
   existing.publicData = publicData;
   existing.revision += 1;
-  existing.updatedBy = new Types.ObjectId(
-    input.actorId,
-  );
+  existing.updatedBy = new Types.ObjectId(input.actorId);
 
   await existing.save();
   publishSettingsUpdated(input.section, input.actorId);
@@ -269,10 +237,7 @@ export async function updateSetting(
   return existing;
 }
 
-export async function resetSetting(
-  section: SettingSection,
-  actorId: string,
-) {
+export async function resetSetting(section: SettingSection, actorId: string) {
   const defaults = DEFAULT_SETTINGS[section];
 
   const setting = await SystemSetting.findOneAndUpdate(
@@ -316,27 +281,20 @@ export async function getAllPublicSettings() {
   ).lean();
 
   const storedMap = new Map(
-    stored.map((setting) => [
-      setting.section,
-      setting,
-    ]),
+    stored.map((setting) => [setting.section, setting]),
   );
 
   return Object.fromEntries(
     SETTING_SECTIONS.map((section) => {
       const defaults = DEFAULT_SETTINGS[section];
-      const storedSetting =
-        storedMap.get(section);
+      const storedSetting = storedMap.get(section);
 
       return [
         section,
         {
-          ...(storedSetting?.publicData ??
-            defaults.publicData),
-          revision:
-            storedSetting?.revision ?? 0,
-          updatedAt:
-            storedSetting?.updatedAt ?? null,
+          ...(storedSetting?.publicData ?? defaults.publicData),
+          revision: storedSetting?.revision ?? 0,
+          updatedAt: storedSetting?.updatedAt ?? null,
         },
       ];
     }),

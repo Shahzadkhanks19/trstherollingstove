@@ -11,14 +11,9 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
 
-    enterpriseHealthRunSchema.parse(
-      await request.json().catch(() => ({})),
-    );
+    enterpriseHealthRunSchema.parse(await request.json().catch(() => ({})));
 
-    const snapshot = await buildEnterpriseHealthSnapshot(
-      "manual",
-      user.id,
-    );
+    const snapshot = await buildEnterpriseHealthSnapshot("manual", user.id);
 
     return successResponse(
       snapshot,

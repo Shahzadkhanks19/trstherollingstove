@@ -6,17 +6,12 @@ import { ensureDefaultSettings } from "@/services/settings.service";
 
 export async function POST() {
   try {
-    const actor = await requirePermission(
-      "settings.manage",
-    );
+    const actor = await requirePermission("settings.manage");
 
     await connectToDatabase();
     await ensureDefaultSettings(actor.id);
 
-    return successResponse(
-      null,
-      "Default settings initialized.",
-    );
+    return successResponse(null, "Default settings initialized.");
   } catch (error) {
     return handleApiError(error);
   }

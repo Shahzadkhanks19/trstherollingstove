@@ -8,7 +8,11 @@ export async function GET(request: Request) {
   try {
     await requirePermission("reports.read");
     const url = new URL(request.url);
-    const { days } = financialReportRangeSchema.parse({ days: url.searchParams.get("days") ?? 30 });
+    const { days } = financialReportRangeSchema.parse({
+      days: url.searchParams.get("days") ?? 30,
+    });
     return successResponse(await getFinancialReportSummary(days));
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

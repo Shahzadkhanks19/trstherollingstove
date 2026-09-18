@@ -44,13 +44,8 @@ const SystemSettingSchema = new Schema(
   },
 );
 
-export type SystemSettingDocument =
-  InferSchemaType<typeof SystemSettingSchema>;
+export type SystemSettingDocument = InferSchemaType<typeof SystemSettingSchema>;
 
-export const SystemSetting:
-  Model<SystemSettingDocument> =
-    (models.SystemSetting as Model<SystemSettingDocument>) ||
-    model<SystemSettingDocument>(
-      "SystemSetting",
-      SystemSettingSchema,
-    );
+export const SystemSetting: Model<SystemSettingDocument> =
+  (models.SystemSetting as Model<SystemSettingDocument>) ||
+  model<SystemSettingDocument>("SystemSetting", SystemSettingSchema);

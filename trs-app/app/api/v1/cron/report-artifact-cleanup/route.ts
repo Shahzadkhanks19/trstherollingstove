@@ -7,8 +7,14 @@ import { cleanupExpiredReportArtifacts } from "@/services/report-automation.serv
 export async function POST(request: Request) {
   try {
     const secret = process.env.CRON_SECRET;
-    if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) throw new AppError("Unauthorized cron request.", 401);
+    if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`)
+      throw new AppError("Unauthorized cron request.", 401);
     await connectToDatabase();
-    return successResponse(await cleanupExpiredReportArtifacts(), "Report artifact cleanup completed.");
-  } catch (error) { return handleApiError(error); }
+    return successResponse(
+      await cleanupExpiredReportArtifacts(),
+      "Report artifact cleanup completed.",
+    );
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

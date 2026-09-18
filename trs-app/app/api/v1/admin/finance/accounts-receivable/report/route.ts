@@ -3,16 +3,28 @@ import { handleApiError } from "@/lib/errors/handleApiError";
 import { getAccountsReceivableSummary } from "@/services/accounts-receivable.service";
 import { receivableRangeSchema } from "@/validators/accounts-receivable";
 
-const escapeCsv = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+const escapeCsv = (value: unknown) =>
+  `"${String(value ?? "").replaceAll('"', '""')}"`;
 
 export async function GET(request: Request) {
   try {
     await requirePermission("reports.read");
     const url = new URL(request.url);
-    const { days } = receivableRangeSchema.parse({ days: url.searchParams.get("days") ?? 30 });
+    const { days } = receivableRangeSchema.parse({
+      days: url.searchParams.get("days") ?? 30,
+    });
     const summary = await getAccountsReceivableSummary(days);
     const rows = [
-      ["Invoice", "Customer", "Invoice date", "Due date", "Status", "Total", "Paid", "Outstanding"],
+      [
+        "Invoice",
+        "Customer",
+        "Invoice date",
+        "Due date",
+        "Status",
+        "Total",
+        "Paid",
+        "Outstanding",
+      ],
       ...summary.recentInvoices.map((invoice) => [
         invoice.invoiceNumber,
         invoice.customerName,

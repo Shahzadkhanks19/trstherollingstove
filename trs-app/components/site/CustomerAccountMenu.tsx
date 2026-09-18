@@ -72,7 +72,10 @@ export function CustomerAccountMenu() {
     if (!open) return;
 
     const handleOutsideClick = (event: MouseEvent): void => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -108,7 +111,10 @@ export function CustomerAccountMenu() {
 
   if (loading) {
     return (
-      <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#27313A] sm:h-10 sm:w-10">
+      <span
+        aria-hidden="true"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#27313A] sm:h-10 sm:w-10"
+      >
         <FontAwesomeIcon icon={faUser} className="h-4 opacity-40 sm:h-[17px]" />
       </span>
     );
@@ -131,7 +137,11 @@ export function CustomerAccountMenu() {
 
   const accountLinks = [
     { href: "/customer-dashboard", label: "Dashboard", icon: faGaugeHigh },
-    { href: "/customer-dashboard/orders", label: "My Orders", icon: faBagShopping },
+    {
+      href: "/customer-dashboard/orders",
+      label: "My Orders",
+      icon: faBagShopping,
+    },
     { href: "/customer-dashboard/rewards", label: "TRS Coins", icon: faCoins },
     { href: "/customer-dashboard/profile", label: "Profile", icon: faUserPen },
   ] as const;
@@ -151,10 +161,17 @@ export function CustomerAccountMenu() {
           <FontAwesomeIcon icon={faUser} className="h-3.5" />
         </span>
         <span className="hidden min-w-0 text-left sm:block">
-          <span className="block text-[8px] font-bold uppercase text-[#81776E]">Hello</span>
-          <span className="block truncate text-[10px] font-black">{firstName}</span>
+          <span className="block text-[8px] font-bold uppercase text-[#81776E]">
+            Hello
+          </span>
+          <span className="block truncate text-[10px] font-black">
+            {firstName}
+          </span>
         </span>
-        <FontAwesomeIcon icon={faChevronDown} className={`hidden h-2.5 transition-transform sm:block ${open ? "rotate-180" : ""}`} />
+        <FontAwesomeIcon
+          icon={faChevronDown}
+          className={`hidden h-2.5 transition-transform sm:block ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       {open && (
@@ -165,8 +182,12 @@ export function CustomerAccountMenu() {
           className="absolute right-0 top-[calc(100%+.7rem)] z-[90] w-[260px] overflow-hidden rounded-2xl border border-[#E8D8C9] bg-white shadow-[0_22px_55px_rgba(37,25,15,.18)]"
         >
           <div className="border-b border-[#EDE3D8] bg-[#FFF8F1] p-4">
-            <p className="truncate text-sm font-black text-[#172536]">{customer.name}</p>
-            <p className="mt-1 truncate text-[9px] font-semibold text-[#776E66]">{customer.email}</p>
+            <p className="truncate text-sm font-black text-[#172536]">
+              {customer.name}
+            </p>
+            <p className="mt-1 truncate text-[9px] font-semibold text-[#776E66]">
+              {customer.email}
+            </p>
           </div>
 
           <nav aria-label="Customer account" className="p-2">

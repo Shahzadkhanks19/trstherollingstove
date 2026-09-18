@@ -27,23 +27,59 @@ export const customerNavigation: NavigationItem[] = [
 ];
 
 export const adminNavigation: NavigationItem[] = [
-  { label: "Dashboard", href: "/admin/dashboard", permission: "dashboard.read" },
+  {
+    label: "Dashboard",
+    href: "/admin/dashboard",
+    permission: "dashboard.read",
+  },
   { label: "Orders", href: "/admin/orders", permission: "orders.read" },
   { label: "Menu", href: "/admin/menu", permission: "menu.read" },
-  { label: "Inventory", href: "/admin/inventory", permission: "inventory.read" },
-  { label: "Reservations", href: "/admin/reservations", permission: "reservations.read" },
+  {
+    label: "Inventory",
+    href: "/admin/inventory",
+    permission: "inventory.read",
+  },
+  {
+    label: "Reservations",
+    href: "/admin/reservations",
+    permission: "reservations.read",
+  },
   { label: "Customers", href: "/admin/customers", permission: "users.read" },
   { label: "TRS Coins", href: "/admin/rewards", permission: "rewards.read" },
-  { label: "Coupons & Offers", href: "/admin/coupons", permission: "orders.read" },
-  { label: "Spin Wheel", href: "/admin/spin-wheel", permission: "settings.manage" },
+  {
+    label: "Coupons & Offers",
+    href: "/admin/coupons",
+    permission: "orders.read",
+  },
+  {
+    label: "Spin Wheel",
+    href: "/admin/spin-wheel",
+    permission: "settings.manage",
+  },
   { label: "Referrals", href: "/admin/referrals", permission: "users.read" },
   { label: "Reviews", href: "/admin/reviews", permission: "reviews.read" },
-  { label: "Notifications", href: "/admin/notifications", permission: "notifications.read" },
+  {
+    label: "Notifications",
+    href: "/admin/notifications",
+    permission: "notifications.read",
+  },
   { label: "Reports", href: "/admin/reports", permission: "reports.read" },
-  { label: "Analytics", href: "/admin/analytics", permission: "analytics.read" },
-  { label: "Roles & Permissions", href: "/admin/roles", permission: "roles.read" },
+  {
+    label: "Analytics",
+    href: "/admin/analytics",
+    permission: "analytics.read",
+  },
+  {
+    label: "Roles & Permissions",
+    href: "/admin/roles",
+    permission: "roles.read",
+  },
   { label: "Settings", href: "/admin/settings", permission: "settings.read" },
-  { label: "Activity Logs", href: "/admin/activity-logs", permission: "activity.read" },
+  {
+    label: "Activity Logs",
+    href: "/admin/activity-logs",
+    permission: "activity.read",
+  },
 ];
 
 export const operationsNavigation: NavigationItem[] = [

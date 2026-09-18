@@ -9,6 +9,11 @@ export async function POST(request: Request) {
   try {
     const actor = await requirePermission("reports.read");
     const input = await validateRequestBody(request, budgetCreateSchema);
-    return successResponse(await createBudgetPlan(input, actor.id), "Budget plan created.");
-  } catch (error) { return handleApiError(error); }
+    return successResponse(
+      await createBudgetPlan(input, actor.id),
+      "Budget plan created.",
+    );
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

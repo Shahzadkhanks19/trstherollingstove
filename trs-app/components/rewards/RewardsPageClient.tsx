@@ -48,7 +48,8 @@ type RewardCatalogItem = {
   _id: string;
   name: string;
   description: string;
-  rewardType: "fixed_discount" | "percentage_discount" | "free_item" | "bonus_coins";
+  rewardType:
+    "fixed_discount" | "percentage_discount" | "free_item" | "bonus_coins";
   coinCost: number;
   rewardValue: number;
   minimumOrderAmount: number;
@@ -158,19 +159,25 @@ export function RewardsPageClient() {
     setLoading(true);
     try {
       const [dashboardResponse, couponResponse] = await Promise.all([
-        fetch("/api/v1/customer/loyalty/dashboard", { credentials: "include", cache: "no-store" }),
+        fetch("/api/v1/customer/loyalty/dashboard", {
+          credentials: "include",
+          cache: "no-store",
+        }),
         fetch("/api/v1/public/offers", { cache: "no-store" }),
       ]);
 
       if (dashboardResponse.ok) {
-        const payload = (await dashboardResponse.json()) as ApiEnvelope<LoyaltyDashboard>;
+        const payload =
+          (await dashboardResponse.json()) as ApiEnvelope<LoyaltyDashboard>;
         setDashboard(payload.data);
       } else {
         setDashboard(null);
       }
 
       if (couponResponse.ok) {
-        const payload = (await couponResponse.json()) as ApiEnvelope<{ items: PublicCoupon[] }>;
+        const payload = (await couponResponse.json()) as ApiEnvelope<{
+          items: PublicCoupon[];
+        }>;
         setCoupons(payload.data.items ?? []);
       }
     } finally {
@@ -196,12 +203,18 @@ export function RewardsPageClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rewardId }),
       });
-      const payload = (await response.json()) as { success?: boolean; message?: string };
-      if (!response.ok) throw new Error(payload.message || "Unable to redeem reward.");
+      const payload = (await response.json()) as {
+        success?: boolean;
+        message?: string;
+      };
+      if (!response.ok)
+        throw new Error(payload.message || "Unable to redeem reward.");
       setMessage(payload.message || "Reward redeemed successfully.");
       await loadRewards();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to redeem reward.");
+      setMessage(
+        error instanceof Error ? error.message : "Unable to redeem reward.",
+      );
     } finally {
       setRedeemingId(null);
     }
@@ -213,10 +226,32 @@ export function RewardsPageClient() {
   );
 
   const rewardStats = [
-    { label: "Your TRS Coins", value: dashboard ? String(dashboard.wallet.balance) : "—", helper: "Available balance", icon: faCoins },
-    { label: "Coins Earned", value: dashboard ? String(dashboard.wallet.lifetimeEarned) : "—", helper: "Lifetime earned", icon: faWallet },
-    { label: "Eligible Orders", value: dashboard ? String(dashboard.membership.annualOrders) : "—", helper: "This year", icon: faReceipt },
-    { label: "Expiring Soon", value: dashboard ? String(dashboard.expiringSoon.coins) : "—", helper: dashboard?.expiringSoon.nextExpiry ? `Next expiry ${new Date(dashboard.expiringSoon.nextExpiry).toLocaleDateString("en-IN")}` : "No coins expiring soon", icon: faCalendarDays },
+    {
+      label: "Your TRS Coins",
+      value: dashboard ? String(dashboard.wallet.balance) : "—",
+      helper: "Available balance",
+      icon: faCoins,
+    },
+    {
+      label: "Coins Earned",
+      value: dashboard ? String(dashboard.wallet.lifetimeEarned) : "—",
+      helper: "Lifetime earned",
+      icon: faWallet,
+    },
+    {
+      label: "Eligible Orders",
+      value: dashboard ? String(dashboard.membership.annualOrders) : "—",
+      helper: "This year",
+      icon: faReceipt,
+    },
+    {
+      label: "Expiring Soon",
+      value: dashboard ? String(dashboard.expiringSoon.coins) : "—",
+      helper: dashboard?.expiringSoon.nextExpiry
+        ? `Next expiry ${new Date(dashboard.expiringSoon.nextExpiry).toLocaleDateString("en-IN")}`
+        : "No coins expiring soon",
+      icon: faCalendarDays,
+    },
   ];
 
   const redemptionOptions = dashboard?.catalog ?? [];
@@ -242,23 +277,25 @@ export function RewardsPageClient() {
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {([
-                {
-                  title: "5 Coins",
-                  text: "for every eligible ₹100 spent",
-                  icon: faCoins,
-                },
-                {
-                  title: "1 Coin",
-                  text: "= ₹1 reward value",
-                  icon: faWallet,
-                },
-                {
-                  title: "Expiry applies",
-                  text: "shown before redemption",
-                  icon: faCalendarDays,
-                },
-              ] satisfies IconContentItem[]).map(({ title, text, icon }) => (
+              {(
+                [
+                  {
+                    title: "5 Coins",
+                    text: "for every eligible ₹100 spent",
+                    icon: faCoins,
+                  },
+                  {
+                    title: "1 Coin",
+                    text: "= ₹1 reward value",
+                    icon: faWallet,
+                  },
+                  {
+                    title: "Expiry applies",
+                    text: "shown before redemption",
+                    icon: faCalendarDays,
+                  },
+                ] satisfies IconContentItem[]
+              ).map(({ title, text, icon }) => (
                 <div
                   key={title}
                   className="flex min-w-0 items-center gap-3 rounded-2xl border border-[#EDE3D8] bg-white/85 p-4 shadow-[0_12px_30px_rgba(44,28,14,.06)]"
@@ -267,7 +304,9 @@ export function RewardsPageClient() {
                     <FontAwesomeIcon icon={icon} className="h-5" />
                   </span>
                   <span className="min-w-0">
-                    <strong className="block text-sm font-black">{title}</strong>
+                    <strong className="block text-sm font-black">
+                      {title}
+                    </strong>
                     <span className="mt-1 block text-[10px] leading-4 text-[#6D655E]">
                       {text}
                     </span>
@@ -411,12 +450,19 @@ export function RewardsPageClient() {
                   </p>
 
                   <div className="mx-auto mt-6 grid h-16 w-16 place-items-center rounded-2xl border border-current/10 bg-white/55">
-                    <FontAwesomeIcon icon={faTicket} className="h-7 opacity-55" />
+                    <FontAwesomeIcon
+                      icon={faTicket}
+                      className="h-7 opacity-55"
+                    />
                   </div>
 
                   <button
                     type="button"
-                    disabled={!dashboard || redeemingId === reward._id || dashboard.wallet.balance < reward.coinCost}
+                    disabled={
+                      !dashboard ||
+                      redeemingId === reward._id ||
+                      dashboard.wallet.balance < reward.coinCost
+                    }
                     onClick={() => void redeemReward(reward._id)}
                     className={`mt-6 h-11 w-full rounded-xl text-[10px] font-black uppercase text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 ${tone.button}`}
                   >
@@ -437,7 +483,8 @@ export function RewardsPageClient() {
             })}
             {!loading && redemptionOptions.length === 0 ? (
               <div className="col-span-full rounded-2xl border border-dashed border-[#E8D8C9] bg-white px-6 py-10 text-center text-sm font-semibold text-[#6A625B]">
-                No active rewards are available in the admin-managed reward catalog.
+                No active rewards are available in the admin-managed reward
+                catalog.
               </div>
             ) : null}
           </div>
@@ -501,7 +548,9 @@ export function RewardsPageClient() {
                   order.
                 </p>
                 <span className="mt-5 inline-flex rounded-full border border-[#C8102E] px-4 py-2 text-[10px] font-black uppercase text-[#C8102E]">
-                  {firstOrderCoupon ? `Code: ${firstOrderCoupon.code}` : "First order reward"}
+                  {firstOrderCoupon
+                    ? `Code: ${firstOrderCoupon.code}`
+                    : "First order reward"}
                 </span>
               </div>
 
@@ -570,7 +619,10 @@ export function RewardsPageClient() {
                 "Transparent expiry information",
               ].map((benefit) => (
                 <span key={benefit} className="flex items-center gap-2">
-                  <FontAwesomeIcon icon={faCheck} className="h-3 text-[#F5C84B]" />
+                  <FontAwesomeIcon
+                    icon={faCheck}
+                    className="h-3 text-[#F5C84B]"
+                  />
                   {benefit}
                 </span>
               ))}

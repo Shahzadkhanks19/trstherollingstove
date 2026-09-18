@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const NotificationDeliverySchema = new Schema(
   {
@@ -23,7 +29,12 @@ const NotificationDeliverySchema = new Schema(
     eventKey: { type: String, required: true, trim: true, maxlength: 100 },
     destination: { type: String, trim: true, maxlength: 254, default: "" },
     provider: { type: String, trim: true, maxlength: 80, default: "" },
-    providerMessageId: { type: String, trim: true, maxlength: 200, default: "" },
+    providerMessageId: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      default: "",
+    },
     status: {
       type: String,
       enum: ["queued", "sent", "delivered", "failed", "skipped"],

@@ -68,7 +68,8 @@ export async function createReservation(input: {
   endTime: string;
   guestCount: number;
   tableNumber: string;
-  occasion: "none" | "birthday" | "anniversary" | "business" | "family" | "other";
+  occasion:
+    "none" | "birthday" | "anniversary" | "business" | "family" | "other";
   specialRequest: string;
   source?: "website" | "admin" | "phone" | "walk_in";
   actorId: string;
@@ -122,12 +123,10 @@ export async function createReservation(input: {
 
   publishReservationCreated({
     reservationId: reservation.id,
-    reservationNumber:
-      reservation.reservationNumber,
+    reservationNumber: reservation.reservationNumber,
     customerId: input.customerId,
     status: reservation.status,
-    reservationDate:
-      reservation.reservationDate,
+    reservationDate: reservation.reservationDate,
     startTime: reservation.startTime,
     guestCount: reservation.guestCount,
     actorId: input.actorId,
@@ -168,10 +167,8 @@ export async function cancelCustomerReservation(input: {
 
   publishReservationStatusChanged({
     reservationId: reservation.id,
-    reservationNumber:
-      reservation.reservationNumber,
-    customerId:
-      reservation.customerId.toString(),
+    reservationNumber: reservation.reservationNumber,
+    customerId: reservation.customerId.toString(),
     status: reservation.status,
     note: input.reason,
     actorId: input.customerId,
@@ -184,12 +181,7 @@ export async function updateReservationStatus(input: {
   reservationId: string;
   actorId: string;
   status:
-    | "confirmed"
-    | "seated"
-    | "completed"
-    | "cancelled"
-    | "no_show"
-    | "rejected";
+    "confirmed" | "seated" | "completed" | "cancelled" | "no_show" | "rejected";
   note: string;
   tableNumber?: string;
 }) {
@@ -244,10 +236,8 @@ export async function updateReservationStatus(input: {
 
   publishReservationStatusChanged({
     reservationId: reservation.id,
-    reservationNumber:
-      reservation.reservationNumber,
-    customerId:
-      reservation.customerId.toString(),
+    reservationNumber: reservation.reservationNumber,
+    customerId: reservation.customerId.toString(),
     status: reservation.status,
     note: input.note,
     actorId: input.actorId,

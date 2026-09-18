@@ -58,7 +58,9 @@ export function AuthTrustStrip() {
               <strong className="block text-[9px] font-black uppercase">
                 {title}
               </strong>
-              <span className="mt-1 block text-[8px] text-[#655E57]">{text}</span>
+              <span className="mt-1 block text-[8px] text-[#655E57]">
+                {text}
+              </span>
             </span>
           </article>
         ))}

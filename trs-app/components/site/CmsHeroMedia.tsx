@@ -28,7 +28,8 @@ type CmsHeroMediaProps = {
   fallbackAlt?: string;
 };
 
-const POSITION_CLASS_PATTERN = /(?:^|\s)(?:absolute|fixed|sticky|relative)(?:\s|$)/;
+const POSITION_CLASS_PATTERN =
+  /(?:^|\s)(?:absolute|fixed|sticky|relative)(?:\s|$)/;
 
 export function CmsHeroMedia({
   pageKey,
@@ -99,10 +100,7 @@ export function CmsHeroMedia({
   }
 
   return (
-    <div
-      className={`w-full overflow-hidden ${className}`}
-      style={wrapperStyle}
-    >
+    <div className={`w-full overflow-hidden ${className}`} style={wrapperStyle}>
       <Image
         src={desktopSrc}
         alt={alt}

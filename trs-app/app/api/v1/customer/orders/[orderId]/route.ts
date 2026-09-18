@@ -10,7 +10,8 @@ type Context = { params: Promise<{ orderId: string }> };
 export async function GET(_request: Request, context: Context) {
   try {
     const actor = await requireAuthenticatedUser();
-    if (actor.roleKey !== "customer") throw new AppError("Customer access required.", 403);
+    if (actor.roleKey !== "customer")
+      throw new AppError("Customer access required.", 403);
     const { orderId } = await context.params;
     await connectToDatabase();
 

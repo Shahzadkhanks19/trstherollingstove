@@ -21,7 +21,10 @@ export async function GET(
     const { categoryId } = await context.params;
     await connectToDatabase();
 
-    const category = await MenuCategory.findOne({ _id: categoryId, deletedAt: null }).lean();
+    const category = await MenuCategory.findOne({
+      _id: categoryId,
+      deletedAt: null,
+    }).lean();
     if (!category) throw new AppError("Category not found.", 404);
 
     return successResponse(category, "Category loaded.");
@@ -40,17 +43,28 @@ export async function PATCH(
     const input = await validateRequestBody(request, categoryUpdateSchema);
     await connectToDatabase();
 
-    const category = await MenuCategory.findOne({ _id: categoryId, deletedAt: null });
+    const category = await MenuCategory.findOne({
+      _id: categoryId,
+      deletedAt: null,
+    });
     if (!category) throw new AppError("Category not found.", 404);
 
     if (input.slug || input.name) {
       const slug = createSlug(input.slug || input.name || category.name);
-      const duplicate = await MenuCategory.exists({ slug, _id: { $ne: category._id } });
-      if (duplicate) throw new AppError("A category with this slug already exists.", 409);
+      const duplicate = await MenuCategory.exists({
+        slug,
+        _id: { $ne: category._id },
+      });
+      if (duplicate)
+        throw new AppError("A category with this slug already exists.", 409);
       category.slug = slug;
     }
 
-    Object.assign(category, { ...input, slug: category.slug, updatedBy: actor.id });
+    Object.assign(category, {
+      ...input,
+      slug: category.slug,
+      updatedBy: actor.id,
+    });
     await category.save();
 
     await writeAuditLog({
@@ -61,7 +75,11 @@ export async function PATCH(
       description: `Menu category ${category.name} updated.`,
     });
 
-    publishMenuUpdated({ action: "updated", categoryId: category.id, actorId: actor.id });
+    publishMenuUpdated({
+      action: "updated",
+      categoryId: category.id,
+      actorId: actor.id,
+    });
 
     return successResponse(category, "Category updated.");
   } catch (error) {
@@ -78,12 +96,21 @@ export async function DELETE(
     const { categoryId } = await context.params;
     await connectToDatabase();
 
-    const category = await MenuCategory.findOne({ _id: categoryId, deletedAt: null });
+    const category = await MenuCategory.findOne({
+      _id: categoryId,
+      deletedAt: null,
+    });
     if (!category) throw new AppError("Category not found.", 404);
 
-    const itemCount = await MenuItem.countDocuments({ categoryId, deletedAt: null });
+    const itemCount = await MenuItem.countDocuments({
+      categoryId,
+      deletedAt: null,
+    });
     if (itemCount > 0) {
-      throw new AppError("Move or delete all menu items in this category first.", 409);
+      throw new AppError(
+        "Move or delete all menu items in this category first.",
+        409,
+      );
     }
 
     category.deletedAt = new Date();
@@ -99,7 +126,11 @@ export async function DELETE(
       description: `Menu category ${category.name} deleted.`,
     });
 
-    publishMenuUpdated({ action: "deleted", categoryId: category.id, actorId: actor.id });
+    publishMenuUpdated({
+      action: "deleted",
+      categoryId: category.id,
+      actorId: actor.id,
+    });
 
     return successResponse(null, "Category deleted.");
   } catch (error) {

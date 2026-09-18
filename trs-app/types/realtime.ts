@@ -50,8 +50,7 @@ export const REALTIME_EVENTS = [
   "review.updated",
 ] as const;
 
-export type RealtimeEventName =
-  (typeof REALTIME_EVENTS)[number];
+export type RealtimeEventName = (typeof REALTIME_EVENTS)[number];
 
 export type RealtimeEventTarget = {
   rooms?: string[];

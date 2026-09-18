@@ -1,1 +1,17 @@
-import { requirePermission } from "@/lib/auth/session";import { handleApiError } from "@/lib/errors/handleApiError";import { successResponse } from "@/lib/http/apiResponse";import { getInvoiceReceiptSummary } from "@/services/invoice-receipt.service";import { invoiceReceiptRangeSchema } from "@/validators/invoice-receipt";export async function GET(request:Request){try{await requirePermission("reports.read");const url=new URL(request.url);const{days}=invoiceReceiptRangeSchema.parse({days:url.searchParams.get("days")??30});return successResponse(await getInvoiceReceiptSummary(days));}catch(error){return handleApiError(error);}}
+import { requirePermission } from "@/lib/auth/session";
+import { handleApiError } from "@/lib/errors/handleApiError";
+import { successResponse } from "@/lib/http/apiResponse";
+import { getInvoiceReceiptSummary } from "@/services/invoice-receipt.service";
+import { invoiceReceiptRangeSchema } from "@/validators/invoice-receipt";
+export async function GET(request: Request) {
+  try {
+    await requirePermission("reports.read");
+    const url = new URL(request.url);
+    const { days } = invoiceReceiptRangeSchema.parse({
+      days: url.searchParams.get("days") ?? 30,
+    });
+    return successResponse(await getInvoiceReceiptSummary(days));
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

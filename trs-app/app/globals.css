@@ -4,34 +4,45 @@
   --font-sans: var(--font-manrope);
   --font-display: var(--font-cormorant);
 
-  --color-trs-red: #C8102E;
-  --color-trs-red-dark: #A50E27;
-  --color-trs-gold: #E8A53A;
-  --color-trs-cream: #FFF8F2;
-  --color-trs-surface: #FFFDF9;
-  --color-trs-charcoal: #1F1F1F;
-  --color-trs-footer: #0F1720;
-  --color-trs-border: #EDE3D8;
+  --color-trs-red: #c8102e;
+  --color-trs-red-dark: #a50e27;
+  --color-trs-gold: #e8a53a;
+  --color-trs-cream: #fff8f2;
+  --color-trs-surface: #fffdf9;
+  --color-trs-charcoal: #1f1f1f;
+  --color-trs-footer: #0f1720;
+  --color-trs-border: #ede3d8;
 }
 
 :root {
-  --trs-red: #C8102E;
-  --trs-red-dark: #A50E27;
-  --trs-gold: #E8A53A;
-  --trs-cream: #FFF8F2;
-  --trs-surface: #FFFDF9;
-  --trs-charcoal: #1F1F1F;
-  --trs-footer: #0F1720;
-  --trs-border: #EDE3D8;
-  --trs-muted: #675F58;
+  --trs-red: #c8102e;
+  --trs-red-dark: #a50e27;
+  --trs-gold: #e8a53a;
+  --trs-cream: #fff8f2;
+  --trs-surface: #fffdf9;
+  --trs-charcoal: #1f1f1f;
+  --trs-footer: #0f1720;
+  --trs-border: #ede3d8;
+  --trs-muted: #675f58;
   --trs-shadow-sm: 0 5px 18px rgb(31 31 31 / 0.06);
   --trs-shadow-md: 0 14px 38px rgb(31 31 31 / 0.1);
 }
 
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--trs-cream); color: var(--trs-charcoal); }
-* { box-sizing: border-box; }
-::selection { background: var(--trs-red); color: white; }
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  background: var(--trs-cream);
+  color: var(--trs-charcoal);
+}
+* {
+  box-sizing: border-box;
+}
+::selection {
+  background: var(--trs-red);
+  color: white;
+}
 
 /* Reusable theme primitives shared by public, account and operations screens. */
 .trs-surface {
@@ -44,7 +55,10 @@ body { margin: 0; background: var(--trs-cream); color: var(--trs-charcoal); }
   border: 1px solid var(--trs-border);
   border-radius: 1rem;
   box-shadow: var(--trs-shadow-sm);
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 .trs-card:hover {
   border-color: rgb(200 16 46 / 0.2);
@@ -54,32 +68,38 @@ body { margin: 0; background: var(--trs-cream); color: var(--trs-charcoal); }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .65rem;
-  border-radius: .75rem;
+  gap: 0.65rem;
+  border-radius: 0.75rem;
   background: var(--trs-red);
   color: white;
   font-weight: 800;
   text-transform: uppercase;
-  box-shadow: 0 10px 24px rgb(200 16 46 / .22);
-  transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  box-shadow: 0 10px 24px rgb(200 16 46 / 0.22);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
 }
 .trs-primary-button:hover {
   transform: translateY(-2px);
   background: var(--trs-red-dark);
-  box-shadow: 0 14px 30px rgb(200 16 46 / .28);
+  box-shadow: 0 14px 30px rgb(200 16 46 / 0.28);
 }
 .trs-secondary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .65rem;
-  border: 1px solid #D8CEC4;
-  border-radius: .75rem;
+  gap: 0.65rem;
+  border: 1px solid #d8cec4;
+  border-radius: 0.75rem;
   background: #fff;
   color: var(--trs-charcoal);
   font-weight: 800;
   text-transform: uppercase;
-  transition: border-color 180ms ease, color 180ms ease, transform 180ms ease;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
 }
 .trs-secondary-button:hover {
   transform: translateY(-2px);
@@ -88,17 +108,34 @@ body { margin: 0; background: var(--trs-cream); color: var(--trs-charcoal); }
 }
 
 /* Only behaviours that are not practical as inline utility classes. */
-@keyframes trs-marquee { to { transform: translateX(-50%); } }
-.trs-marquee-track { animation: trs-marquee 26s linear infinite; }
+@keyframes trs-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.trs-marquee-track {
+  animation: trs-marquee 26s linear infinite;
+}
 
 @keyframes trs-soft-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
-.trs-soft-float { animation: trs-soft-float 4s ease-in-out infinite; }
+.trs-soft-float {
+  animation: trs-soft-float 4s ease-in-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
+  html {
+    scroll-behavior: auto;
+  }
   .trs-marquee-track,
-  .trs-soft-float { animation: none; }
+  .trs-soft-float {
+    animation: none;
+  }
 }

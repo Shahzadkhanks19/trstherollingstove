@@ -12,57 +12,39 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(
-  _request: Request,
-  context: Context,
-) {
+export async function POST(_request: Request, context: Context) {
   try {
-    const actor = await requirePermission(
-      "purchases.manage",
-    );
+    const actor = await requirePermission("purchases.manage");
     const { id } = await context.params;
 
     await connectToDatabase();
 
-    const purchaseOrder =
-      await PurchaseOrder.findOne({
-        _id: id,
-        status: "draft",
-      });
+    const purchaseOrder = await PurchaseOrder.findOne({
+      _id: id,
+      status: "draft",
+    });
 
     if (!purchaseOrder) {
-      throw new AppError(
-        "Draft purchase order not found.",
-        404,
-      );
+      throw new AppError("Draft purchase order not found.", 404);
     }
 
     purchaseOrder.status = "approved";
-    purchaseOrder.approvedBy =
-      new Types.ObjectId(actor.id);
+    purchaseOrder.approvedBy = new Types.ObjectId(actor.id);
     purchaseOrder.approvedAt = new Date();
-    purchaseOrder.updatedBy =
-      new Types.ObjectId(actor.id);
+    purchaseOrder.updatedBy = new Types.ObjectId(actor.id);
 
     await purchaseOrder.save();
 
-    await Supplier.findByIdAndUpdate(
-      purchaseOrder.supplierId,
-      {
-        $inc: {
-          outstandingBalance:
-            purchaseOrder.grandTotal,
-        },
-        $set: {
-          updatedBy: actor.id,
-        },
+    await Supplier.findByIdAndUpdate(purchaseOrder.supplierId, {
+      $inc: {
+        outstandingBalance: purchaseOrder.grandTotal,
       },
-    );
+      $set: {
+        updatedBy: actor.id,
+      },
+    });
 
-    return successResponse(
-      purchaseOrder,
-      "Purchase order approved.",
-    );
+    return successResponse(purchaseOrder, "Purchase order approved.");
   } catch (error) {
     return handleApiError(error);
   }

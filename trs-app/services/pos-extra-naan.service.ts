@@ -4,7 +4,11 @@ import { ModifierGroup } from "@/models/ModifierGroup";
 import { POSItem } from "@/models/POSItem";
 
 function normalizeSkuPart(value: string) {
-  return value.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 36);
+  return value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 36);
 }
 
 /**
@@ -15,7 +19,10 @@ function normalizeSkuPart(value: string) {
  */
 export async function syncExtraNaanPosItems(actorId: string) {
   const actorObjectId = new Types.ObjectId(actorId);
-  const groups = await ModifierGroup.find({ isActive: true, name: { $regex: /extra\s*naan/i } })
+  const groups = await ModifierGroup.find({
+    isActive: true,
+    name: { $regex: /extra\s*naan/i },
+  })
     .select("name options")
     .lean();
 
@@ -35,7 +42,8 @@ export async function syncExtraNaanPosItems(actorId: string) {
             $set: {
               name: option.name,
               category: "Extra Naans",
-              description: "Standalone extra naan synced from the menu configuration.",
+              description:
+                "Standalone extra naan synced from the menu configuration.",
               sellingPrice: Number(option.price ?? 0),
               taxRate: 0,
               trackInventory: false,
@@ -60,7 +68,10 @@ export async function syncExtraNaanPosItems(actorId: string) {
   }
 
   await POSItem.updateMany(
-    { category: "Extra Naans", ...(activeSkus.length ? { sku: { $nin: activeSkus } } : {}) },
+    {
+      category: "Extra Naans",
+      ...(activeSkus.length ? { sku: { $nin: activeSkus } } : {}),
+    },
     { $set: { isActive: false, updatedBy: actorObjectId } },
   );
 }

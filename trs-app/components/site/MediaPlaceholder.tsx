@@ -20,7 +20,9 @@ export function MediaPlaceholder({
         <span className="grid h-10 w-10 place-items-center rounded-full border border-[#ead6bf] bg-white/80 text-[#bd7311] shadow-sm">
           <FontAwesomeIcon icon={faImage} className="h-4" />
         </span>
-        <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#5b4b3d]">{label}</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#5b4b3d]">
+          {label}
+        </span>
       </div>
     </div>
   );

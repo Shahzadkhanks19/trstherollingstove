@@ -22,9 +22,7 @@ function createDocumentNumber(prefix: string) {
     String(date.getMilliseconds()).padStart(3, "0"),
   ].join("");
 
-  const random = Math.floor(
-    1000 + Math.random() * 9000,
-  );
+  const random = Math.floor(1000 + Math.random() * 9000);
 
   return `${prefix}-${stamp}-${random}`;
 }
@@ -40,92 +38,175 @@ type CreatePurchaseOrderInput = {
 };
 
 function formatPurchaseRequestMessage(order: {
-  purchaseOrderNumber: string; supplierName: string; expectedDeliveryDate: Date | null;
-  fulfilmentType: "vendor_delivery" | "self_pickup"; pickupPersonName: string;
-  items: Array<{ itemName: string; orderedQuantity: number; unit: string }>; notes: string;
+  purchaseOrderNumber: string;
+  supplierName: string;
+  expectedDeliveryDate: Date | null;
+  fulfilmentType: "vendor_delivery" | "self_pickup";
+  pickupPersonName: string;
+  items: Array<{ itemName: string; orderedQuantity: number; unit: string }>;
+  notes: string;
 }) {
   const expected = order.expectedDeliveryDate
-    ? new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(order.expectedDeliveryDate)
+    ? new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(order.expectedDeliveryDate)
     : "Not specified";
   return [
     `*TRS Purchase Request ${order.purchaseOrderNumber}*`,
     `Vendor: ${order.supplierName}`,
     `Fulfilment: ${order.fulfilmentType === "self_pickup" ? "Self Pickup" : "Vendor Delivery"}`,
-    ...(order.pickupPersonName ? [`Pickup person: ${order.pickupPersonName}`] : []),
+    ...(order.pickupPersonName
+      ? [`Pickup person: ${order.pickupPersonName}`]
+      : []),
     `Expected date: ${expected}`,
     "",
     "*Items:*",
-    ...order.items.map((item, index) => `${index + 1}. ${item.itemName} — ${item.orderedQuantity} ${item.unit}`),
+    ...order.items.map(
+      (item, index) =>
+        `${index + 1}. ${item.itemName} — ${item.orderedQuantity} ${item.unit}`,
+    ),
     ...(order.notes ? ["", `Notes: ${order.notes}`] : []),
   ].join("\n");
 }
 
 export async function createPurchaseOrder(input: CreatePurchaseOrderInput) {
-  const supplier = await Supplier.findOne({ _id: input.supplierId, isActive: true }).lean();
+  const supplier = await Supplier.findOne({
+    _id: input.supplierId,
+    isActive: true,
+  }).lean();
   if (!supplier) throw new AppError("Active supplier not found.", 404);
-  if (!supplier.phone) throw new AppError("Vendor WhatsApp number is required.", 409);
+  if (!supplier.phone)
+    throw new AppError("Vendor WhatsApp number is required.", 409);
 
-  const pickupPerson = input.fulfilmentType === "self_pickup"
-    ? await PickupPerson.findOne({ _id: input.pickupPersonId, isActive: true }).lean()
-    : null;
+  const pickupPerson =
+    input.fulfilmentType === "self_pickup"
+      ? await PickupPerson.findOne({
+          _id: input.pickupPersonId,
+          isActive: true,
+        }).lean()
+      : null;
   if (input.fulfilmentType === "self_pickup" && !pickupPerson) {
     throw new AppError("Active pickup person not found.", 404);
   }
 
-  const inventoryIds = input.items.map((item) => new Types.ObjectId(item.inventoryItemId));
-  const inventoryItems = await InventoryItem.find({ _id: { $in: inventoryIds }, isActive: true }).lean();
-  const inventoryMap = new Map(inventoryItems.map((item) => [String(item._id), item]));
-  if (inventoryItems.length !== new Set(input.items.map((item) => item.inventoryItemId)).size) {
-    throw new AppError("One or more inventory items are missing or inactive.", 409);
+  const inventoryIds = input.items.map(
+    (item) => new Types.ObjectId(item.inventoryItemId),
+  );
+  const inventoryItems = await InventoryItem.find({
+    _id: { $in: inventoryIds },
+    isActive: true,
+  }).lean();
+  const inventoryMap = new Map(
+    inventoryItems.map((item) => [String(item._id), item]),
+  );
+  if (
+    inventoryItems.length !==
+    new Set(input.items.map((item) => item.inventoryItemId)).size
+  ) {
+    throw new AppError(
+      "One or more inventory items are missing or inactive.",
+      409,
+    );
   }
 
   const items = input.items.map((item) => {
     const inventoryItem = inventoryMap.get(item.inventoryItemId);
     if (!inventoryItem) throw new AppError("Inventory item not found.", 404);
     return {
-      inventoryItemId: inventoryItem._id, itemName: inventoryItem.name, sku: inventoryItem.sku,
-      unit: inventoryItem.unit, orderedQuantity: item.orderedQuantity, receivedQuantity: 0,
-      unitCost: 0, taxRate: 0, lineSubtotal: 0, lineTax: 0, lineTotal: 0,
+      inventoryItemId: inventoryItem._id,
+      itemName: inventoryItem.name,
+      sku: inventoryItem.sku,
+      unit: inventoryItem.unit,
+      orderedQuantity: item.orderedQuantity,
+      receivedQuantity: 0,
+      unitCost: 0,
+      taxRate: 0,
+      lineSubtotal: 0,
+      lineTax: 0,
+      lineTotal: 0,
     };
   });
 
-  const adminWhatsapp = (process.env.ADMIN_WHATSAPP_NUMBER || process.env.SUPER_ADMIN_PHONE || "").trim();
+  const adminWhatsapp = (
+    process.env.ADMIN_WHATSAPP_NUMBER ||
+    process.env.SUPER_ADMIN_PHONE ||
+    ""
+  ).trim();
   const recipients = [
     { recipientType: "vendor" as const, destination: supplier.phone },
     { recipientType: "admin" as const, destination: adminWhatsapp },
-    ...(pickupPerson ? [{ recipientType: "pickup_person" as const, destination: pickupPerson.whatsappNumber }] : []),
+    ...(pickupPerson
+      ? [
+          {
+            recipientType: "pickup_person" as const,
+            destination: pickupPerson.whatsappNumber,
+          },
+        ]
+      : []),
   ];
 
   const purchaseOrder = await PurchaseOrder.create({
-    purchaseOrderNumber: createDocumentNumber("PR"), supplierId: new Types.ObjectId(input.supplierId),
-    expectedDeliveryDate: input.expectedDeliveryDate ?? null, fulfilmentType: input.fulfilmentType,
-    pickupPersonId: pickupPerson?._id ?? null, pickupPersonName: pickupPerson?.name ?? "",
-    pickupPersonWhatsapp: pickupPerson?.whatsappNumber ?? "", items, subtotal: 0, taxTotal: 0,
-    discountTotal: 0, shippingTotal: 0, grandTotal: 0, paidAmount: 0, balanceAmount: 0, notes: input.notes,
-    whatsappDeliveries: recipients.map((recipient) => ({ ...recipient, status: recipient.destination ? "queued" : "skipped", failureReason: recipient.destination ? "" : "WhatsApp number is not configured." })),
-    createdBy: new Types.ObjectId(input.actorId), updatedBy: new Types.ObjectId(input.actorId),
+    purchaseOrderNumber: createDocumentNumber("PR"),
+    supplierId: new Types.ObjectId(input.supplierId),
+    expectedDeliveryDate: input.expectedDeliveryDate ?? null,
+    fulfilmentType: input.fulfilmentType,
+    pickupPersonId: pickupPerson?._id ?? null,
+    pickupPersonName: pickupPerson?.name ?? "",
+    pickupPersonWhatsapp: pickupPerson?.whatsappNumber ?? "",
+    items,
+    subtotal: 0,
+    taxTotal: 0,
+    discountTotal: 0,
+    shippingTotal: 0,
+    grandTotal: 0,
+    paidAmount: 0,
+    balanceAmount: 0,
+    notes: input.notes,
+    whatsappDeliveries: recipients.map((recipient) => ({
+      ...recipient,
+      status: recipient.destination ? "queued" : "skipped",
+      failureReason: recipient.destination
+        ? ""
+        : "WhatsApp number is not configured.",
+    })),
+    createdBy: new Types.ObjectId(input.actorId),
+    updatedBy: new Types.ObjectId(input.actorId),
   });
 
   const message = formatPurchaseRequestMessage({
-    purchaseOrderNumber: purchaseOrder.purchaseOrderNumber, supplierName: supplier.name,
+    purchaseOrderNumber: purchaseOrder.purchaseOrderNumber,
+    supplierName: supplier.name,
     expectedDeliveryDate: purchaseOrder.expectedDeliveryDate
       ? new Date(purchaseOrder.expectedDeliveryDate)
       : null,
     fulfilmentType: input.fulfilmentType,
-    pickupPersonName: pickupPerson?.name ?? "", items, notes: input.notes,
+    pickupPersonName: pickupPerson?.name ?? "",
+    items,
+    notes: input.notes,
   });
 
   for (const delivery of purchaseOrder.whatsappDeliveries) {
     if (!delivery.destination) continue;
     delivery.attemptedAt = new Date();
     try {
-      const result = await sendWhatsAppMessage({ to: delivery.destination, message });
-      delivery.provider = result.provider; delivery.providerMessageId = result.messageId;
+      const result = await sendWhatsAppMessage({
+        to: delivery.destination,
+        message,
+      });
+      delivery.provider = result.provider;
+      delivery.providerMessageId = result.messageId;
       delivery.status = result.skipped ? "skipped" : "sent";
-      delivery.failureReason = result.skipped ? "WhatsApp provider environment variables are not configured." : "";
+      delivery.failureReason = result.skipped
+        ? "WhatsApp provider environment variables are not configured."
+        : "";
     } catch (error) {
       delivery.status = "failed";
-      delivery.failureReason = error instanceof Error ? error.message : "Unknown WhatsApp delivery error.";
+      delivery.failureReason =
+        error instanceof Error
+          ? error.message
+          : "Unknown WhatsApp delivery error.";
     }
   }
   await purchaseOrder.save();
@@ -149,9 +230,7 @@ type ReceivePurchaseOrderInput = {
   actorId: string;
 };
 
-export async function receivePurchaseOrder(
-  input: ReceivePurchaseOrderInput,
-) {
+export async function receivePurchaseOrder(input: ReceivePurchaseOrderInput) {
   const session = await PurchaseOrder.startSession();
   let createdReceipt;
 
@@ -162,17 +241,10 @@ export async function receivePurchaseOrder(
       ).session(session);
 
       if (!purchaseOrder) {
-        throw new AppError(
-          "Purchase order not found.",
-          404,
-        );
+        throw new AppError("Purchase order not found.", 404);
       }
 
-      if (
-        !["approved", "partially_received"].includes(
-          purchaseOrder.status,
-        )
-      ) {
+      if (!["approved", "partially_received"].includes(purchaseOrder.status)) {
         throw new AppError(
           "Only approved purchase orders can be received.",
           409,
@@ -185,10 +257,7 @@ export async function receivePurchaseOrder(
         );
 
         if (!purchaseItem) {
-          throw new AppError(
-            "Purchase order item not found.",
-            404,
-          );
+          throw new AppError("Purchase order item not found.", 404);
         }
 
         return purchaseItem.inventoryItemId;
@@ -212,10 +281,7 @@ export async function receivePurchaseOrder(
         );
 
         if (!purchaseItem) {
-          throw new AppError(
-            "Purchase order item not found.",
-            404,
-          );
+          throw new AppError("Purchase order item not found.", 404);
         }
 
         const inventoryItem = inventoryMap.get(
@@ -229,13 +295,9 @@ export async function receivePurchaseOrder(
         }
 
         const remainingQuantity =
-          purchaseItem.orderedQuantity -
-          purchaseItem.receivedQuantity;
+          purchaseItem.orderedQuantity - purchaseItem.receivedQuantity;
 
-        if (
-          receiptItem.acceptedQuantity >
-          remainingQuantity
-        ) {
+        if (receiptItem.acceptedQuantity > remainingQuantity) {
           throw new AppError(
             `Accepted quantity exceeds the remaining quantity for ${purchaseItem.itemName}.`,
             409,
@@ -253,13 +315,10 @@ export async function receivePurchaseOrder(
           );
         }
 
-        acceptedValue +=
-          receiptItem.acceptedQuantity *
-          purchaseItem.unitCost;
+        acceptedValue += receiptItem.acceptedQuantity * purchaseItem.unitCost;
       }
 
-      const goodsReceiptNumber =
-        createDocumentNumber("GRN");
+      const goodsReceiptNumber = createDocumentNumber("GRN");
 
       for (const receiptItem of input.items) {
         const purchaseItem = purchaseOrder.items.id(
@@ -272,9 +331,7 @@ export async function receivePurchaseOrder(
 
         if (receiptItem.acceptedQuantity > 0) {
           await recordInventoryMovement({
-            inventoryItemId: String(
-              purchaseItem.inventoryItemId,
-            ),
+            inventoryItemId: String(purchaseItem.inventoryItemId),
             type: "purchase",
             quantity: receiptItem.acceptedQuantity,
             unitCost: purchaseItem.unitCost,
@@ -290,20 +347,15 @@ export async function receivePurchaseOrder(
 
         // Only accepted stock fulfils the purchase order. Rejected units
         // remain outstanding so a replacement delivery can be received.
-        purchaseItem.receivedQuantity +=
-          receiptItem.acceptedQuantity;
+        purchaseItem.receivedQuantity += receiptItem.acceptedQuantity;
       }
 
       const allReceived = purchaseOrder.items.every(
-        (item) =>
-          item.receivedQuantity >= item.orderedQuantity,
+        (item) => item.receivedQuantity >= item.orderedQuantity,
       );
 
-      purchaseOrder.status = allReceived
-        ? "received"
-        : "partially_received";
-      purchaseOrder.updatedBy =
-        new Types.ObjectId(input.actorId);
+      purchaseOrder.status = allReceived ? "received" : "partially_received";
+      purchaseOrder.updatedBy = new Types.ObjectId(input.actorId);
 
       await purchaseOrder.save({ session });
 
@@ -322,10 +374,7 @@ export async function receivePurchaseOrder(
               );
 
               if (!purchaseItem) {
-                throw new AppError(
-                  "Purchase order item not found.",
-                  404,
-                );
+                throw new AppError("Purchase order item not found.", 404);
               }
 
               return {
@@ -355,10 +404,7 @@ export async function receivePurchaseOrder(
   }
 
   if (!createdReceipt) {
-    throw new AppError(
-      "Goods receipt could not be created.",
-      500,
-    );
+    throw new AppError("Goods receipt could not be created.", 500);
   }
 
   return createdReceipt;
@@ -368,25 +414,15 @@ type RecordSupplierPaymentInput = {
   supplierId: string;
   purchaseOrderId: string | null;
   amount: number;
-  method:
-    | "cash"
-    | "upi"
-    | "bank_transfer"
-    | "cheque"
-    | "card"
-    | "other";
+  method: "cash" | "upi" | "bank_transfer" | "cheque" | "card" | "other";
   referenceNumber: string;
   paymentDate?: Date;
   notes: string;
   actorId: string;
 };
 
-export async function recordSupplierPayment(
-  input: RecordSupplierPaymentInput,
-) {
-  const supplier = await Supplier.findById(
-    input.supplierId,
-  );
+export async function recordSupplierPayment(input: RecordSupplierPaymentInput) {
+  const supplier = await Supplier.findById(input.supplierId);
 
   if (!supplier) {
     throw new AppError("Supplier not found.", 404);
@@ -402,27 +438,19 @@ export async function recordSupplierPayment(
     });
 
     if (!purchaseOrder) {
-      throw new AppError(
-        "Purchase order not found for this supplier.",
-        404,
-      );
+      throw new AppError("Purchase order not found for this supplier.", 404);
     }
 
     if (input.amount > purchaseOrder.balanceAmount) {
-      throw new AppError(
-        "Payment exceeds the purchase order balance.",
-        409,
-      );
+      throw new AppError("Payment exceeds the purchase order balance.", 409);
     }
 
     purchaseOrder.paidAmount += input.amount;
     purchaseOrder.balanceAmount = Math.max(
       0,
-      purchaseOrder.grandTotal -
-        purchaseOrder.paidAmount,
+      purchaseOrder.grandTotal - purchaseOrder.paidAmount,
     );
-    purchaseOrder.updatedBy =
-      new Types.ObjectId(input.actorId);
+    purchaseOrder.updatedBy = new Types.ObjectId(input.actorId);
 
     await purchaseOrder.save();
   }
@@ -431,25 +459,19 @@ export async function recordSupplierPayment(
     0,
     supplier.outstandingBalance - input.amount,
   );
-  supplier.updatedBy =
-    new Types.ObjectId(input.actorId);
+  supplier.updatedBy = new Types.ObjectId(input.actorId);
 
   await supplier.save();
 
   return SupplierPayment.create({
-    paymentNumber:
-      createDocumentNumber("SP"),
+    paymentNumber: createDocumentNumber("SP"),
     supplierId: supplier._id,
-    purchaseOrderId:
-      purchaseOrder?._id ?? null,
+    purchaseOrderId: purchaseOrder?._id ?? null,
     amount: input.amount,
     method: input.method,
     referenceNumber: input.referenceNumber,
-    paymentDate:
-      input.paymentDate ?? new Date(),
+    paymentDate: input.paymentDate ?? new Date(),
     notes: input.notes,
-    recordedBy: new Types.ObjectId(
-      input.actorId,
-    ),
+    recordedBy: new Types.ObjectId(input.actorId),
   });
 }

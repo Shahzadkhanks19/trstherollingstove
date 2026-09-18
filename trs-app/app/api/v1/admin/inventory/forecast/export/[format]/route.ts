@@ -7,35 +7,24 @@ import {
   createInventoryReportPdf,
   createInventoryReportWorkbook,
 } from "@/services/inventory-report-export.service";
-import {
-  getLatestForecastRun,
-} from "@/services/inventory-forecast.service";
-import {
-  recordInventoryAudit,
-} from "@/services/inventory-enterprise-events.service";
+import { getLatestForecastRun } from "@/services/inventory-forecast.service";
+import { recordInventoryAudit } from "@/services/inventory-enterprise-events.service";
 
 type Context = {
   params: Promise<{ format: string }>;
 };
 
-export async function GET(
-  request: Request,
-  context: Context,
-) {
+export async function GET(request: Request, context: Context) {
   try {
     const actor = await requirePermission("reports.read");
     const { format } = await context.params;
 
     if (format !== "xlsx" && format !== "pdf") {
-      throw new AppError(
-        "Forecast export format must be xlsx or pdf.",
-        400,
-      );
+      throw new AppError("Forecast export format must be xlsx or pdf.", 400);
     }
 
     const url = new URL(request.url);
-    const requestedRunId =
-      url.searchParams.get("runId");
+    const requestedRunId = url.searchParams.get("runId");
     await connectToDatabase();
 
     const run = requestedRunId
@@ -49,15 +38,14 @@ export async function GET(
       );
     }
 
-    const snapshots =
-      await InventoryForecastSnapshot.find({
-        runId: run._id,
+    const snapshots = await InventoryForecastSnapshot.find({
+      runId: run._id,
+    })
+      .sort({
+        recommendedOrderValue: -1,
+        daysUntilStockout: 1,
       })
-        .sort({
-          recommendedOrderValue: -1,
-          daysUntilStockout: 1,
-        })
-        .lean();
+      .lean();
 
     const rows = snapshots.map((row) => ({
       item: row.itemName,
@@ -72,20 +60,16 @@ export async function GET(
       trendPercent: row.trendPercent,
       safetyStock: row.safetyStock,
       reorderPoint: row.reorderPoint,
-      recommendedOrderQuantity:
-        row.recommendedOrderQuantity,
-      recommendedOrderValue:
-        row.recommendedOrderValue,
+      recommendedOrderQuantity: row.recommendedOrderQuantity,
+      recommendedOrderValue: row.recommendedOrderValue,
       daysUntilStockout: row.daysUntilStockout,
-      expectedStockoutDate:
-        row.expectedStockoutDate,
+      expectedStockoutDate: row.expectedStockoutDate,
       confidenceScore: row.confidenceScore,
       riskLevel: row.riskLevel,
       velocityClass: row.velocityClass,
     }));
 
-    const title =
-      "Inventory Demand Forecast & Reorder Recommendations";
+    const title = "Inventory Demand Forecast & Reorder Recommendations";
     const bytes =
       format === "xlsx"
         ? await createInventoryReportWorkbook({

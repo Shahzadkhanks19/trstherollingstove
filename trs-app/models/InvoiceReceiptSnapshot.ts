@@ -1,5 +1,18 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
-const BreakdownSchema = new Schema({ key: { type: String, required: true }, count: { type: Number, required: true }, amount: { type: Number, required: true } }, { _id: false });
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
+const BreakdownSchema = new Schema(
+  {
+    key: { type: String, required: true },
+    count: { type: Number, required: true },
+    amount: { type: Number, required: true },
+  },
+  { _id: false },
+);
 const InvoiceReceiptSnapshotSchema = new Schema(
   {
     periodKey: { type: String, required: true, unique: true, index: true },
@@ -24,10 +37,20 @@ const InvoiceReceiptSnapshotSchema = new Schema(
     byPaymentMethod: { type: [BreakdownSchema], default: [] },
     generatedAt: { type: Date, required: true, default: Date.now },
     generatedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
-    source: { type: String, enum: ["manual", "scheduled", "system"], default: "system" },
+    source: {
+      type: String,
+      enum: ["manual", "scheduled", "system"],
+      default: "system",
+    },
   },
   { timestamps: true, versionKey: false },
 );
-export type InvoiceReceiptSnapshotRecord = InferSchemaType<typeof InvoiceReceiptSnapshotSchema>;
+export type InvoiceReceiptSnapshotRecord = InferSchemaType<
+  typeof InvoiceReceiptSnapshotSchema
+>;
 export const InvoiceReceiptSnapshot: Model<InvoiceReceiptSnapshotRecord> =
-  (models.InvoiceReceiptSnapshot as Model<InvoiceReceiptSnapshotRecord>) || model<InvoiceReceiptSnapshotRecord>("InvoiceReceiptSnapshot", InvoiceReceiptSnapshotSchema);
+  (models.InvoiceReceiptSnapshot as Model<InvoiceReceiptSnapshotRecord>) ||
+  model<InvoiceReceiptSnapshotRecord>(
+    "InvoiceReceiptSnapshot",
+    InvoiceReceiptSnapshotSchema,
+  );

@@ -9,10 +9,8 @@ import { AppError } from "@/lib/errors/AppError";
 import { getRuntimeSetting } from "@/lib/settings/runtime";
 
 export async function assertOrderingAvailable() {
-  const operations =
-    await getRuntimeSetting("operations");
-  const ordering =
-    await getRuntimeSetting("ordering");
+  const operations = await getRuntimeSetting("operations");
+  const ordering = await getRuntimeSetting("ordering");
 
   if (operations.maintenanceMode === true) {
     throw new AppError(
@@ -25,9 +23,6 @@ export async function assertOrderingAvailable() {
   }
 
   if (ordering.orderingEnabled !== true) {
-    throw new AppError(
-      "Online ordering is currently closed.",
-      503,
-    );
+    throw new AppError("Online ordering is currently closed.", 503);
   }
 }

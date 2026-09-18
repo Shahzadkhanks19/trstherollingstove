@@ -37,9 +37,7 @@ type LoginResponse = {
   };
 };
 
-function getLoginErrorMessage(
-  data: LoginResponse | null,
-): string {
+function getLoginErrorMessage(data: LoginResponse | null): string {
   return (
     data?.errors?.[0]?.message ??
     data?.error?.details?.[0]?.message ??
@@ -50,38 +48,30 @@ function getLoginErrorMessage(
 }
 
 export function LoginPageClient() {
-  const [identifier, setIdentifier] =
-    useState("");
+  const [identifier, setIdentifier] = useState("");
 
-  const [password, setPassword] =
-    useState("");
+  const [password, setPassword] = useState("");
 
-  const [rememberMe, setRememberMe] =
-    useState(true);
+  const [rememberMe, setRememberMe] = useState(true);
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
 
-  const [message, setMessage] =
-    useState("");
+  const [message, setMessage] = useState("");
 
   const submitLogin = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
 
-    const normalizedIdentifier =
-      identifier.trim();
+    const normalizedIdentifier = identifier.trim();
 
     if (normalizedIdentifier.length < 5) {
       setStatus("error");
-      setMessage(
-        "Enter your registered phone number or email.",
-      );
+      setMessage("Enter your registered phone number or email.");
       return;
     }
 
@@ -95,64 +85,51 @@ export function LoginPageClient() {
     setMessage("");
 
     try {
-      const response = await fetch(
-        "/api/v1/auth/login",
-        {
-          method: "POST",
+      const response = await fetch("/api/v1/auth/login", {
+        method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            identifier: normalizedIdentifier,
-            password,
-            rememberMe,
-          }),
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
 
-      const data =
-        (await response
-          .json()
-          .catch(() => null)) as LoginResponse | null;
+        body: JSON.stringify({
+          identifier: normalizedIdentifier,
+          password,
+          rememberMe,
+        }),
+      });
+
+      const data = (await response
+        .json()
+        .catch(() => null)) as LoginResponse | null;
 
       if (!response.ok) {
-        throw new Error(
-          getLoginErrorMessage(data),
-        );
+        throw new Error(getLoginErrorMessage(data));
       }
 
- try {
-  await mergeGuestCart();
-} catch (cartError) {
-  console.error(
-    "Guest cart merge failed after login:",
-    cartError,
-  );
-}
+      try {
+        await mergeGuestCart();
+      } catch (cartError) {
+        console.error("Guest cart merge failed after login:", cartError);
+      }
 
-const requestedReturn =
-  new URLSearchParams(
-    window.location.search,
-  ).get("returnTo");
+      const requestedReturn = new URLSearchParams(window.location.search).get(
+        "returnTo",
+      );
 
-const safeReturn =
-  requestedReturn?.startsWith("/") &&
-  !requestedReturn.startsWith("//") &&
-  requestedReturn !== "/login" &&
-  requestedReturn !== "/signup" &&
-  requestedReturn !==
-    "/customer-dashboard"
-    ? requestedReturn
-    : "/";
+      const safeReturn =
+        requestedReturn?.startsWith("/") &&
+        !requestedReturn.startsWith("//") &&
+        requestedReturn !== "/login" &&
+        requestedReturn !== "/signup" &&
+        requestedReturn !== "/customer-dashboard"
+          ? requestedReturn
+          : "/";
 
-setStatus("success");
-setMessage("Login successful.");
+      setStatus("success");
+      setMessage("Login successful.");
 
-window.location.assign(
-  safeReturn,
-);
+      window.location.assign(safeReturn);
     } catch (error) {
       setStatus("error");
 
@@ -171,15 +148,11 @@ window.location.assign(
           <section className="min-w-0 p-6 sm:p-10 lg:p-12">
             <div>
               <h1 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-                Welcome{" "}
-                <span className="text-[#C8102E]">
-                  Back!
-                </span>
+                Welcome <span className="text-[#C8102E]">Back!</span>
               </h1>
 
               <p className="mt-3 text-sm leading-6 text-[#655E57]">
-                Login to continue enjoying delicious
-                food and exclusive rewards.
+                Login to continue enjoying delicious food and exclusive rewards.
               </p>
             </div>
 
@@ -199,13 +172,9 @@ window.location.assign(
               </Link>
             </div>
 
-            <form
-              onSubmit={submitLogin}
-              className="mt-8"
-            >
+            <form onSubmit={submitLogin} className="mt-8">
               <label className="block text-[10px] font-black">
                 Phone Number or Email
-
                 <div className="relative mt-2">
                   <FontAwesomeIcon
                     icon={faUser}
@@ -215,9 +184,7 @@ window.location.assign(
                   <input
                     value={identifier}
                     onChange={(event) => {
-                      setIdentifier(
-                        event.target.value,
-                      );
+                      setIdentifier(event.target.value);
 
                       if (status === "error") {
                         setStatus("idle");
@@ -234,7 +201,6 @@ window.location.assign(
 
               <label className="mt-5 block text-[10px] font-black">
                 Password
-
                 <div className="relative mt-2">
                   <FontAwesomeIcon
                     icon={faLock}
@@ -244,20 +210,14 @@ window.location.assign(
                   <input
                     value={password}
                     onChange={(event) => {
-                      setPassword(
-                        event.target.value,
-                      );
+                      setPassword(event.target.value);
 
                       if (status === "error") {
                         setStatus("idle");
                         setMessage("");
                       }
                     }}
-                    type={
-                      showPassword
-                        ? "text"
-                        : "password"
-                    }
+                    type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     placeholder="Enter your password"
                     className="h-12 w-full rounded-xl border border-[#E5D9CD] bg-[#FFFDF9] pl-11 pr-12 text-sm outline-none transition placeholder:text-[#9C938A] focus:border-[#C8102E] focus:ring-2 focus:ring-[#C8102E]/10"
@@ -265,24 +225,14 @@ window.location.assign(
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPassword(
-                        (current) => !current,
-                      )
-                    }
+                    onClick={() => setShowPassword((current) => !current)}
                     aria-label={
-                      showPassword
-                        ? "Hide password"
-                        : "Show password"
+                      showPassword ? "Hide password" : "Show password"
                     }
                     className="absolute right-4 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center text-[#655E57]"
                   >
                     <FontAwesomeIcon
-                      icon={
-                        showPassword
-                          ? faEyeSlash
-                          : faEye
-                      }
+                      icon={showPassword ? faEyeSlash : faEye}
                       className="h-4"
                     />
                   </button>
@@ -293,15 +243,10 @@ window.location.assign(
                 <label className="flex items-center gap-2 font-semibold text-[#4F4943]">
                   <input
                     checked={rememberMe}
-                    onChange={(event) =>
-                      setRememberMe(
-                        event.target.checked,
-                      )
-                    }
+                    onChange={(event) => setRememberMe(event.target.checked)}
                     type="checkbox"
                     className="h-4 w-4 accent-[#C8102E]"
                   />
-
                   Remember me
                 </label>
 
@@ -315,11 +260,7 @@ window.location.assign(
 
               {message && (
                 <div
-                  role={
-                    status === "error"
-                      ? "alert"
-                      : "status"
-                  }
+                  role={status === "error" ? "alert" : "status"}
                   className={`mt-5 rounded-xl border px-4 py-3 text-xs font-semibold ${
                     status === "success"
                       ? "border-[#B8DFC0] bg-[#F1FBF3] text-[#287238]"
@@ -335,14 +276,9 @@ window.location.assign(
                 disabled={status === "loading"}
                 className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#C8102E] px-6 text-[11px] font-black uppercase text-white shadow-[0_12px_28px_rgba(200,16,46,.22)] transition hover:-translate-y-0.5 hover:bg-[#A50E27] disabled:cursor-not-allowed disabled:opacity-65"
               >
-                {status === "loading"
-                  ? "Logging In..."
-                  : "Login"}
+                {status === "loading" ? "Logging In..." : "Login"}
 
-                <FontAwesomeIcon
-                  icon={faArrowRight}
-                  className="h-3"
-                />
+                <FontAwesomeIcon icon={faArrowRight} className="h-3" />
               </button>
             </form>
 
@@ -350,11 +286,7 @@ window.location.assign(
 
             <p className="mt-7 text-center text-xs text-[#655E57]">
               Don&apos;t have an account?{" "}
-
-              <Link
-                href="/signup"
-                className="font-black text-[#C8102E]"
-              >
+              <Link href="/signup" className="font-black text-[#C8102E]">
                 Sign up
               </Link>
             </p>

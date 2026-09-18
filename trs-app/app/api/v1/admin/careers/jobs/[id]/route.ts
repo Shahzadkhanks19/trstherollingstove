@@ -15,7 +15,11 @@ export async function PATCH(request: Request, context: Context) {
     const { id } = await context.params;
     const input = await validateRequestBody(request, updateCareerOpeningSchema);
     await connectToDatabase();
-    const item = await CareerOpening.findByIdAndUpdate(id, { $set: { ...input, updatedBy: actor.id } }, { returnDocument: "after" });
+    const item = await CareerOpening.findByIdAndUpdate(
+      id,
+      { $set: { ...input, updatedBy: actor.id } },
+      { returnDocument: "after" },
+    );
     if (!item) throw new AppError("Job opening not found.", 404);
     return successResponse(item, "Job opening updated.");
   } catch (error) {

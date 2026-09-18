@@ -8,10 +8,7 @@ import { User } from "@/models/User";
 import { publishNotificationCreated } from "@/services/realtimeEvents.service";
 
 type NotificationCategory =
-  | "transactional"
-  | "reservations"
-  | "rewards"
-  | "promotions";
+  "transactional" | "reservations" | "rewards" | "promotions";
 
 type NotificationChannel = "in_app" | "email" | "whatsapp";
 
@@ -166,9 +163,7 @@ export async function sendNotification(input: SendNotificationInput) {
       actionUrl: input.actionUrl ?? "",
       metadata: input.metadata ?? {},
       expiresAt: input.expiresAt ?? null,
-      createdBy: input.createdBy
-        ? new Types.ObjectId(input.createdBy)
-        : null,
+      createdBy: input.createdBy ? new Types.ObjectId(input.createdBy) : null,
     });
 
     notificationId = notification._id;
@@ -250,16 +245,13 @@ export async function sendNotification(input: SendNotificationInput) {
 
   if (notificationId) {
     publishNotificationCreated({
-      notificationId:
-        notificationId.toString(),
+      notificationId: notificationId.toString(),
       recipientId: input.recipientId,
       type: input.type,
       title: input.title,
       message: input.message,
       actionUrl: input.actionUrl ?? "",
-      ...(input.createdBy
-        ? { actorId: input.createdBy }
-        : {}),
+      ...(input.createdBy ? { actorId: input.createdBy } : {}),
     });
   }
 
@@ -304,8 +296,7 @@ export async function sendBroadcast(input: {
       sendNotification({
         recipientId: recipient._id.toString(),
         eventKey: "admin.broadcast",
-        category:
-          input.type === "promotion" ? "promotions" : "transactional",
+        category: input.type === "promotion" ? "promotions" : "transactional",
         type: input.type,
         title: input.title,
         message: input.message,
@@ -319,7 +310,8 @@ export async function sendBroadcast(input: {
 
   return {
     recipientCount: recipients.length,
-    successful: results.filter((result) => result.status === "fulfilled").length,
+    successful: results.filter((result) => result.status === "fulfilled")
+      .length,
     failed: results.filter((result) => result.status === "rejected").length,
   };
 }

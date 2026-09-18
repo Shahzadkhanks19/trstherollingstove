@@ -1,7 +1,4 @@
-export type ReadinessCheckStatus =
-  | "pass"
-  | "warn"
-  | "fail";
+export type ReadinessCheckStatus = "pass" | "warn" | "fail";
 
 export type ReadinessCheck = {
   name: string;

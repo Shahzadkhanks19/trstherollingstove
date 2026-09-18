@@ -13,12 +13,8 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const from =
       url.searchParams.get("from") ??
-      new Date(
-        Date.now() - 24 * 60 * 60 * 1000,
-      ).toISOString();
-    const to =
-      url.searchParams.get("to") ??
-      new Date().toISOString();
+      new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const to = url.searchParams.get("to") ?? new Date().toISOString();
 
     const fromDate = parseDateParameter(from, "From date");
     const toDate = parseDateParameter(to, "To date");
@@ -62,10 +58,7 @@ export async function GET(request: Request) {
                 {
                   $divide: [
                     {
-                      $subtract: [
-                        "$readyAt",
-                        "$startedAt",
-                      ],
+                      $subtract: ["$readyAt", "$startedAt"],
                     },
                     60000,
                   ],

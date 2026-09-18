@@ -11,7 +11,9 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const thermal = new URL(request.url).searchParams.get("thermal") === "1";
   if (thermal) {
-    return createThermalQrResponse(await generateThermalQrPng(TRS_GOOGLE_MAPS_URL));
+    return createThermalQrResponse(
+      await generateThermalQrPng(TRS_GOOGLE_MAPS_URL),
+    );
   }
 
   const svg = await generateBrandedSocialQrSvg({

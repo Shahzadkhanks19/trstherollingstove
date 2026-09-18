@@ -8,7 +8,21 @@ import { budgetForecastRebuildSchema } from "@/validators/budgeting-forecasting"
 export async function POST(request: Request) {
   try {
     const actor = await requirePermission("reports.read");
-    const input = await validateRequestBody(request, budgetForecastRebuildSchema);
-    return successResponse(await buildBudgetForecastSnapshot({ fiscalYear:input.fiscalYear, scenario:input.scenario, department:input.department, source:input.source, generatedBy:actor.id }), "Budget forecast rebuilt.");
-  } catch (error) { return handleApiError(error); }
+    const input = await validateRequestBody(
+      request,
+      budgetForecastRebuildSchema,
+    );
+    return successResponse(
+      await buildBudgetForecastSnapshot({
+        fiscalYear: input.fiscalYear,
+        scenario: input.scenario,
+        department: input.department,
+        source: input.source,
+        generatedBy: actor.id,
+      }),
+      "Budget forecast rebuilt.",
+    );
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

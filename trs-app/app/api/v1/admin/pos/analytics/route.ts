@@ -9,8 +9,12 @@ export async function GET(request: Request) {
   try {
     await requirePermission("reports.read");
     const url = new URL(request.url);
-    const parsed = posAnalyticsQuerySchema.parse(Object.fromEntries(url.searchParams));
+    const parsed = posAnalyticsQuerySchema.parse(
+      Object.fromEntries(url.searchParams),
+    );
     await connectToDatabase();
     return successResponse(await getPosAnalytics(parsed));
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

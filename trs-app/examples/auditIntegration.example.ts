@@ -25,13 +25,11 @@ export async function logOrderCancellation(
     module: "orders",
     entityType: "Order",
     entityId: orderId,
-    description:
-      "Administrator cancelled an order.",
+    description: "Administrator cancelled an order.",
     severity: "warning",
     outcome: "success",
     ipAddress: getRequestIp(request),
-    userAgent:
-      getRequestUserAgent(request),
+    userAgent: getRequestUserAgent(request),
     requestId: getRequestId(request),
   });
 }
@@ -39,19 +37,14 @@ export async function logOrderCancellation(
 /**
  * Failed-login security example:
  */
-export async function logFailedLogin(
-  request: Request,
-  email: string,
-) {
+export async function logFailedLogin(request: Request, email: string) {
   await recordSecurityEvent({
     eventType: "login_failure",
     severity: "warning",
     email,
     ipAddress: getRequestIp(request),
-    userAgent:
-      getRequestUserAgent(request),
+    userAgent: getRequestUserAgent(request),
     route: new URL(request.url).pathname,
-    message:
-      "Authentication failed for the supplied credentials.",
+    message: "Authentication failed for the supplied credentials.",
   });
 }

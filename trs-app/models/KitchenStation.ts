@@ -74,12 +74,10 @@ KitchenStationSchema.index({
   sortOrder: 1,
 });
 
-export type KitchenStationDocument =
-  InferSchemaType<typeof KitchenStationSchema>;
+export type KitchenStationDocument = InferSchemaType<
+  typeof KitchenStationSchema
+>;
 
 export const KitchenStation: Model<KitchenStationDocument> =
   (models.KitchenStation as Model<KitchenStationDocument>) ||
-  model<KitchenStationDocument>(
-    "KitchenStation",
-    KitchenStationSchema,
-  );
+  model<KitchenStationDocument>("KitchenStation", KitchenStationSchema);

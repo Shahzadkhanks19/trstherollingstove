@@ -2,8 +2,7 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { AppError } from "@/lib/errors/AppError";
 import { SystemSetting } from "@/models/SystemSetting";
 
-export const PUBLIC_ORDERING_DISABLED_CODE =
-  "PUBLIC_ORDERING_DISABLED";
+export const PUBLIC_ORDERING_DISABLED_CODE = "PUBLIC_ORDERING_DISABLED";
 
 export type PublicOrderingAvailability = {
   enabled: boolean;
@@ -22,40 +21,28 @@ export async function getPublicOrderingAvailability(): Promise<PublicOrderingAva
     .select({ data: 1 })
     .lean();
 
-  const data = setting?.data as
-    | Record<string, unknown>
-    | undefined;
+  const data = setting?.data as Record<string, unknown> | undefined;
 
   const enabled =
-    data?.orderingEnabled === true &&
-    data?.acceptingOrders === true;
+    data?.orderingEnabled === true && data?.acceptingOrders === true;
 
   const configuredMessage =
-    typeof data?.statusMessage === "string"
-      ? data.statusMessage.trim()
-      : "";
+    typeof data?.statusMessage === "string" ? data.statusMessage.trim() : "";
 
   return {
     enabled,
     message:
-      enabled || !configuredMessage
-        ? DEFAULT_MESSAGE
-        : configuredMessage,
+      enabled || !configuredMessage ? DEFAULT_MESSAGE : configuredMessage,
   };
 }
 
 export async function requirePublicOrderingEnabled() {
-  const availability =
-    await getPublicOrderingAvailability();
+  const availability = await getPublicOrderingAvailability();
 
   if (!availability.enabled) {
-    throw new AppError(
-      availability.message,
-      503,
-      {
-        code: PUBLIC_ORDERING_DISABLED_CODE,
-      },
-    );
+    throw new AppError(availability.message, 503, {
+      code: PUBLIC_ORDERING_DISABLED_CODE,
+    });
   }
 
   return availability;

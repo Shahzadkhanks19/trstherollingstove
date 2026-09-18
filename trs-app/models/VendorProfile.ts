@@ -52,7 +52,13 @@ const VendorProfileSchema = new Schema<VendorProfileDocument>(
     },
     legalName: { type: String, required: true, trim: true, maxlength: 180 },
     displayName: { type: String, required: true, trim: true, maxlength: 120 },
-    email: { type: String, required: true, trim: true, lowercase: true, index: true },
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      index: true,
+    },
     phone: { type: String, required: true, trim: true, index: true },
     gstin: { type: String, trim: true, uppercase: true, default: "" },
     pan: { type: String, trim: true, uppercase: true, default: "" },
@@ -74,10 +80,18 @@ const VendorProfileSchema = new Schema<VendorProfileDocument>(
     isPortalEnabled: { type: Boolean, default: false, index: true },
     isActive: { type: Boolean, default: true, index: true },
     lastLoginAt: { type: Date, default: null },
-    createdBy: { type: Schema.Types.ObjectId, ref: "AdminUser", required: true },
-    updatedBy: { type: Schema.Types.ObjectId, ref: "AdminUser", required: true },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "AdminUser",
+      required: true,
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "AdminUser",
+      required: true,
+    },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 VendorProfileSchema.index({ isActive: 1, displayName: 1 });

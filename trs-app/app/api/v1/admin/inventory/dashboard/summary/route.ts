@@ -9,9 +9,7 @@ export async function GET() {
     await requirePermission("inventory.read");
     await connectToDatabase();
 
-    return successResponse(
-      await getInventoryDashboardSummary(),
-    );
+    return successResponse(await getInventoryDashboardSummary());
   } catch (error) {
     return handleApiError(error);
   }

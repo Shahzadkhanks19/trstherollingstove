@@ -1,9 +1,28 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const MenuCategorySchema = new Schema(
   {
-    name: { type: String, required: true, trim: true, minlength: 2, maxlength: 80 },
-    slug: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 2,
+      maxlength: 80,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
     description: { type: String, trim: true, maxlength: 500, default: "" },
     imageUrl: { type: String, trim: true, maxlength: 500, default: "" },
     iconUrl: { type: String, trim: true, maxlength: 500, default: "" },

@@ -1,22 +1,13 @@
-import {
-  publishRealtimeEventSafely,
-} from "@/services/realtimePublisher.service";
+import { publishRealtimeEventSafely } from "@/services/realtimePublisher.service";
 
-export function publishDashboardRefresh(
-  source: string,
-  actorId?: string,
-) {
+export function publishDashboardRefresh(source: string, actorId?: string) {
   publishRealtimeEventSafely({
     event: "dashboard.metrics_updated",
     data: {
       source,
     },
     target: {
-      roleKeys: [
-        "super_admin",
-        "admin",
-        "manager",
-      ],
+      roleKeys: ["super_admin", "admin", "manager"],
     },
     ...(actorId ? { actorId } : {}),
   });
@@ -47,20 +38,11 @@ export function publishOrderCreated(input: {
     },
     target: {
       ...(input.customerId ? { userIds: [input.customerId] } : {}),
-      roleKeys: [
-        "super_admin",
-        "admin",
-        "manager",
-        "cashier",
-        "kitchen",
-      ],
+      roleKeys: ["super_admin", "admin", "manager", "cashier", "kitchen"],
     },
   });
 
-  publishDashboardRefresh(
-    "order.created",
-    input.actorId,
-  );
+  publishDashboardRefresh("order.created", input.actorId);
 }
 
 export function publishReservationCreated(input: {
@@ -79,69 +61,48 @@ export function publishReservationCreated(input: {
     actorId: input.actorId,
     data: {
       reservationId: input.reservationId,
-      reservationNumber:
-        input.reservationNumber,
+      reservationNumber: input.reservationNumber,
       customerId: input.customerId,
       status: input.status,
-      reservationDate:
-        input.reservationDate.toISOString(),
+      reservationDate: input.reservationDate.toISOString(),
       startTime: input.startTime,
       guestCount: input.guestCount,
     },
     target: {
       userIds: [input.customerId],
-      roleKeys: [
-        "super_admin",
-        "admin",
-        "manager",
-        "cashier",
-      ],
+      roleKeys: ["super_admin", "admin", "manager", "cashier"],
     },
   });
 
-  publishDashboardRefresh(
-    "reservation.created",
-    input.actorId,
-  );
+  publishDashboardRefresh("reservation.created", input.actorId);
 }
 
-export function publishReservationStatusChanged(
-  input: {
-    reservationId: string;
-    reservationNumber: string;
-    customerId: string;
-    status: string;
-    note: string;
-    actorId: string;
-  },
-) {
+export function publishReservationStatusChanged(input: {
+  reservationId: string;
+  reservationNumber: string;
+  customerId: string;
+  status: string;
+  note: string;
+  actorId: string;
+}) {
   publishRealtimeEventSafely({
     event: "reservation.status_changed",
     entityId: input.reservationId,
     actorId: input.actorId,
     data: {
       reservationId: input.reservationId,
-      reservationNumber:
-        input.reservationNumber,
+      reservationNumber: input.reservationNumber,
       customerId: input.customerId,
       status: input.status,
       note: input.note,
     },
     target: {
       userIds: [input.customerId],
-      roleKeys: [
-        "super_admin",
-        "admin",
-        "manager",
-        "cashier",
-      ],
+      roleKeys: ["super_admin", "admin", "manager", "cashier"],
     },
   });
 
-  publishDashboardRefresh(
-    "reservation.status_changed",
-    input.actorId,
-  );
+  publishDashboardRefresh("reservation.status_changed", input.actorId);
 }
 
 export function publishNotificationCreated(input: {
@@ -157,8 +118,7 @@ export function publishNotificationCreated(input: {
     event: "notification.created",
     entityId: input.notificationId,
     data: {
-      notificationId:
-        input.notificationId,
+      notificationId: input.notificationId,
       recipientId: input.recipientId,
       type: input.type,
       title: input.title,
@@ -168,9 +128,7 @@ export function publishNotificationCreated(input: {
     target: {
       userIds: [input.recipientId],
     },
-    ...(input.actorId
-      ? { actorId: input.actorId }
-      : {}),
+    ...(input.actorId ? { actorId: input.actorId } : {}),
   });
 }
 
@@ -299,7 +257,10 @@ export function publishOrderStatusChanged(input: {
   actorId: string;
 }) {
   publishRealtimeEventSafely({
-    event: input.status === "cancelled" || input.status === "rejected" ? "order.cancelled" : "order.status_changed",
+    event:
+      input.status === "cancelled" || input.status === "rejected"
+        ? "order.cancelled"
+        : "order.status_changed",
     entityId: input.orderId,
     actorId: input.actorId,
     data: input,

@@ -13,7 +13,9 @@ export async function GET() {
   try {
     await requirePermission("menu.read");
     await connectToDatabase();
-    const groups = await ModifierGroup.find().sort({ sortOrder: 1, name: 1 }).lean();
+    const groups = await ModifierGroup.find()
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
     return successResponse(groups, "Modifier groups loaded.");
   } catch (error) {
     return handleApiError(error);
@@ -27,10 +29,17 @@ export async function POST(request: Request) {
     await connectToDatabase();
 
     if (await ModifierGroup.exists({ internalName: input.internalName })) {
-      throw new AppError("A modifier group with this internal name already exists.", 409);
+      throw new AppError(
+        "A modifier group with this internal name already exists.",
+        409,
+      );
     }
 
-    const group = await ModifierGroup.create({ ...input, createdBy: actor.id, updatedBy: actor.id });
+    const group = await ModifierGroup.create({
+      ...input,
+      createdBy: actor.id,
+      updatedBy: actor.id,
+    });
     await writeAuditLog({
       actorUserId: actor.id,
       action: "menu.modifier_group_created",

@@ -6,10 +6,7 @@ import {
   type Model,
 } from "mongoose";
 
-import {
-  AUDIT_SEVERITIES,
-  SECURITY_EVENT_TYPES,
-} from "@/types/audit";
+import { AUDIT_SEVERITIES, SECURITY_EVENT_TYPES } from "@/types/audit";
 
 const SecurityEventSchema = new Schema(
   {
@@ -106,14 +103,8 @@ SecurityEventSchema.index({
   createdAt: -1,
 });
 
-export type SecurityEventDocument =
-  InferSchemaType<typeof SecurityEventSchema>;
+export type SecurityEventDocument = InferSchemaType<typeof SecurityEventSchema>;
 
-export const SecurityEvent:
-  Model<SecurityEventDocument> =
-    (models.SecurityEvent as
-      Model<SecurityEventDocument>) ||
-    model<SecurityEventDocument>(
-      "SecurityEvent",
-      SecurityEventSchema,
-    );
+export const SecurityEvent: Model<SecurityEventDocument> =
+  (models.SecurityEvent as Model<SecurityEventDocument>) ||
+  model<SecurityEventDocument>("SecurityEvent", SecurityEventSchema);

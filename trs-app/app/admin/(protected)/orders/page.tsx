@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { AdminOrdersClient } from "@/components/admin/orders/AdminOrdersClient";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
-export const metadata = createAdminMetadata("Orders", "Search, review and manage all customer orders.");
+export const metadata = createAdminMetadata(
+  "Orders",
+  "Search, review and manage all customer orders.",
+);
 
 export const dynamic = "force-dynamic";
 

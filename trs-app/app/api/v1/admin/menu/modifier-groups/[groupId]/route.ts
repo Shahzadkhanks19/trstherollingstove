@@ -25,9 +25,15 @@ export async function PATCH(
 
     if (
       input.internalName &&
-      await ModifierGroup.exists({ internalName: input.internalName, _id: { $ne: group._id } })
+      (await ModifierGroup.exists({
+        internalName: input.internalName,
+        _id: { $ne: group._id },
+      }))
     ) {
-      throw new AppError("A modifier group with this internal name already exists.", 409);
+      throw new AppError(
+        "A modifier group with this internal name already exists.",
+        409,
+      );
     }
 
     const nextIsActive = input.isActive ?? group.isActive;
@@ -85,7 +91,10 @@ export async function DELETE(
     await connectToDatabase();
 
     if (await MenuItem.exists({ modifierGroupIds: groupId, deletedAt: null })) {
-      throw new AppError("Remove this modifier group from all menu items first.", 409);
+      throw new AppError(
+        "Remove this modifier group from all menu items first.",
+        409,
+      );
     }
 
     const group = await ModifierGroup.findByIdAndDelete(groupId);

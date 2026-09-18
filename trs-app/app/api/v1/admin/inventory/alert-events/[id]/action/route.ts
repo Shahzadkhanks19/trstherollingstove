@@ -15,10 +15,7 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(
-  request: Request,
-  context: Context,
-) {
+export async function POST(request: Request, context: Context) {
   try {
     const actor = await requirePermission("inventory.manage");
     const { id } = await context.params;
@@ -87,10 +84,7 @@ export async function POST(
       },
     });
 
-    return successResponse(
-      event,
-      `Inventory alert ${input.action}d.`,
-    );
+    return successResponse(event, `Inventory alert ${input.action}d.`);
   } catch (error) {
     return handleApiError(error);
   }

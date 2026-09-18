@@ -5,7 +5,13 @@ import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
 import { Order } from "@/models/Order";
 
-const VISIBLE_KITCHEN_STATUSES = ["placed", "accepted", "preparing", "ready", "completed"] as const;
+const VISIBLE_KITCHEN_STATUSES = [
+  "placed",
+  "accepted",
+  "preparing",
+  "ready",
+  "completed",
+] as const;
 
 function startOfBusinessDay(value: Date) {
   const start = new Date(value);
@@ -21,7 +27,8 @@ export async function GET(request: Request) {
     }
 
     const url = new URL(request.url);
-    const orderNumber = url.searchParams.get("order")?.trim().toUpperCase() ?? "";
+    const orderNumber =
+      url.searchParams.get("order")?.trim().toUpperCase() ?? "";
     if (!orderNumber) {
       throw new AppError("Order number is required.", 400);
     }
@@ -49,7 +56,10 @@ export async function GET(request: Request) {
       throw new AppError("Order not found.", 404);
     }
     if (order.paymentStatus !== "paid") {
-      throw new AppError("This order has not been paid and confirmed yet.", 409);
+      throw new AppError(
+        "This order has not been paid and confirmed yet.",
+        409,
+      );
     }
 
     const createdAt = new Date(order.createdAt);

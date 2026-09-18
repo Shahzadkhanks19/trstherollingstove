@@ -1,7 +1,4 @@
-export function formatInvoiceMoney(
-  amount: number,
-  currency = "INR",
-) {
+export function formatInvoiceMoney(amount: number, currency = "INR") {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
@@ -10,9 +7,7 @@ export function formatInvoiceMoney(
   }).format(amount);
 }
 
-export function escapeInvoiceHtml(
-  value: unknown,
-) {
+export function escapeInvoiceHtml(value: unknown) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")

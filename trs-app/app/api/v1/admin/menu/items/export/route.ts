@@ -34,7 +34,10 @@ export async function GET() {
       ],
       items.map((item) => {
         const category = item.categoryId as unknown as { name?: string };
-        const taxClass = item.taxClassId as unknown as { code?: string; percentage?: number } | null;
+        const taxClass = item.taxClassId as unknown as {
+          code?: string;
+          percentage?: number;
+        } | null;
         return [
           item.name,
           item.slug,

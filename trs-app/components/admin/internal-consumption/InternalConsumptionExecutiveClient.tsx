@@ -250,9 +250,15 @@ function DailyTrend({ rows }: { rows: Report["daily"] }) {
   const max = Math.max(0, ...rows.map((row) => row.menuValue));
   return (
     <div className="overflow-x-auto pb-2">
-      <div className="flex min-w-[680px] items-end gap-2" style={{ height: 240 }}>
+      <div
+        className="flex min-w-[680px] items-end gap-2"
+        style={{ height: 240 }}
+      >
         {rows.map((row) => (
-          <div key={row.date} className="flex min-w-0 flex-1 flex-col items-center">
+          <div
+            key={row.date}
+            className="flex min-w-0 flex-1 flex-col items-center"
+          >
             <div className="flex h-44 w-full items-end justify-center rounded-t-lg bg-slate-50 px-1">
               <div
                 title={`${row.date}: ${currency(row.menuValue)}`}
@@ -319,7 +325,9 @@ export function InternalConsumptionExecutiveClient() {
   }, [query]);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => { void load(); }, 0);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
     return () => window.clearTimeout(timeoutId);
   }, [load]);
 
@@ -356,12 +364,14 @@ export function InternalConsumptionExecutiveClient() {
 
       <SectionCard>
         <div className="mb-4 flex flex-wrap gap-2" aria-label="Date presets">
-          {([
-            ["today", "Today"],
-            ["7d", "Last 7 days"],
-            ["30d", "Last 30 days"],
-            ["month", "This month"],
-          ] as const).map(([value, label]) => (
+          {(
+            [
+              ["today", "Today"],
+              ["7d", "Last 7 days"],
+              ["30d", "Last 30 days"],
+              ["month", "This month"],
+            ] as const
+          ).map(([value, label]) => (
             <button
               key={value}
               type="button"
@@ -445,14 +455,18 @@ export function InternalConsumptionExecutiveClient() {
             <MetricCard
               label="Menu value consumed"
               value={currency(report.summary.menuValue)}
-              detail={<Change value={report.comparison.menuValueChangePercent} />}
+              detail={
+                <Change value={report.comparison.menuValueChangePercent} />
+              }
             />
             <MetricCard
               label="Inventory cost"
               value={currency(report.summary.inventoryCost)}
               detail={
                 <>
-                  <Change value={report.comparison.inventoryCostChangePercent} />
+                  <Change
+                    value={report.comparison.inventoryCostChangePercent}
+                  />
                   {" · "}
                   {report.summary.costCoveragePercent}% coverage
                 </>

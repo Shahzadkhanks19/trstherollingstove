@@ -81,12 +81,7 @@ export function handleApiError(error: unknown) {
       }),
     );
 
-    return errorResponse(
-      "Validation failed.",
-      422,
-      errors,
-      "VALIDATION_ERROR",
-    );
+    return errorResponse("Validation failed.", 422, errors, "VALIDATION_ERROR");
   }
 
   if (mongoError?.code === 11000) {

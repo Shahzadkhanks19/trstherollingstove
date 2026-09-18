@@ -29,7 +29,12 @@ export async function validateCoupon(input: {
   customerId: string;
   subtotal: number;
   orderMode: "dine_in" | "takeaway";
-  items?: Array<{ menuItemId: string; lineTotal: number; lineUnitPrice: number; quantity: number }>;
+  items?: Array<{
+    menuItemId: string;
+    lineTotal: number;
+    lineUnitPrice: number;
+    quantity: number;
+  }>;
 }) {
   const now = new Date();
 
@@ -60,22 +65,35 @@ export async function validateCoupon(input: {
     const menuItems = await MenuItem.find({ _id: { $in: itemIds } })
       .select("_id categoryId")
       .lean();
-    const categoryByItem = new Map(menuItems.map((item) => [String(item._id), String(item.categoryId)]));
+    const categoryByItem = new Map(
+      menuItems.map((item) => [String(item._id), String(item.categoryId)]),
+    );
     const includedItems = new Set(coupon.applicableMenuItemIds.map(String));
-    const includedCategories = new Set(coupon.applicableCategoryIds.map(String));
+    const includedCategories = new Set(
+      coupon.applicableCategoryIds.map(String),
+    );
     const excludedItems = new Set(coupon.excludedMenuItemIds.map(String));
-    const hasInclusionRules = includedItems.size > 0 || includedCategories.size > 0;
+    const hasInclusionRules =
+      includedItems.size > 0 || includedCategories.size > 0;
 
-    eligibleSubtotal = roundMoney(input.items.reduce((sum, item) => {
-      const itemId = String(item.menuItemId);
-      if (excludedItems.has(itemId)) return sum;
-      const categoryId = categoryByItem.get(itemId);
-      const included = !hasInclusionRules || includedItems.has(itemId) || Boolean(categoryId && includedCategories.has(categoryId));
-      return included ? sum + item.lineTotal : sum;
-    }, 0));
+    eligibleSubtotal = roundMoney(
+      input.items.reduce((sum, item) => {
+        const itemId = String(item.menuItemId);
+        if (excludedItems.has(itemId)) return sum;
+        const categoryId = categoryByItem.get(itemId);
+        const included =
+          !hasInclusionRules ||
+          includedItems.has(itemId) ||
+          Boolean(categoryId && includedCategories.has(categoryId));
+        return included ? sum + item.lineTotal : sum;
+      }, 0),
+    );
 
     if (eligibleSubtotal <= 0) {
-      throw new AppError("This coupon does not apply to the items in your cart.", 400);
+      throw new AppError(
+        "This coupon does not apply to the items in your cart.",
+        400,
+      );
     }
   }
 
@@ -103,10 +121,16 @@ export async function validateCoupon(input: {
   }
 
   let discountAmount: number;
-  let freeItem: { menuItemId: string; name: string; discountAmount: number } | null = null;
+  let freeItem: {
+    menuItemId: string;
+    name: string;
+    discountAmount: number;
+  } | null = null;
 
   if (coupon.discountType === "free_item") {
-    const freeMenuItemId = coupon.freeMenuItemId ? String(coupon.freeMenuItemId) : "";
+    const freeMenuItemId = coupon.freeMenuItemId
+      ? String(coupon.freeMenuItemId)
+      : "";
     const matchingCartItem = input.items?.find(
       (item) => String(item.menuItemId) === freeMenuItemId && item.quantity > 0,
     );
@@ -128,7 +152,10 @@ export async function validateCoupon(input: {
       .lean();
 
     if (!menuItem) {
-      throw new AppError("The free item for this coupon is currently unavailable.", 400);
+      throw new AppError(
+        "The free item for this coupon is currently unavailable.",
+        400,
+      );
     }
 
     discountAmount = matchingCartItem.lineUnitPrice;
@@ -145,7 +172,10 @@ export async function validateCoupon(input: {
   }
 
   const maxDiscountAmount = coupon.maxDiscountAmount;
-  if (coupon.discountType !== "free_item" && typeof maxDiscountAmount === "number") {
+  if (
+    coupon.discountType !== "free_item" &&
+    typeof maxDiscountAmount === "number"
+  ) {
     discountAmount = Math.min(discountAmount, maxDiscountAmount);
   }
 
@@ -170,9 +200,14 @@ export async function earnCoinsForOrder(input: {
   }).lean();
   if (existing) return existing;
 
-  const membership = await LoyaltyMembership.findOne({ customerId: input.customerId }).lean();
+  const membership = await LoyaltyMembership.findOne({
+    customerId: input.customerId,
+  }).lean();
   const tier = membership
-    ? await LoyaltyTier.findOne({ key: membership.tierKey, isActive: true }).lean()
+    ? await LoyaltyTier.findOne({
+        key: membership.tierKey,
+        isActive: true,
+      }).lean()
     : null;
   const multiplier = tier?.pointsMultiplier ?? 1;
   const coins = Math.floor(
@@ -275,10 +310,7 @@ export async function refundRedeemedCoins(input: {
 
   const wallet = await getOrCreateWallet(input.customerId);
   wallet.balance += input.coins;
-  wallet.lifetimeRedeemed = Math.max(
-    0,
-    wallet.lifetimeRedeemed - input.coins,
-  );
+  wallet.lifetimeRedeemed = Math.max(0, wallet.lifetimeRedeemed - input.coins);
   wallet.lastActivityAt = new Date();
   await wallet.save();
 

@@ -48,8 +48,13 @@ function wholeRupee(value: number) {
   return Math.round(value + Number.EPSILON);
 }
 
-
-type ModifierInput = { groupId: string; groupName?: string; optionId: string; optionName?: string; quantity: number };
+type ModifierInput = {
+  groupId: string;
+  groupName?: string;
+  optionId: string;
+  optionName?: string;
+  quantity: number;
+};
 type AdjustmentsInput = {
   discountType: "none" | "fixed" | "percentage";
   discountValue: number;
@@ -65,7 +70,13 @@ type CreatePosOrderInput = {
   shiftId: string;
   orderMode: "dine_in" | "takeaway";
   internalConsumption: {
-    saleType: "customer" | "staff_meal" | "family_meal" | "complimentary" | "food_wastage" | "kitchen_test";
+    saleType:
+      | "customer"
+      | "staff_meal"
+      | "family_meal"
+      | "complimentary"
+      | "food_wastage"
+      | "kitchen_test";
     referenceId: string | null;
     personName: string;
     reason: string;
@@ -81,7 +92,11 @@ type CreatePosOrderInput = {
   customerEmail: string;
   customerNote: string;
   paymentMethod: "cash" | "upi" | "split";
-  paymentBreakdown: Array<{ method: "cash" | "upi"; amount: number; reference: string }>;
+  paymentBreakdown: Array<{
+    method: "cash" | "upi";
+    amount: number;
+    reference: string;
+  }>;
   waivedAmount: number;
   waivedReason: string;
   tipAmount: number;
@@ -175,17 +190,24 @@ type KitchenOrderRecord = {
   orderTakerName?: string;
 };
 
-export async function createPosOrder(input: CreatePosOrderInput, actorId: string) {
+export async function createPosOrder(
+  input: CreatePosOrderInput,
+  actorId: string,
+) {
   const shift = await POSShift.findOne({
     _id: input.shiftId,
     status: "open",
     openedBy: new Types.ObjectId(actorId),
   }).lean();
-  if (!shift) throw new AppError("Open POS shift not found for this cashier.", 409);
+  if (!shift)
+    throw new AppError("Open POS shift not found for this cashier.", 409);
 
   const isInternalOrder = input.internalConsumption.saleType !== "customer";
   if (isInternalOrder && !input.internalConsumption.personName.trim()) {
-    throw new AppError("Select or enter the person/name for this internal order.", 422);
+    throw new AppError(
+      "Select or enter the person/name for this internal order.",
+      422,
+    );
   }
   if (isInternalOrder && !input.internalConsumption.reason.trim()) {
     throw new AppError("Reason is required for internal consumption.", 422);
@@ -200,46 +222,119 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
   let monthlyLimit = 0;
 
   if (input.internalConsumption.saleType === "staff_meal") {
-    if (!input.internalConsumption.referenceId) throw new AppError("Select a staff member.", 422);
-    const staffUser = await User.findOne({ _id: input.internalConsumption.referenceId, deletedAt: null, isActive: true }).select("_id name").lean();
-    if (!staffUser) throw new AppError("Selected staff member is no longer active.", 409);
-    if (staffUser.name !== input.internalConsumption.personName.trim()) input.internalConsumption.personName = staffUser.name;
+    if (!input.internalConsumption.referenceId)
+      throw new AppError("Select a staff member.", 422);
+    const staffUser = await User.findOne({
+      _id: input.internalConsumption.referenceId,
+      deletedAt: null,
+      isActive: true,
+    })
+      .select("_id name")
+      .lean();
+    if (!staffUser)
+      throw new AppError("Selected staff member is no longer active.", 409);
+    if (staffUser.name !== input.internalConsumption.personName.trim())
+      input.internalConsumption.personName = staffUser.name;
 
-    const profile = await StaffProfile.findOne({ userId: staffUser._id }).lean();
-    if (!profile || profile.mealEligible === false) throw new AppError("This staff member is not eligible for staff meals.", 409);
-    if (profile.mealSuspendedUntil && new Date(profile.mealSuspendedUntil) > new Date()) {
-      throw new AppError(`Staff meal access is suspended until ${new Date(profile.mealSuspendedUntil).toLocaleDateString("en-IN")}. ${profile.mealSuspensionReason || ""}`.trim(), 409);
+    const profile = await StaffProfile.findOne({
+      userId: staffUser._id,
+    }).lean();
+    if (!profile || profile.mealEligible === false)
+      throw new AppError(
+        "This staff member is not eligible for staff meals.",
+        409,
+      );
+    if (
+      profile.mealSuspendedUntil &&
+      new Date(profile.mealSuspendedUntil) > new Date()
+    ) {
+      throw new AppError(
+        `Staff meal access is suspended until ${new Date(profile.mealSuspendedUntil).toLocaleDateString("en-IN")}. ${profile.mealSuspensionReason || ""}`.trim(),
+        409,
+      );
     }
     dailyLimit = profile.dailyMealLimit ?? 2;
     monthlyLimit = profile.monthlyMealLimit ?? 60;
     const weeklyLimit = profile.weeklyMealLimit ?? 14;
     const yearlyLimit = profile.yearlyMealLimit ?? 720;
     const now = new Date();
-    const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
-    const weekStart = new Date(now); weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7)); weekStart.setHours(0, 0, 0, 0);
+    const dayStart = new Date(now);
+    dayStart.setHours(0, 0, 0, 0);
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    weekStart.setHours(0, 0, 0, 0);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const yearStart = new Date(now.getFullYear(), 0, 1);
-    const [dailyCount, weeklyCount, monthlyCount, yearlyCount] = await Promise.all([
-      Order.countDocuments({ saleType: "staff_meal", "internalConsumption.referenceId": staffUser._id, status: { $nin: ["cancelled", "rejected"] }, createdAt: { $gte: dayStart } }),
-      Order.countDocuments({ saleType: "staff_meal", "internalConsumption.referenceId": staffUser._id, status: { $nin: ["cancelled", "rejected"] }, createdAt: { $gte: weekStart } }),
-      Order.countDocuments({ saleType: "staff_meal", "internalConsumption.referenceId": staffUser._id, status: { $nin: ["cancelled", "rejected"] }, createdAt: { $gte: monthStart } }),
-      Order.countDocuments({ saleType: "staff_meal", "internalConsumption.referenceId": staffUser._id, status: { $nin: ["cancelled", "rejected"] }, createdAt: { $gte: yearStart } }),
-    ]);
+    const [dailyCount, weeklyCount, monthlyCount, yearlyCount] =
+      await Promise.all([
+        Order.countDocuments({
+          saleType: "staff_meal",
+          "internalConsumption.referenceId": staffUser._id,
+          status: { $nin: ["cancelled", "rejected"] },
+          createdAt: { $gte: dayStart },
+        }),
+        Order.countDocuments({
+          saleType: "staff_meal",
+          "internalConsumption.referenceId": staffUser._id,
+          status: { $nin: ["cancelled", "rejected"] },
+          createdAt: { $gte: weekStart },
+        }),
+        Order.countDocuments({
+          saleType: "staff_meal",
+          "internalConsumption.referenceId": staffUser._id,
+          status: { $nin: ["cancelled", "rejected"] },
+          createdAt: { $gte: monthStart },
+        }),
+        Order.countDocuments({
+          saleType: "staff_meal",
+          "internalConsumption.referenceId": staffUser._id,
+          status: { $nin: ["cancelled", "rejected"] },
+          createdAt: { $gte: yearStart },
+        }),
+      ]);
     dailyUsageBefore = dailyCount;
     monthlyUsageBefore = monthlyCount;
-    const limitExceeded = profile.unlimitedMeals !== true && (dailyCount >= dailyLimit || weeklyCount >= weeklyLimit || monthlyCount >= monthlyLimit || yearlyCount >= yearlyLimit);
+    const limitExceeded =
+      profile.unlimitedMeals !== true &&
+      (dailyCount >= dailyLimit ||
+        weeklyCount >= weeklyLimit ||
+        monthlyCount >= monthlyLimit ||
+        yearlyCount >= yearlyLimit);
     if (limitExceeded && profile.requireManagerApprovalOnLimit !== false) {
       approvalStatus = "required";
-      const email = input.internalConsumption.managerApprovalEmail.trim().toLowerCase();
+      const email = input.internalConsumption.managerApprovalEmail
+        .trim()
+        .toLowerCase();
       const password = input.internalConsumption.managerApprovalPassword;
-      if (!email || !password || input.internalConsumption.managerApprovalReason.trim().length < 3) {
-        throw new AppError(`Manager approval is required. Daily ${dailyCount}/${dailyLimit}; weekly ${weeklyCount}/${weeklyLimit}; monthly ${monthlyCount}/${monthlyLimit}; yearly ${yearlyCount}/${yearlyLimit}.`, 409, { code: "INTERNAL_MEAL_APPROVAL_REQUIRED" });
+      if (
+        !email ||
+        !password ||
+        input.internalConsumption.managerApprovalReason.trim().length < 3
+      ) {
+        throw new AppError(
+          `Manager approval is required. Daily ${dailyCount}/${dailyLimit}; weekly ${weeklyCount}/${weeklyLimit}; monthly ${monthlyCount}/${monthlyLimit}; yearly ${yearlyCount}/${yearlyLimit}.`,
+          409,
+          { code: "INTERNAL_MEAL_APPROVAL_REQUIRED" },
+        );
       }
-      const manager = await User.findOne({ email, isActive: true, deletedAt: null }).select("+passwordHash name roleId");
-      if (!manager || !(await verifyPassword(password, manager.passwordHash))) throw new AppError("Manager approval credentials are invalid.", 403);
+      const manager = await User.findOne({
+        email,
+        isActive: true,
+        deletedAt: null,
+      }).select("+passwordHash name roleId");
+      if (!manager || !(await verifyPassword(password, manager.passwordHash)))
+        throw new AppError("Manager approval credentials are invalid.", 403);
       const role = await getRoleWithPermissions(String(manager.roleId));
-      const canApprove = role?.permissionIds.some((permission) => ["settings.manage", "orders.update", "pos.manage"].includes(permission.key));
-      if (!canApprove) throw new AppError("This account does not have permission to approve meal-limit overrides.", 403);
+      const canApprove = role?.permissionIds.some((permission) =>
+        ["settings.manage", "orders.update", "pos.manage"].includes(
+          permission.key,
+        ),
+      );
+      if (!canApprove)
+        throw new AppError(
+          "This account does not have permission to approve meal-limit overrides.",
+          403,
+        );
       approvalStatus = "approved";
       approvalReason = input.internalConsumption.managerApprovalReason.trim();
       approvedBy = manager._id;
@@ -247,10 +342,14 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     }
   }
 
-  const customer = !isInternalOrder && input.customerId
-    ? await User.findOne({ _id: input.customerId, deletedAt: null }).select("name phone email").lean()
-    : null;
-  if (input.customerId && !customer) throw new AppError("Selected customer is no longer available.", 409);
+  const customer =
+    !isInternalOrder && input.customerId
+      ? await User.findOne({ _id: input.customerId, deletedAt: null })
+          .select("name phone email")
+          .lean()
+      : null;
+  if (input.customerId && !customer)
+    throw new AppError("Selected customer is no longer available.", 409);
 
   const primaryMenuIds = input.items
     .filter((item) => item.sourceType === "menu")
@@ -261,43 +360,75 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
       .map((modifier) => modifier.optionId),
   );
   const menuIds = [...new Set([...primaryMenuIds, ...mixedNaanMenuIds])];
-  const posIds = input.items.filter((item) => item.sourceType === "pos").map((item) => item.itemId);
+  const posIds = input.items
+    .filter((item) => item.sourceType === "pos")
+    .map((item) => item.itemId);
   const menuItemIds = new Set(menuIds);
-  const syntheticThinCrustGroupIds = new Set([...menuItemIds].map(thinCrustGroupId));
-  const modifierGroupIds = [...new Set(
-    input.items.flatMap((item) => item.modifiers.map((modifier) => modifier.groupId))
-      .filter((groupId) =>
-        !syntheticThinCrustGroupIds.has(groupId) &&
-        groupId !== MIXED_NAAN_GROUP_ID,
-      ),
-  )];
+  const syntheticThinCrustGroupIds = new Set(
+    [...menuItemIds].map(thinCrustGroupId),
+  );
+  const modifierGroupIds = [
+    ...new Set(
+      input.items
+        .flatMap((item) => item.modifiers.map((modifier) => modifier.groupId))
+        .filter(
+          (groupId) =>
+            !syntheticThinCrustGroupIds.has(groupId) &&
+            groupId !== MIXED_NAAN_GROUP_ID,
+        ),
+    ),
+  ];
 
   const [menuItems, posItems, modifierGroups] = await Promise.all([
-    MenuItem.find({ _id: { $in: menuIds }, isActive: true, isAvailable: true, deletedAt: null }).lean(),
+    MenuItem.find({
+      _id: { $in: menuIds },
+      isActive: true,
+      isAvailable: true,
+      deletedAt: null,
+    }).lean(),
     POSItem.find({ _id: { $in: posIds }, isActive: true }).lean(),
-    ModifierGroup.find({ _id: { $in: modifierGroupIds }, isActive: true }).lean(),
+    ModifierGroup.find({
+      _id: { $in: modifierGroupIds },
+      isActive: true,
+    }).lean(),
   ]);
   const menuMap = new Map(menuItems.map((item) => [String(item._id), item]));
   const posMap = new Map(posItems.map((item) => [String(item._id), item]));
-  const groupMap = new Map(modifierGroups.map((group) => [String(group._id), group]));
+  const groupMap = new Map(
+    modifierGroups.map((group) => [String(group._id), group]),
+  );
 
   const orderLines: ResolvedPosLine[] = input.items.map((line) => {
     if (line.sourceType === "menu") {
       const item = menuMap.get(line.itemId);
-      if (!item) throw new AppError("A selected menu item is no longer available.", 409);
-      if (input.orderMode === "dine_in" && item.availableForDineIn === false) throw new AppError(`${item.name} is not available for dine-in.`, 409);
-      if (input.orderMode === "takeaway" && item.availableForTakeaway === false) throw new AppError(`${item.name} is not available for takeaway.`, 409);
+      if (!item)
+        throw new AppError("A selected menu item is no longer available.", 409);
+      if (input.orderMode === "dine_in" && item.availableForDineIn === false)
+        throw new AppError(`${item.name} is not available for dine-in.`, 409);
+      if (input.orderMode === "takeaway" && item.availableForTakeaway === false)
+        throw new AppError(`${item.name} is not available for takeaway.`, 409);
 
       const variant = line.variantId
-        ? item.variants.find((entry) => String(entry._id) === line.variantId && entry.isActive)
-        : item.variants.find((entry) => entry.isDefault && entry.isActive) ?? item.variants.find((entry) => entry.isActive);
-      if (line.variantId && !variant) throw new AppError(`The selected variant for ${item.name} is unavailable.`, 409);
+        ? item.variants.find(
+            (entry) => String(entry._id) === line.variantId && entry.isActive,
+          )
+        : (item.variants.find((entry) => entry.isDefault && entry.isActive) ??
+          item.variants.find((entry) => entry.isActive));
+      if (line.variantId && !variant)
+        throw new AppError(
+          `The selected variant for ${item.name} is unavailable.`,
+          409,
+        );
       const variantName = variant?.name ?? "";
       let baseUnitPrice = money(variant?.price ?? item.basePrice);
       const specialThinCrustGroupId = thinCrustGroupId(line.itemId);
       const specialThinCrustOptionId = thinCrustOptionId(line.itemId);
-      const thinCrustSelections = line.modifiers.filter((modifier) => modifier.groupId === specialThinCrustGroupId);
-      const mixedNaanSelections = line.modifiers.filter((modifier) => modifier.groupId === MIXED_NAAN_GROUP_ID);
+      const thinCrustSelections = line.modifiers.filter(
+        (modifier) => modifier.groupId === specialThinCrustGroupId,
+      );
+      const mixedNaanSelections = line.modifiers.filter(
+        (modifier) => modifier.groupId === MIXED_NAAN_GROUP_ID,
+      );
       const regularSelections = line.modifiers.filter(
         (modifier) =>
           modifier.groupId !== specialThinCrustGroupId &&
@@ -305,7 +436,8 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
       );
 
       if (thinCrustSelections.length > 0) {
-        const configuration = item.pizzaConfiguration as { thinCrustAvailable?: boolean } | undefined;
+        const configuration = item.pizzaConfiguration as
+          { thinCrustAvailable?: boolean } | undefined;
         if (
           !isThinCrustEnabled(item.name, configuration) ||
           !isMediumPizzaVariant(variantName) ||
@@ -313,7 +445,10 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
           thinCrustSelections[0]?.optionId !== specialThinCrustOptionId ||
           thinCrustSelections[0]?.quantity !== 1
         ) {
-          throw new AppError("Thin Crust is available only for eligible Medium pizzas.", 422);
+          throw new AppError(
+            "Thin Crust is available only for eligible Medium pizzas.",
+            422,
+          );
         }
       }
 
@@ -323,41 +458,62 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
         ? combinationPricing.modifierGroupId?.toString()
         : undefined;
       const combinationSelections = combinationGroupId
-        ? regularSelections.filter((selection) => selection.groupId === combinationGroupId)
+        ? regularSelections.filter(
+            (selection) => selection.groupId === combinationGroupId,
+          )
         : [];
       const standardSelections = combinationGroupId
-        ? regularSelections.filter((selection) => selection.groupId !== combinationGroupId)
+        ? regularSelections.filter(
+            (selection) => selection.groupId !== combinationGroupId,
+          )
         : regularSelections;
 
-      const resolvedModifiers = resolveModifiers(standardSelections, allowedGroups, groupMap, variantName);
+      const resolvedModifiers = resolveModifiers(
+        standardSelections,
+        allowedGroups,
+        groupMap,
+        variantName,
+      );
 
       if (combinationPricing?.enabled) {
-        if (!combinationGroupId || combinationSelections.length !== 1 || combinationSelections[0]?.quantity !== 1) {
+        if (
+          !combinationGroupId ||
+          combinationSelections.length !== 1 ||
+          combinationSelections[0]?.quantity !== 1
+        ) {
           throw new AppError("Select one platter option.", 422);
         }
 
         const selectedCombination = combinationSelections[0];
         const entry = (combinationPricing.entries ?? []).find(
           (candidate) =>
-            (
-              candidate.optionId?.toString() === selectedCombination.optionId ||
-              normalizeMenuLabel(candidate.optionName ?? "") === normalizeMenuLabel(selectedCombination.optionName ?? "")
-            ) &&
-            normalizeMenuLabel(candidate.variantLabel) === normalizeMenuLabel(variantName),
+            (candidate.optionId?.toString() === selectedCombination.optionId ||
+              normalizeMenuLabel(candidate.optionName ?? "") ===
+                normalizeMenuLabel(selectedCombination.optionName ?? "")) &&
+            normalizeMenuLabel(candidate.variantLabel) ===
+              normalizeMenuLabel(variantName),
         );
-        if (!entry) throw new AppError("The selected platter combination has no configured price.", 422);
+        if (!entry)
+          throw new AppError(
+            "The selected platter combination has no configured price.",
+            422,
+          );
 
         const group = groupMap.get(combinationGroupId);
-        if (!group) throw new AppError("The configured platter group is no longer available.", 409);
+        if (!group)
+          throw new AppError(
+            "The configured platter group is no longer available.",
+            409,
+          );
         const currentOption = group.options.find(
           (option) =>
             option.isActive &&
             option.isAvailable &&
-            (
-              String(option._id) === selectedCombination.optionId ||
-              normalizeMenuLabel(option.name) === normalizeMenuLabel(selectedCombination.optionName ?? "") ||
-              normalizeMenuLabel(option.name) === normalizeMenuLabel(entry.optionName ?? "")
-            ),
+            (String(option._id) === selectedCombination.optionId ||
+              normalizeMenuLabel(option.name) ===
+                normalizeMenuLabel(selectedCombination.optionName ?? "") ||
+              normalizeMenuLabel(option.name) ===
+                normalizeMenuLabel(entry.optionName ?? "")),
         );
 
         resolvedModifiers.push({
@@ -378,21 +534,31 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
             422,
           );
         }
-        if (mixedNaanSelections.length !== 1 || mixedNaanSelections[0]?.quantity !== 1) {
+        if (
+          mixedNaanSelections.length !== 1 ||
+          mixedNaanSelections[0]?.quantity !== 1
+        ) {
           throw new AppError("Select only one different second naan.", 422);
         }
         const selectedCombination = combinationSelections[0];
         const currentEntry = (combinationPricing.entries ?? []).find(
           (candidate) =>
             candidate.optionId?.toString() === selectedCombination?.optionId &&
-            normalizeMenuLabel(candidate.variantLabel) === normalizeMenuLabel(variantName),
+            normalizeMenuLabel(candidate.variantLabel) ===
+              normalizeMenuLabel(variantName),
         );
         if (!selectedCombination || !currentEntry) {
-          throw new AppError("Select the platter sabji before choosing a second naan.", 422);
+          throw new AppError(
+            "Select the platter sabji before choosing a second naan.",
+            422,
+          );
         }
         const alternateId = mixedNaanSelections[0].optionId;
         if (alternateId === line.itemId) {
-          throw new AppError("Choose a different naan for the second naan.", 422);
+          throw new AppError(
+            "Choose a different naan for the second naan.",
+            422,
+          );
         }
         const alternate = menuMap.get(alternateId);
         if (
@@ -420,7 +586,8 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
           );
         }
         const adjustment = money(
-          Math.max(Number(currentEntry.price), alternatePrice) - Number(currentEntry.price),
+          Math.max(Number(currentEntry.price), alternatePrice) -
+            Number(currentEntry.price),
         );
         resolvedModifiers.push({
           groupId: new Types.ObjectId(MIXED_NAAN_GROUP_ID),
@@ -432,7 +599,11 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
         });
       }
 
-      validateRequiredGroups(item.modifierGroupIds.map(String), resolvedModifiers, groupMap);
+      validateRequiredGroups(
+        item.modifierGroupIds.map(String),
+        resolvedModifiers,
+        groupMap,
+      );
 
       if (thinCrustSelections.length === 1) {
         resolvedModifiers.push({
@@ -445,7 +616,10 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
         });
       }
 
-      const modifierUnitTotal = resolvedModifiers.reduce((sum, modifier) => sum + modifier.unitPrice * modifier.quantity, 0);
+      const modifierUnitTotal = resolvedModifiers.reduce(
+        (sum, modifier) => sum + modifier.unitPrice * modifier.quantity,
+        0,
+      );
       const lineUnitPrice = money(baseUnitPrice + modifierUnitTotal);
 
       return {
@@ -469,8 +643,12 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     }
 
     const item = posMap.get(line.itemId);
-    if (!item) throw new AppError("A selected POS item is no longer available.", 409);
-    const customPrice = item.allowCustomPrice && typeof line.unitPrice === "number" ? line.unitPrice : item.sellingPrice;
+    if (!item)
+      throw new AppError("A selected POS item is no longer available.", 409);
+    const customPrice =
+      item.allowCustomPrice && typeof line.unitPrice === "number"
+        ? line.unitPrice
+        : item.sellingPrice;
     const unitPrice = money(customPrice);
     return {
       sourceType: "pos",
@@ -492,36 +670,109 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     };
   });
 
-  const subtotal = money(orderLines.reduce((sum, item) => sum + item.lineTotal, 0));
-  const adjustments = isInternalOrder ? normalizeAdjustments({ discountType: "none", discountValue: 0, discountReason: "", packingCharge: 0, serviceCharge: 0, additionalCharge: 0, additionalChargeLabel: "Additional charge", taxRate: 0, taxMode: "exclusive" }, subtotal) : normalizeAdjustments(input.adjustments, subtotal);
-  const discountTotal = adjustments.discountType === "percentage"
-    ? wholeRupee(Math.min(subtotal, subtotal * adjustments.discountValue / 100))
-    : adjustments.discountType === "fixed" ? wholeRupee(Math.min(subtotal, adjustments.discountValue)) : 0;
+  const subtotal = money(
+    orderLines.reduce((sum, item) => sum + item.lineTotal, 0),
+  );
+  const adjustments = isInternalOrder
+    ? normalizeAdjustments(
+        {
+          discountType: "none",
+          discountValue: 0,
+          discountReason: "",
+          packingCharge: 0,
+          serviceCharge: 0,
+          additionalCharge: 0,
+          additionalChargeLabel: "Additional charge",
+          taxRate: 0,
+          taxMode: "exclusive",
+        },
+        subtotal,
+      )
+    : normalizeAdjustments(input.adjustments, subtotal);
+  const discountTotal =
+    adjustments.discountType === "percentage"
+      ? wholeRupee(
+          Math.min(subtotal, (subtotal * adjustments.discountValue) / 100),
+        )
+      : adjustments.discountType === "fixed"
+        ? wholeRupee(Math.min(subtotal, adjustments.discountValue))
+        : 0;
   const netSubtotal = wholeRupee(subtotal - discountTotal);
-  const chargesTotal = wholeRupee(adjustments.packingCharge + adjustments.serviceCharge + adjustments.additionalCharge);
+  const chargesTotal = wholeRupee(
+    adjustments.packingCharge +
+      adjustments.serviceCharge +
+      adjustments.additionalCharge,
+  );
   const preTax = wholeRupee(netSubtotal + chargesTotal);
-  const taxTotal = adjustments.taxRate <= 0 ? 0 : adjustments.taxMode === "inclusive"
-    ? wholeRupee(preTax - preTax / (1 + adjustments.taxRate / 100))
-    : wholeRupee(preTax * adjustments.taxRate / 100);
-  const calculatedGrandTotal = wholeRupee(adjustments.taxMode === "inclusive" ? preTax : preTax + taxTotal);
+  const taxTotal =
+    adjustments.taxRate <= 0
+      ? 0
+      : adjustments.taxMode === "inclusive"
+        ? wholeRupee(preTax - preTax / (1 + adjustments.taxRate / 100))
+        : wholeRupee((preTax * adjustments.taxRate) / 100);
+  const calculatedGrandTotal = wholeRupee(
+    adjustments.taxMode === "inclusive" ? preTax : preTax + taxTotal,
+  );
   const grandTotal = isInternalOrder ? 0 : calculatedGrandTotal;
 
-  const waivedAmount = isInternalOrder ? 0 : wholeRupee(Math.min(input.waivedAmount, grandTotal));
+  const waivedAmount = isInternalOrder
+    ? 0
+    : wholeRupee(Math.min(input.waivedAmount, grandTotal));
   const saleAmountDue = wholeRupee(grandTotal - waivedAmount);
   const tipAmount = isInternalOrder ? 0 : wholeRupee(input.tipAmount);
   // A tip only enters restaurant collections when the restaurant currently holds it.
   // This covers UPI tips and cash tips received at the counter for later waiter payout.
-  const restaurantHeldTip = input.tipCollection === "restaurant" ? tipAmount : 0;
+  const restaurantHeldTip =
+    input.tipCollection === "restaurant" ? tipAmount : 0;
   const collectionTarget = wholeRupee(saleAmountDue + restaurantHeldTip);
-  const paymentBreakdown = isInternalOrder ? [] : input.paymentMethod === "split"
-    ? input.paymentBreakdown.filter((part) => part.amount > 0).map((part) => ({ method: part.method, amount: money(part.amount), reference: part.reference.trim() }))
-    : [{ method: input.paymentMethod, amount: input.paymentMethod === "cash" ? money(input.amountTendered) : collectionTarget, reference: input.paymentMethod === "upi" ? input.upiReference.trim() : "" }];
-  const collected = money(paymentBreakdown.reduce((sum, part) => sum + part.amount, 0));
-  if (!isInternalOrder && collected < collectionTarget) throw new AppError("Collected payment is less than the restaurant amount due.", 422);
-  if (!isInternalOrder && input.paymentMethod === "split" && Math.abs(collected - collectionTarget) > 0.01) throw new AppError("Split payment amounts must exactly equal the restaurant amount due, including any UPI tip.", 422);
-  const cashPaid = money(paymentBreakdown.filter((part) => part.method === "cash").reduce((sum, part) => sum + part.amount, 0));
+  const paymentBreakdown = isInternalOrder
+    ? []
+    : input.paymentMethod === "split"
+      ? input.paymentBreakdown
+          .filter((part) => part.amount > 0)
+          .map((part) => ({
+            method: part.method,
+            amount: money(part.amount),
+            reference: part.reference.trim(),
+          }))
+      : [
+          {
+            method: input.paymentMethod,
+            amount:
+              input.paymentMethod === "cash"
+                ? money(input.amountTendered)
+                : collectionTarget,
+            reference:
+              input.paymentMethod === "upi" ? input.upiReference.trim() : "",
+          },
+        ];
+  const collected = money(
+    paymentBreakdown.reduce((sum, part) => sum + part.amount, 0),
+  );
+  if (!isInternalOrder && collected < collectionTarget)
+    throw new AppError(
+      "Collected payment is less than the restaurant amount due.",
+      422,
+    );
+  if (
+    !isInternalOrder &&
+    input.paymentMethod === "split" &&
+    Math.abs(collected - collectionTarget) > 0.01
+  )
+    throw new AppError(
+      "Split payment amounts must exactly equal the restaurant amount due, including any UPI tip.",
+      422,
+    );
+  const cashPaid = money(
+    paymentBreakdown
+      .filter((part) => part.method === "cash")
+      .reduce((sum, part) => sum + part.amount, 0),
+  );
   const amountTendered = cashPaid;
-  const changeDue = input.paymentMethod === "cash" ? money(Math.max(0, collected - collectionTarget)) : 0;
+  const changeDue =
+    input.paymentMethod === "cash"
+      ? money(Math.max(0, collected - collectionTarget))
+      : 0;
 
   await assertInventoryAvailable(orderLines);
 
@@ -533,14 +784,17 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     saleType: input.internalConsumption.saleType,
     isRevenueOrder: !isInternalOrder,
     internalConsumption: {
-      referenceId: input.internalConsumption.referenceId ? new Types.ObjectId(input.internalConsumption.referenceId) : null,
+      referenceId: input.internalConsumption.referenceId
+        ? new Types.ObjectId(input.internalConsumption.referenceId)
+        : null,
       personName: input.internalConsumption.personName.trim(),
       reason: input.internalConsumption.reason.trim(),
       notes: input.internalConsumption.notes.trim(),
       menuValue: subtotal,
       approvalStatus,
       approvalReason,
-      approvedBy: approvedBy ?? (isInternalOrder ? new Types.ObjectId(actorId) : null),
+      approvedBy:
+        approvedBy ?? (isInternalOrder ? new Types.ObjectId(actorId) : null),
       approvedAt: approvedAt ?? (isInternalOrder ? now : null),
       dailyUsageBefore,
       monthlyUsageBefore,
@@ -551,7 +805,10 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     posShiftId: shift._id,
     posRegisterId: shift.registerId,
     cashierId: new Types.ObjectId(actorId),
-    upiReference: !isInternalOrder && input.paymentMethod === "upi" ? input.upiReference : "",
+    upiReference:
+      !isInternalOrder && input.paymentMethod === "upi"
+        ? input.upiReference
+        : "",
     paymentBreakdown,
     waivedAmount,
     waivedReason: waivedAmount > 0 ? input.waivedReason.trim() : "",
@@ -564,7 +821,9 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     amountTendered,
     changeDue,
     customerSnapshot: {
-      name: isInternalOrder ? input.internalConsumption.personName.trim() : customer?.name ?? (input.customerName || "Walk-in Customer"),
+      name: isInternalOrder
+        ? input.internalConsumption.personName.trim()
+        : (customer?.name ?? (input.customerName || "Walk-in Customer")),
       phone: customer?.phone ?? input.customerPhone,
       email: customer?.email ?? input.customerEmail,
     },
@@ -577,13 +836,15 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
       variantId: item.variantId,
       variantName: item.variantName,
       baseUnitPrice: item.baseUnitPrice,
-      modifiers: item.modifiers.flatMap((modifier) => Array.from({ length: modifier.quantity }, () => ({
-        groupId: modifier.groupId,
-        groupName: modifier.groupName,
-        optionId: modifier.optionId,
-        optionName: modifier.optionName,
-        unitPrice: modifier.unitPrice,
-      }))),
+      modifiers: item.modifiers.flatMap((modifier) =>
+        Array.from({ length: modifier.quantity }, () => ({
+          groupId: modifier.groupId,
+          groupName: modifier.groupName,
+          optionId: modifier.optionId,
+          optionName: modifier.optionName,
+          unitPrice: modifier.unitPrice,
+        })),
+      ),
       quantity: item.quantity,
       specialInstructions: item.specialInstructions,
       lineUnitPrice: item.lineUnitPrice,
@@ -596,7 +857,9 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     statusHistory: [
       {
         status: "placed",
-        note: isInternalOrder ? "Internal consumption order created from POS." : "Order created and paid from POS.",
+        note: isInternalOrder
+          ? "Internal consumption order created from POS."
+          : "Order created and paid from POS.",
         changedBy: new Types.ObjectId(actorId),
         changedAt: now,
       },
@@ -628,7 +891,9 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     taxMode: adjustments.taxMode,
     discountType: isInternalOrder ? "fixed" : adjustments.discountType,
     discountValue: isInternalOrder ? subtotal : adjustments.discountValue,
-    discountReason: isInternalOrder ? `Internal consumption: ${input.internalConsumption.reason.trim()}` : adjustments.discountReason,
+    discountReason: isInternalOrder
+      ? `Internal consumption: ${input.internalConsumption.reason.trim()}`
+      : adjustments.discountReason,
     grandTotal,
     loyaltyEligibleAmount: 0,
     itemCount: orderLines.reduce((sum, item) => sum + item.quantity, 0),
@@ -641,12 +906,20 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
       orderId: order._id,
       action: approvalStatus === "approved" ? "approved" : "created",
       saleType: input.internalConsumption.saleType,
-      subjectId: input.internalConsumption.referenceId ? new Types.ObjectId(input.internalConsumption.referenceId) : null,
+      subjectId: input.internalConsumption.referenceId
+        ? new Types.ObjectId(input.internalConsumption.referenceId)
+        : null,
       subjectName: input.internalConsumption.personName.trim(),
       actorId: new Types.ObjectId(actorId),
       approvedBy,
       reason: approvalReason || input.internalConsumption.reason.trim(),
-      metadata: { dailyUsageBefore, monthlyUsageBefore, dailyLimit, monthlyLimit, menuValue: subtotal },
+      metadata: {
+        dailyUsageBefore,
+        monthlyUsageBefore,
+        dailyLimit,
+        monthlyLimit,
+        menuValue: subtotal,
+      },
     });
   }
 
@@ -661,7 +934,10 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
         referenceId: order._id,
         createdBy: new Types.ObjectId(actorId),
       });
-      await POSShift.updateOne({ _id: shift._id }, { $inc: { expectedCash: cashPaid } });
+      await POSShift.updateOne(
+        { _id: shift._id },
+        { $inc: { expectedCash: cashPaid } },
+      );
     }
 
     await deductInventory(orderLines, order._id, actorId);
@@ -669,15 +945,29 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
     const invoice = await getOrCreateInvoice(String(order._id), actorId);
 
     publishOrderCreated({
-      orderId: String(order._id), orderNumber, customerId: order.customerId?.toString(), status: order.status,
-      paymentStatus: order.paymentStatus, grandTotal, orderMode: order.orderMode, actorId,
+      orderId: String(order._id),
+      orderNumber,
+      customerId: order.customerId?.toString(),
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      grandTotal,
+      orderMode: order.orderMode,
+      actorId,
     });
     publishRealtimeEventSafely({
       event: "pos.order_created",
       entityId: String(order._id),
       actorId,
-      data: { orderId: String(order._id), orderNumber, grandTotal, paymentMethod: isInternalOrder ? "not_required" : input.paymentMethod, saleType: input.internalConsumption.saleType },
-      target: { roleKeys: ["super_admin", "admin", "manager", "cashier", "kitchen"] },
+      data: {
+        orderId: String(order._id),
+        orderNumber,
+        grandTotal,
+        paymentMethod: isInternalOrder ? "not_required" : input.paymentMethod,
+        saleType: input.internalConsumption.saleType,
+      },
+      target: {
+        roleKeys: ["super_admin", "admin", "manager", "cashier", "kitchen"],
+      },
     });
     publishDashboardRefresh("pos.order_created", actorId);
 
@@ -685,18 +975,29 @@ export async function createPosOrder(input: CreatePosOrderInput, actorId: string
   } catch (error) {
     await Order.updateOne(
       { _id: order._id },
-      { $set: { status: "cancelled", cancelledAt: new Date(), cancellationReason: "POS finalization failed after order creation." } },
+      {
+        $set: {
+          status: "cancelled",
+          cancelledAt: new Date(),
+          cancellationReason: "POS finalization failed after order creation.",
+        },
+      },
     );
     throw error;
   }
 }
 
-function normalizeAdjustments(input: AdjustmentsInput, subtotal: number): AdjustmentsInput {
+function normalizeAdjustments(
+  input: AdjustmentsInput,
+  subtotal: number,
+): AdjustmentsInput {
   const discountType = input.discountType;
-  const discountValue = discountType === "percentage"
-    ? Math.min(100, money(input.discountValue))
-    : Math.min(subtotal, money(input.discountValue));
-  if (discountType !== "none" && !input.discountReason.trim()) throw new AppError("Discount reason is required.", 422);
+  const discountValue =
+    discountType === "percentage"
+      ? Math.min(100, money(input.discountValue))
+      : Math.min(subtotal, money(input.discountValue));
+  if (discountType !== "none" && !input.discountReason.trim())
+    throw new AppError("Discount reason is required.", 422);
   return {
     discountType,
     discountValue,
@@ -704,14 +1005,19 @@ function normalizeAdjustments(input: AdjustmentsInput, subtotal: number): Adjust
     packingCharge: money(input.packingCharge),
     serviceCharge: money(input.serviceCharge),
     additionalCharge: money(input.additionalCharge),
-    additionalChargeLabel: input.additionalChargeLabel.trim() || "Additional charge",
+    additionalChargeLabel:
+      input.additionalChargeLabel.trim() || "Additional charge",
     taxRate: Math.min(100, money(input.taxRate)),
     taxMode: input.taxMode,
   };
 }
 
 function normalizeMenuLabel(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 function resolveModifiers(
@@ -722,7 +1028,11 @@ function resolveModifiers(
 ): ResolvedModifier[] {
   const grouped = new Map<string, ModifierInput[]>();
   for (const selection of selections) {
-    if (!allowedGroups.has(selection.groupId)) throw new AppError("A selected modifier group is not allowed for this item.", 409);
+    if (!allowedGroups.has(selection.groupId))
+      throw new AppError(
+        "A selected modifier group is not allowed for this item.",
+        409,
+      );
     const values = grouped.get(selection.groupId) ?? [];
     values.push(selection);
     grouped.set(selection.groupId, values);
@@ -731,24 +1041,54 @@ function resolveModifiers(
   const resolved: ResolvedModifier[] = [];
   for (const [groupId, groupSelections] of grouped) {
     const group = groupMap.get(groupId);
-    if (!group) throw new AppError("A selected modifier group is no longer available.", 409);
-    const selectionCount = groupSelections.reduce((sum, selection) => sum + selection.quantity, 0);
-    if (selectionCount < Number(group.minSelections ?? 0) || selectionCount > Number(group.maxSelections ?? 1)) {
-      throw new AppError(`Invalid number of selections for ${group.name}.`, 422);
+    if (!group)
+      throw new AppError(
+        "A selected modifier group is no longer available.",
+        409,
+      );
+    const selectionCount = groupSelections.reduce(
+      (sum, selection) => sum + selection.quantity,
+      0,
+    );
+    if (
+      selectionCount < Number(group.minSelections ?? 0) ||
+      selectionCount > Number(group.maxSelections ?? 1)
+    ) {
+      throw new AppError(
+        `Invalid number of selections for ${group.name}.`,
+        422,
+      );
     }
-    if (group.selectionType === "single" && selectionCount !== 1) throw new AppError(`${group.name} requires one selection.`, 422);
+    if (group.selectionType === "single" && selectionCount !== 1)
+      throw new AppError(`${group.name} requires one selection.`, 422);
 
     for (const selection of groupSelections) {
-      const option = group.options.find((entry: ModifierOptionRecord) =>
-        String(entry._id) === selection.optionId && entry.isActive && entry.isAvailable,
-      ) ?? (selection.optionName
-        ? group.options.find((entry: ModifierOptionRecord) =>
-            normalizeMenuLabel(entry.name) === normalizeMenuLabel(selection.optionName ?? "") &&
-            entry.isActive && entry.isAvailable,
-          )
-        : undefined);
-      if (!option) throw new AppError(`The selected ${group.name} option is no longer available. Reconfigure this item and try again.`, 409);
-      if (selection.quantity > Number(option.maxQuantity ?? 1)) throw new AppError(`Selected quantity for ${option.name} is too high.`, 422);
+      const option =
+        group.options.find(
+          (entry: ModifierOptionRecord) =>
+            String(entry._id) === selection.optionId &&
+            entry.isActive &&
+            entry.isAvailable,
+        ) ??
+        (selection.optionName
+          ? group.options.find(
+              (entry: ModifierOptionRecord) =>
+                normalizeMenuLabel(entry.name) ===
+                  normalizeMenuLabel(selection.optionName ?? "") &&
+                entry.isActive &&
+                entry.isAvailable,
+            )
+          : undefined);
+      if (!option)
+        throw new AppError(
+          `The selected ${group.name} option is no longer available. Reconfigure this item and try again.`,
+          409,
+        );
+      if (selection.quantity > Number(option.maxQuantity ?? 1))
+        throw new AppError(
+          `Selected quantity for ${option.name} is too high.`,
+          422,
+        );
       const modifierPrice = resolveVariantModifierPrice(
         Number(option.price ?? 0),
         option.variantPrices,
@@ -773,11 +1113,18 @@ function validateRequiredGroups(
   groupMap: Map<string, ModifierGroupRecord>,
 ) {
   const countByGroup = new Map<string, number>();
-  for (const modifier of resolved) countByGroup.set(String(modifier.groupId), (countByGroup.get(String(modifier.groupId)) ?? 0) + modifier.quantity);
+  for (const modifier of resolved)
+    countByGroup.set(
+      String(modifier.groupId),
+      (countByGroup.get(String(modifier.groupId)) ?? 0) + modifier.quantity,
+    );
   for (const groupId of groupIds) {
     const group = groupMap.get(groupId);
     if (!group || !group.isRequired) continue;
-    if ((countByGroup.get(groupId) ?? 0) < Math.max(1, Number(group.minSelections ?? 1))) {
+    if (
+      (countByGroup.get(groupId) ?? 0) <
+      Math.max(1, Number(group.minSelections ?? 1))
+    ) {
       throw new AppError(`${group.name} requires a selection.`, 422);
     }
   }
@@ -786,31 +1133,53 @@ function validateRequiredGroups(
 async function assertInventoryAvailable(lines: ResolvedPosLine[]) {
   const requirements = await inventoryRequirements(lines);
   if (!requirements.size) return;
-  const stocks = await InventoryItem.find({ _id: { $in: [...requirements.keys()].map((id) => new Types.ObjectId(id)) } })
+  const stocks = await InventoryItem.find({
+    _id: { $in: [...requirements.keys()].map((id) => new Types.ObjectId(id)) },
+  })
     .select("name currentStock")
     .lean();
   const stockMap = new Map(stocks.map((item) => [String(item._id), item]));
   for (const [id, quantity] of requirements) {
     const stock = stockMap.get(id);
-    if (!stock || stock.currentStock < quantity) throw new AppError(`Insufficient inventory for ${stock?.name ?? "an ingredient"}.`, 409);
+    if (!stock || stock.currentStock < quantity)
+      throw new AppError(
+        `Insufficient inventory for ${stock?.name ?? "an ingredient"}.`,
+        409,
+      );
   }
 }
 
 async function inventoryRequirements(lines: ResolvedPosLine[]) {
-  const menuIds = lines.filter((line) => line.menuItemId).map((line) => line.menuItemId);
-  const posIds = lines.filter((line) => line.posItemId).map((line) => line.posItemId);
+  const menuIds = lines
+    .filter((line) => line.menuItemId)
+    .map((line) => line.menuItemId);
+  const posIds = lines
+    .filter((line) => line.posItemId)
+    .map((line) => line.posItemId);
   const [menuRecipes, posRecipes] = await Promise.all([
-    MenuItemRecipe.find({ menuItemId: { $in: menuIds }, isActive: true }).lean(),
+    MenuItemRecipe.find({
+      menuItemId: { $in: menuIds },
+      isActive: true,
+    }).lean(),
     POSItemRecipe.find({ posItemId: { $in: posIds }, isActive: true }).lean(),
   ]);
-  const menuRecipeMap = new Map(menuRecipes.map((recipe) => [String(recipe.menuItemId), recipe]));
-  const posRecipeMap = new Map(posRecipes.map((recipe) => [String(recipe.posItemId), recipe]));
+  const menuRecipeMap = new Map(
+    menuRecipes.map((recipe) => [String(recipe.menuItemId), recipe]),
+  );
+  const posRecipeMap = new Map(
+    posRecipes.map((recipe) => [String(recipe.posItemId), recipe]),
+  );
   const requirements = new Map<string, number>();
   for (const line of lines) {
-    const recipe = line.sourceType === "menu" ? menuRecipeMap.get(String(line.menuItemId)) : posRecipeMap.get(String(line.posItemId));
+    const recipe =
+      line.sourceType === "menu"
+        ? menuRecipeMap.get(String(line.menuItemId))
+        : posRecipeMap.get(String(line.posItemId));
     if (!recipe) continue;
     for (const ingredient of recipe.ingredients) {
-      const quantity = Number(ingredient.quantity) * line.quantity / Number(recipe.yieldQuantity || 1);
+      const quantity =
+        (Number(ingredient.quantity) * line.quantity) /
+        Number(recipe.yieldQuantity || 1);
       const key = String(ingredient.inventoryItemId);
       requirements.set(key, (requirements.get(key) ?? 0) + quantity);
     }
@@ -818,7 +1187,11 @@ async function inventoryRequirements(lines: ResolvedPosLine[]) {
   return requirements;
 }
 
-async function deductInventory(lines: ResolvedPosLine[], orderId: Types.ObjectId, actorId: string) {
+async function deductInventory(
+  lines: ResolvedPosLine[],
+  orderId: Types.ObjectId,
+  actorId: string,
+) {
   const requirements = await inventoryRequirements(lines);
   for (const [inventoryItemId, quantity] of requirements) {
     const stockItem = await InventoryItem.findOneAndUpdate(
@@ -826,7 +1199,11 @@ async function deductInventory(lines: ResolvedPosLine[], orderId: Types.ObjectId
       { $inc: { currentStock: -quantity } },
       { returnDocument: "before" },
     );
-    if (!stockItem) throw new AppError("Inventory changed while the sale was being completed. Please retry.", 409);
+    if (!stockItem)
+      throw new AppError(
+        "Inventory changed while the sale was being completed. Please retry.",
+        409,
+      );
     await InventoryMovement.create({
       inventoryItemId: stockItem._id,
       type: "sale",
@@ -860,7 +1237,9 @@ async function createKitchenOutput(
     customerName: order.customerSnapshot?.name ?? "Walk-in Customer",
     customerPhone: order.customerSnapshot?.phone ?? "",
     customerEmail: order.customerSnapshot?.email ?? "",
-    orderTakerName: (order as KitchenOrderRecord & { orderTakerName?: string }).orderTakerName ?? "",
+    orderTakerName:
+      (order as KitchenOrderRecord & { orderTakerName?: string })
+        .orderTakerName ?? "",
     items: lines.map((line) => {
       const orderItem = order.items.find((item) =>
         line.sourceType === "menu"
@@ -937,11 +1316,12 @@ export async function markInvoicePrinted(invoiceId: string, actorId: string) {
       }));
 
     if (paymentBreakdown.length > 0) {
-      invoice = await Invoice.findByIdAndUpdate(
-        invoiceId,
-        { $set: { paymentBreakdown } },
-        { returnDocument: "after" },
-      ) ?? invoice;
+      invoice =
+        (await Invoice.findByIdAndUpdate(
+          invoiceId,
+          { $set: { paymentBreakdown } },
+          { returnDocument: "after" },
+        )) ?? invoice;
     }
   }
 

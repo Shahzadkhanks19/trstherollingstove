@@ -73,9 +73,7 @@ export async function calculateTodayExpectedCash(
   );
 }
 
-export async function calculateExpectedCash(
-  shiftId: string | Types.ObjectId,
-) {
+export async function calculateExpectedCash(shiftId: string | Types.ObjectId) {
   const shift = await POSShift.findById(shiftId).lean();
 
   if (!shift) {
@@ -112,9 +110,7 @@ export async function calculateExpectedCash(
   );
 }
 
-export async function getOpenShiftForRegister(
-  registerId: string,
-) {
+export async function getOpenShiftForRegister(registerId: string) {
   return POSShift.findOne({
     registerId,
     status: "open",
@@ -124,19 +120,14 @@ export async function getOpenShiftForRegister(
     .lean();
 }
 
-export async function assertActiveRegister(
-  registerId: string,
-) {
+export async function assertActiveRegister(registerId: string) {
   const register = await POSRegister.findOne({
     _id: registerId,
     isActive: true,
   });
 
   if (!register) {
-    throw new AppError(
-      "Active POS register not found.",
-      404,
-    );
+    throw new AppError("Active POS register not found.", 404);
   }
 
   return register;

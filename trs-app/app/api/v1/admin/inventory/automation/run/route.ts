@@ -24,11 +24,7 @@ export async function POST(request: Request) {
       maxAttempts: input.maxAttempts,
     });
 
-    return successResponse(
-      job,
-      "Inventory automation job completed.",
-      201,
-    );
+    return successResponse(job, "Inventory automation job completed.", 201);
   } catch (error) {
     return handleApiError(error);
   }

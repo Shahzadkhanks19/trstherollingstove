@@ -2,8 +2,7 @@ export function combineReservationDateTime(
   reservationDate: Date,
   startTime: string,
 ) {
-  const [hoursText, minutesText] =
-    startTime.split(":");
+  const [hoursText, minutesText] = startTime.split(":");
 
   const hours = Number(hoursText);
   const minutes = Number(minutesText);
@@ -20,13 +19,8 @@ export function combineReservationDateTime(
   return result;
 }
 
-export function retryDelayMs(
-  attempt: number,
-) {
-  const baseMinutes = Math.min(
-    60,
-    2 ** Math.max(0, attempt - 1),
-  );
+export function retryDelayMs(attempt: number) {
+  const baseMinutes = Math.min(60, 2 ** Math.max(0, attempt - 1));
 
   return baseMinutes * 60 * 1000;
 }

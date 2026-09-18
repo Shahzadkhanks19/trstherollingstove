@@ -23,20 +23,14 @@ export async function GET() {
           },
           totalStockValue: {
             $sum: {
-              $multiply: [
-                "$currentStock",
-                "$averageUnitCost",
-              ],
+              $multiply: ["$currentStock", "$averageUnitCost"],
             },
           },
           lowStockItems: {
             $sum: {
               $cond: [
                 {
-                  $lte: [
-                    "$currentStock",
-                    "$reorderLevel",
-                  ],
+                  $lte: ["$currentStock", "$reorderLevel"],
                 },
                 1,
                 0,

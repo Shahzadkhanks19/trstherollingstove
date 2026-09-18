@@ -2,9 +2,7 @@ import { AppError } from "@/lib/errors/AppError";
 import { createInvoicePublicId } from "@/lib/invoices/verification";
 import { Invoice } from "@/models/Invoice";
 
-export async function ensureInvoiceVerificationIdentity(
-  invoiceId: string,
-) {
+export async function ensureInvoiceVerificationIdentity(invoiceId: string) {
   const invoice = await Invoice.findById(invoiceId);
 
   if (!invoice) {
@@ -12,8 +10,7 @@ export async function ensureInvoiceVerificationIdentity(
   }
 
   if (!invoice.verificationPublicId) {
-    invoice.verificationPublicId =
-      createInvoicePublicId();
+    invoice.verificationPublicId = createInvoicePublicId();
     invoice.verificationEnabled = true;
     invoice.verificationVersion = 1;
     await invoice.save();

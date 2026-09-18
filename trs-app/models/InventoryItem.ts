@@ -32,16 +32,7 @@ const InventoryItemSchema = new Schema(
     },
     unit: {
       type: String,
-      enum: [
-        "kg",
-        "g",
-        "l",
-        "ml",
-        "piece",
-        "packet",
-        "box",
-        "bottle",
-      ],
+      enum: ["kg", "g", "l", "ml", "piece", "packet", "box", "bottle"],
       required: true,
     },
     currentStock: {
@@ -111,12 +102,8 @@ InventoryItemSchema.index({
   name: 1,
 });
 
-export type InventoryItemDocument =
-  InferSchemaType<typeof InventoryItemSchema>;
+export type InventoryItemDocument = InferSchemaType<typeof InventoryItemSchema>;
 
 export const InventoryItem: Model<InventoryItemDocument> =
   (models.InventoryItem as Model<InventoryItemDocument>) ||
-  model<InventoryItemDocument>(
-    "InventoryItem",
-    InventoryItemSchema,
-  );
+  model<InventoryItemDocument>("InventoryItem", InventoryItemSchema);

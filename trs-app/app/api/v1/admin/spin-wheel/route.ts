@@ -16,7 +16,13 @@ import {
   spinWheelDeletionSchema,
 } from "@/validators/growth";
 
-async function validateCouponPrizes(prizes: Array<{ type: "coins" | "coupon" | "try_again"; couponCode: string; isActive: boolean }>) {
+async function validateCouponPrizes(
+  prizes: Array<{
+    type: "coins" | "coupon" | "try_again";
+    couponCode: string;
+    isActive: boolean;
+  }>,
+) {
   const couponCodes = [
     ...new Set(
       prizes
@@ -47,7 +53,9 @@ export async function GET() {
   try {
     await requirePermission("settings.manage");
     await connectToDatabase();
-    const campaigns = await SpinWheelCampaign.find({ deletedAt: null }).sort({ createdAt: -1 }).lean();
+    const campaigns = await SpinWheelCampaign.find({ deletedAt: null })
+      .sort({ createdAt: -1 })
+      .lean();
     return successResponse(campaigns, "Spin wheel campaigns loaded.");
   } catch (error) {
     return handleApiError(error);
@@ -62,7 +70,11 @@ export async function POST(request: Request) {
 
     await validateCouponPrizes(input.prizes);
 
-    if (input.isActive) await SpinWheelCampaign.updateMany({ deletedAt: null }, { $set: { isActive: false } });
+    if (input.isActive)
+      await SpinWheelCampaign.updateMany(
+        { deletedAt: null },
+        { $set: { isActive: false } },
+      );
     const campaign = await SpinWheelCampaign.create({
       ...input,
       startsAt: new Date(input.startsAt),
@@ -71,18 +83,26 @@ export async function POST(request: Request) {
       updatedBy: new Types.ObjectId(actor.id),
     });
 
-    await writeAuditLog({ actorUserId: actor.id, action: "spin_campaign.created", entityType: "spin_campaign", entityId: campaign.id, description: `Spin campaign ${campaign.name} created.` });
+    await writeAuditLog({
+      actorUserId: actor.id,
+      action: "spin_campaign.created",
+      entityType: "spin_campaign",
+      entityId: campaign.id,
+      description: `Spin campaign ${campaign.name} created.`,
+    });
     return successResponse(campaign, "Spin wheel campaign created.", 201);
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-
 export async function PUT(request: Request) {
   try {
     const actor = await requirePermission("settings.manage");
-    const input = await validateRequestBody(request, spinWheelCampaignUpdateSchema);
+    const input = await validateRequestBody(
+      request,
+      spinWheelCampaignUpdateSchema,
+    );
     await connectToDatabase();
     await validateCouponPrizes(input.prizes);
 
@@ -131,25 +151,40 @@ export async function PATCH(request: Request) {
     const input = await validateRequestBody(request, spinWheelActivationSchema);
     await connectToDatabase();
 
-    const campaign = await SpinWheelCampaign.findOne({ _id: input.id, deletedAt: null });
+    const campaign = await SpinWheelCampaign.findOne({
+      _id: input.id,
+      deletedAt: null,
+    });
     if (!campaign) throw new AppError("Spin wheel campaign not found.", 404);
     const now = new Date();
     if (input.isActive && campaign.expiresAt < now) {
-      throw new AppError("This campaign has expired. Edit its schedule before activating it again.", 409);
+      throw new AppError(
+        "This campaign has expired. Edit its schedule before activating it again.",
+        409,
+      );
     }
 
-    if (input.isActive) await SpinWheelCampaign.updateMany({ _id: { $ne: campaign._id }, deletedAt: null }, { $set: { isActive: false } });
+    if (input.isActive)
+      await SpinWheelCampaign.updateMany(
+        { _id: { $ne: campaign._id }, deletedAt: null },
+        { $set: { isActive: false } },
+      );
     campaign.isActive = input.isActive;
     campaign.updatedBy = new Types.ObjectId(actor.id);
     await campaign.save();
 
-    await writeAuditLog({ actorUserId: actor.id, action: "spin_campaign.updated", entityType: "spin_campaign", entityId: campaign.id, description: `Spin campaign ${campaign.name} ${input.isActive ? "activated" : "deactivated"}.` });
+    await writeAuditLog({
+      actorUserId: actor.id,
+      action: "spin_campaign.updated",
+      entityType: "spin_campaign",
+      entityId: campaign.id,
+      description: `Spin campaign ${campaign.name} ${input.isActive ? "activated" : "deactivated"}.`,
+    });
     return successResponse(campaign, "Spin wheel campaign updated.");
   } catch (error) {
     return handleApiError(error);
   }
 }
-
 
 export async function DELETE(request: Request) {
   try {

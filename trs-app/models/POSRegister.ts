@@ -51,8 +51,7 @@ const POSRegisterSchema = new Schema(
   },
 );
 
-export type POSRegisterDocument =
-  InferSchemaType<typeof POSRegisterSchema>;
+export type POSRegisterDocument = InferSchemaType<typeof POSRegisterSchema>;
 
 export const POSRegister: Model<POSRegisterDocument> =
   (models.POSRegister as Model<POSRegisterDocument>) ||

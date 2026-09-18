@@ -1,17 +1,11 @@
-import type {
-  SettingPayload,
-  SettingSection,
-} from "@/types/settings";
+import type { SettingPayload, SettingSection } from "@/types/settings";
 
 export type DefaultSetting = {
   data: SettingPayload;
   publicData: SettingPayload;
 };
 
-export const DEFAULT_SETTINGS: Record<
-  SettingSection,
-  DefaultSetting
-> = {
+export const DEFAULT_SETTINGS: Record<SettingSection, DefaultSetting> = {
   business: {
     data: {
       legalName: "The Rolling Stove",
@@ -201,8 +195,7 @@ export const DEFAULT_SETTINGS: Record<
   seo: {
     data: {
       siteName: "The Rolling Stove",
-      defaultTitle:
-        "The Rolling Stove | Vegetarian Food in Jodhpur",
+      defaultTitle: "The Rolling Stove | Vegetarian Food in Jodhpur",
       defaultDescription: "",
       defaultKeywords: [],
       canonicalBaseUrl: "",
@@ -214,8 +207,7 @@ export const DEFAULT_SETTINGS: Record<
     },
     publicData: {
       siteName: "The Rolling Stove",
-      defaultTitle:
-        "The Rolling Stove | Vegetarian Food in Jodhpur",
+      defaultTitle: "The Rolling Stove | Vegetarian Food in Jodhpur",
       defaultDescription: "",
       defaultKeywords: [],
       canonicalBaseUrl: "",

@@ -12,7 +12,10 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const query = url.searchParams.get("q")?.trim() ?? "";
     const paymentMethod = url.searchParams.get("paymentMethod")?.trim() ?? "";
-    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? 50)));
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(url.searchParams.get("limit") ?? 50)),
+    );
     const filter: Record<string, unknown> = {};
     if (query) {
       filter.$or = [
@@ -22,22 +25,31 @@ export async function GET(request: Request) {
         { "customerSnapshot.phone": { $regex: query, $options: "i" } },
       ];
     }
-    if (["cash", "upi"].includes(paymentMethod)) filter.paymentMethod = paymentMethod;
+    if (["cash", "upi"].includes(paymentMethod))
+      filter.paymentMethod = paymentMethod;
     const invoices = await Invoice.find(filter)
       .sort({ issuedAt: -1 })
       .limit(limit)
-      .select("invoiceNumber orderId orderNumber issuedAt customerSnapshot paymentMethod grandTotal printCount lastPrintedAt")
+      .select(
+        "invoiceNumber orderId orderNumber issuedAt customerSnapshot paymentMethod grandTotal printCount lastPrintedAt",
+      )
       .lean();
-    const orders = await Order.find({ _id: { $in: invoices.map((invoice) => invoice.orderId) } })
+    const orders = await Order.find({
+      _id: { $in: invoices.map((invoice) => invoice.orderId) },
+    })
       .select("status paymentStatus")
       .lean();
     const orderMap = new Map(orders.map((order) => [String(order._id), order]));
-    return successResponse(invoices.map((invoice) => ({
-      ...invoice,
-      orderId: String(invoice.orderId),
-      orderStatus: orderMap.get(String(invoice.orderId))?.status ?? "completed",
-      paymentStatus: orderMap.get(String(invoice.orderId))?.paymentStatus ?? "paid",
-    })));
+    return successResponse(
+      invoices.map((invoice) => ({
+        ...invoice,
+        orderId: String(invoice.orderId),
+        orderStatus:
+          orderMap.get(String(invoice.orderId))?.status ?? "completed",
+        paymentStatus:
+          orderMap.get(String(invoice.orderId))?.paymentStatus ?? "paid",
+      })),
+    );
   } catch (error) {
     return handleApiError(error);
   }

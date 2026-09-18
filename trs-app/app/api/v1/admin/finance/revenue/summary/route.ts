@@ -8,8 +8,13 @@ export async function GET(request: Request) {
   try {
     await requirePermission("reports.read");
     const url = new URL(request.url);
-    const { days } = revenueRangeSchema.parse({ days: url.searchParams.get("days") ?? 30 });
-    return successResponse(await getRevenueSummary(days), "Revenue summary loaded.");
+    const { days } = revenueRangeSchema.parse({
+      days: url.searchParams.get("days") ?? 30,
+    });
+    return successResponse(
+      await getRevenueSummary(days),
+      "Revenue summary loaded.",
+    );
   } catch (error) {
     return handleApiError(error);
   }

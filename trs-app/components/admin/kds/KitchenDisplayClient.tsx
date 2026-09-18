@@ -1,13 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -39,15 +33,12 @@ import {
 } from "@/lib/realtime/client";
 
 type TicketStatus =
-  | "queued"
-  | "accepted"
-  | "preparing"
-  | "ready"
-  | "served"
-  | "cancelled";
+  "queued" | "accepted" | "preparing" | "ready" | "served" | "cancelled";
 type TicketPriority = "normal" | "high" | "urgent";
-type FilterKey = "all" | "new" | "preparing" | "ready" | "completed" | "priority";
-type RealtimeStatus = "connecting" | "connected" | "reconnecting" | "offline" | "unavailable";
+type FilterKey =
+  "all" | "new" | "preparing" | "ready" | "completed" | "priority";
+type RealtimeStatus =
+  "connecting" | "connected" | "reconnecting" | "offline" | "unavailable";
 
 type KitchenTicketItem = {
   _id: string;
@@ -205,20 +196,11 @@ function scheduleNotificationBeep(
   const gain = context.createGain();
 
   oscillator.type = "sine";
-  oscillator.frequency.setValueAtTime(
-    frequency,
-    startAt,
-  );
+  oscillator.frequency.setValueAtTime(frequency, startAt);
 
   gain.gain.setValueAtTime(0.0001, startAt);
-  gain.gain.exponentialRampToValueAtTime(
-    0.28,
-    startAt + 0.015,
-  );
-  gain.gain.exponentialRampToValueAtTime(
-    0.0001,
-    startAt + 0.24,
-  );
+  gain.gain.exponentialRampToValueAtTime(0.28, startAt + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.24);
 
   oscillator.connect(gain);
   gain.connect(context.destination);
@@ -265,8 +247,8 @@ function TicketCard({
     const modifierNotes = item.modifiers
       .map((modifier) => `${modifier.name} ${modifier.value}`)
       .filter((value) => SPECIAL_NOTE_PATTERN.test(value));
-    return [item.notes, ...modifierNotes].filter(
-      (note): note is string => Boolean(note && SPECIAL_NOTE_PATTERN.test(note)),
+    return [item.notes, ...modifierNotes].filter((note): note is string =>
+      Boolean(note && SPECIAL_NOTE_PATTERN.test(note)),
     );
   });
 
@@ -306,8 +288,15 @@ function TicketCard({
             <h2 className="mt-1 truncate text-3xl font-black tracking-tight">
               #{ticket.orderNumber}
             </h2>
-            <p className="mt-1 truncate text-sm font-bold text-white/75">{ticket.customerName || "Walk-in customer"}</p>
-            <p className="mt-1 text-[11px] font-semibold text-white/60">{ticket.customerPhone || "No phone"}{ticket.orderTakerName ? ` · Taken by ${ticket.orderTakerName}` : ""}</p>
+            <p className="mt-1 truncate text-sm font-bold text-white/75">
+              {ticket.customerName || "Walk-in customer"}
+            </p>
+            <p className="mt-1 text-[11px] font-semibold text-white/60">
+              {ticket.customerPhone || "No phone"}
+              {ticket.orderTakerName
+                ? ` · Taken by ${ticket.orderTakerName}`
+                : ""}
+            </p>
           </div>
           <div
             className={`shrink-0 rounded-2xl border px-3 py-2 text-center ${getTimerTone(ticket, now)}`}
@@ -323,7 +312,9 @@ function TicketCard({
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-wider">
           <span className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2">
             <FontAwesomeIcon
-              icon={ticket.fulfilmentType === "dine_in" ? faChair : faMotorcycle}
+              icon={
+                ticket.fulfilmentType === "dine_in" ? faChair : faMotorcycle
+              }
             />
             {ticket.fulfilmentType === "dine_in" ? "Dine In" : "Pickup"}
             {ticket.tableLabel ? ` · ${ticket.tableLabel}` : ""}
@@ -355,13 +346,22 @@ function TicketCard({
 
         <div className="space-y-4">
           {ticket.items.map((item) => (
-            <div key={item._id} className="border-b border-[#eee4dc] pb-4 last:border-0 last:pb-0">
+            <div
+              key={item._id}
+              className="border-b border-[#eee4dc] pb-4 last:border-0 last:pb-0"
+            >
               <p className="text-xl font-black leading-tight text-[#172b3a]">
-                <span className="text-[#C8102E]">{item.quantity} ×</span> {item.name}
+                <span className="text-[#C8102E]">{item.quantity} ×</span>{" "}
+                {item.name}
               </p>
               {item.variantName && (
                 <p className="mt-1 inline-flex rounded-lg bg-sky-50 px-2.5 py-1 text-sm font-black text-sky-800">
-                  {/pizza/i.test(item.name) ? "Size" : /chur|naan/i.test(item.name) ? "Plate" : "Variant"}: {item.variantName}
+                  {/pizza/i.test(item.name)
+                    ? "Size"
+                    : /chur|naan/i.test(item.name)
+                      ? "Plate"
+                      : "Variant"}
+                  : {item.variantName}
                 </p>
               )}
               {item.modifiers.length > 0 && (
@@ -436,7 +436,26 @@ function TicketCard({
             <FontAwesomeIcon icon={faHand} className="mr-2" /> Hold
           </button>
         )}
-        {ticket.status === "preparing" && <><button type="button" disabled={acting} onClick={()=>onAddTime(ticket,5)} className="min-h-12 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm font-black text-amber-900">+5 min</button><button type="button" disabled={acting} onClick={()=>onAddTime(ticket,10)} className="min-h-12 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm font-black text-amber-900">+10 min</button></>}
+        {ticket.status === "preparing" && (
+          <>
+            <button
+              type="button"
+              disabled={acting}
+              onClick={() => onAddTime(ticket, 5)}
+              className="min-h-12 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm font-black text-amber-900"
+            >
+              +5 min
+            </button>
+            <button
+              type="button"
+              disabled={acting}
+              onClick={() => onAddTime(ticket, 10)}
+              className="min-h-12 rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 text-sm font-black text-amber-900"
+            >
+              +10 min
+            </button>
+          </>
+        )}
         <button
           type="button"
           onClick={() => onDetails(ticket)}
@@ -465,64 +484,65 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
   const [soundUnlocked, setSoundUnlocked] = useState(false);
   const [soundMessage, setSoundMessage] = useState("");
   const [now, setNow] = useState(() => Date.now());
-  const [detailsTicket, setDetailsTicket] = useState<KitchenTicket | null>(null);
-  const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>("connecting");
+  const [detailsTicket, setDetailsTicket] = useState<KitchenTicket | null>(
+    null,
+  );
+  const [realtimeStatus, setRealtimeStatus] =
+    useState<RealtimeStatus>("connecting");
   const knownTicketIds = useRef<Set<string> | null>(null);
   const soundEnabledRef = useRef(soundEnabled);
 
-  const loadTickets = useCallback(
-    async (background = false) => {
-      if (background) setRefreshing(true);
-      else setLoading(true);
-      setError("");
+  const loadTickets = useCallback(async (background = false) => {
+    if (background) setRefreshing(true);
+    else setLoading(true);
+    setError("");
 
-      try {
-        const response = await fetch("/api/v1/kds/tickets", {
-          cache: "no-store",
-        });
-        const payload = (await response.json()) as ApiResponse<KitchenTicket[]>;
-        if (!response.ok || !payload.success) {
-          throw new Error(payload.message || "Unable to load kitchen tickets.");
-        }
-
-        const nextIds = new Set(payload.data.map((ticket) => ticket._id));
-        if (knownTicketIds.current && soundEnabledRef.current) {
-          const hasNewTicket = payload.data.some(
-            (ticket) =>
-              !knownTicketIds.current?.has(ticket._id) &&
-              isNewStatus(ticket.status),
-          );
-          if (hasNewTicket) {
-            void playNotificationTone().then((played) => {
-              if (!played) {
-                setSoundUnlocked(false);
-                setSoundMessage(
-                  "Browser audio is blocked. Click Enable Sound once.",
-                );
-              }
-            });
-          }
-        }
-        knownTicketIds.current = nextIds;
-        setTickets(payload.data);
-      } catch (requestError) {
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Unable to load kitchen tickets.",
-        );
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+    try {
+      const response = await fetch("/api/v1/kds/tickets", {
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as ApiResponse<KitchenTicket[]>;
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || "Unable to load kitchen tickets.");
       }
-    },
-    [],
-  );
+
+      const nextIds = new Set(payload.data.map((ticket) => ticket._id));
+      if (knownTicketIds.current && soundEnabledRef.current) {
+        const hasNewTicket = payload.data.some(
+          (ticket) =>
+            !knownTicketIds.current?.has(ticket._id) &&
+            isNewStatus(ticket.status),
+        );
+        if (hasNewTicket) {
+          void playNotificationTone().then((played) => {
+            if (!played) {
+              setSoundUnlocked(false);
+              setSoundMessage(
+                "Browser audio is blocked. Click Enable Sound once.",
+              );
+            }
+          });
+        }
+      }
+      knownTicketIds.current = nextIds;
+      setTickets(payload.data);
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to load kitchen tickets.",
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const storedPreference =
-        window.localStorage.getItem("trs-kds-sound-enabled");
+      const storedPreference = window.localStorage.getItem(
+        "trs-kds-sound-enabled",
+      );
 
       if (storedPreference === "false") {
         setSoundEnabled(false);
@@ -538,10 +558,7 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
 
   useEffect(() => {
     soundEnabledRef.current = soundEnabled;
-    window.localStorage.setItem(
-      "trs-kds-sound-enabled",
-      String(soundEnabled),
-    );
+    window.localStorage.setItem("trs-kds-sound-enabled", String(soundEnabled));
   }, [soundEnabled]);
 
   async function enableSound() {
@@ -561,9 +578,7 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
       setSoundEnabled(true);
       setSoundUnlocked(true);
       await playNotificationTone();
-      setSoundMessage(
-        "Kitchen notification sound is enabled.",
-      );
+      setSoundMessage("Kitchen notification sound is enabled.");
     } catch {
       setSoundUnlocked(false);
       setSoundMessage(
@@ -669,7 +684,8 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
       setNow(Date.now());
     }
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   async function updateStatus(ticket: KitchenTicket, status: TicketStatus) {
@@ -713,12 +729,17 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
 
   const counts = useMemo(
     () => ({
-      all: tickets.filter((ticket) => !["ready", "served", "cancelled"].includes(ticket.status)).length,
+      all: tickets.filter(
+        (ticket) => !["ready", "served", "cancelled"].includes(ticket.status),
+      ).length,
       new: tickets.filter((ticket) => isNewStatus(ticket.status)).length,
-      preparing: tickets.filter((ticket) => ticket.status === "preparing").length,
+      preparing: tickets.filter((ticket) => ticket.status === "preparing")
+        .length,
       ready: tickets.filter((ticket) => ticket.status === "ready").length,
       completed: tickets.filter((ticket) => ticket.status === "served").length,
-      priority: tickets.filter((ticket) => ticket.priority !== "normal" && ticket.status !== "served").length,
+      priority: tickets.filter(
+        (ticket) => ticket.priority !== "normal" && ticket.status !== "served",
+      ).length,
     }),
     [tickets],
   );
@@ -726,12 +747,38 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
   async function addPreparationTime(ticket: KitchenTicket, minutes: number) {
     setActingTicketId(ticket._id);
     try {
-      const base = ticket.estimatedReadyAt && new Date(ticket.estimatedReadyAt).getTime() > Date.now() ? new Date(ticket.estimatedReadyAt).getTime() : Date.now();
-      const response = await fetch(`/api/v1/admin/orders/${ticket.orderId}/status`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: "preparing", note: `Preparation time extended by ${minutes} minutes.`, estimatedReadyAt: new Date(base + minutes * 60000).toISOString() }) });
-      const payload = await response.json() as ApiResponse<unknown>;
-      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to update preparation time.");
+      const base =
+        ticket.estimatedReadyAt &&
+        new Date(ticket.estimatedReadyAt).getTime() > Date.now()
+          ? new Date(ticket.estimatedReadyAt).getTime()
+          : Date.now();
+      const response = await fetch(
+        `/api/v1/admin/orders/${ticket.orderId}/status`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            status: "preparing",
+            note: `Preparation time extended by ${minutes} minutes.`,
+            estimatedReadyAt: new Date(base + minutes * 60000).toISOString(),
+          }),
+        },
+      );
+      const payload = (await response.json()) as ApiResponse<unknown>;
+      if (!response.ok || !payload.success)
+        throw new Error(
+          payload.message || "Unable to update preparation time.",
+        );
       await loadTickets(true);
-    } catch (error) { setActionError(error instanceof Error ? error.message : "Unable to update preparation time."); } finally { setActingTicketId(""); }
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Unable to update preparation time.",
+      );
+    } finally {
+      setActingTicketId("");
+    }
   }
 
   const filteredTickets = useMemo(() => {
@@ -811,7 +858,8 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
                   className={`hidden rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider sm:inline ${
                     realtimeStatus === "connected"
                       ? "bg-emerald-500/15 text-emerald-300"
-                      : realtimeStatus === "connecting" || realtimeStatus === "reconnecting"
+                      : realtimeStatus === "connecting" ||
+                          realtimeStatus === "reconnecting"
                         ? "bg-amber-500/15 text-amber-300"
                         : "bg-red-500/15 text-red-300"
                   }`}
@@ -853,15 +901,11 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
             >
               <FontAwesomeIcon
                 icon={
-                  soundEnabled && soundUnlocked
-                    ? faVolumeHigh
-                    : faVolumeXmark
+                  soundEnabled && soundUnlocked ? faVolumeHigh : faVolumeXmark
                 }
                 className="mr-2"
               />
-              {soundEnabled && soundUnlocked
-                ? "Sound On"
-                : "Enable Sound"}
+              {soundEnabled && soundUnlocked ? "Sound On" : "Enable Sound"}
             </button>
             {soundEnabled && soundUnlocked ? (
               <button
@@ -878,7 +922,10 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
               onClick={() => void loadTickets(true)}
               className="min-h-11 rounded-xl border border-white/15 bg-white/5 px-4 text-xs font-black outline-none hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/20 disabled:opacity-60"
             >
-              <FontAwesomeIcon icon={faRotate} className={`mr-2 ${refreshing ? "animate-spin" : ""}`} />
+              <FontAwesomeIcon
+                icon={faRotate}
+                className={`mr-2 ${refreshing ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
             <button
@@ -886,7 +933,14 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
               onClick={() => void toggleFullscreen()}
               className="min-h-11 rounded-xl bg-[#C8102E] px-4 text-xs font-black outline-none hover:bg-[#a50e27] focus-visible:ring-4 focus-visible:ring-red-300/30"
             >
-              <FontAwesomeIcon icon={typeof document !== "undefined" && document.fullscreenElement ? faCompress : faExpand} className="mr-2" />
+              <FontAwesomeIcon
+                icon={
+                  typeof document !== "undefined" && document.fullscreenElement
+                    ? faCompress
+                    : faExpand
+                }
+                className="mr-2"
+              />
               Fullscreen
             </button>
           </div>
@@ -922,7 +976,9 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
                 }`}
               >
                 {item.label}
-                <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] ${filter === item.key ? "bg-[#173044] text-white" : "bg-white/10"}`}>
+                <span
+                  className={`ml-2 rounded-full px-2 py-0.5 text-[11px] ${filter === item.key ? "bg-[#173044] text-white" : "bg-white/10"}`}
+                >
                   {counts[item.key]}
                 </span>
               </button>
@@ -931,8 +987,13 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <label className="relative block min-w-0 sm:w-80">
-              <span className="sr-only">Search by order number or customer name</span>
-              <FontAwesomeIcon icon={faMagnifyingGlass} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/45" />
+              <span className="sr-only">
+                Search by order number or customer name
+              </span>
+              <FontAwesomeIcon
+                icon={faMagnifyingGlass}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/45"
+              />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -945,7 +1006,9 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
               aria-pressed={groupedView}
               onClick={() => setGroupedView((current) => !current)}
               className={`min-h-12 rounded-2xl px-4 text-sm font-black outline-none focus-visible:ring-4 focus-visible:ring-white/20 ${
-                groupedView ? "bg-[#E8A53A] text-[#172b3a]" : "border border-white/15 bg-white/5"
+                groupedView
+                  ? "bg-[#E8A53A] text-[#172b3a]"
+                  : "border border-white/15 bg-white/5"
               }`}
             >
               <FontAwesomeIcon icon={faLayerGroup} className="mr-2" />
@@ -956,7 +1019,10 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
       </section>
 
       {(error || actionError) && (
-        <div role="alert" className="mx-4 mt-4 flex items-center gap-3 rounded-2xl border border-red-400/40 bg-red-500/15 px-4 py-3 text-sm font-bold text-red-100 sm:mx-6">
+        <div
+          role="alert"
+          className="mx-4 mt-4 flex items-center gap-3 rounded-2xl border border-red-400/40 bg-red-500/15 px-4 py-3 text-sm font-bold text-red-100 sm:mx-6"
+        >
           <FontAwesomeIcon icon={faTriangleExclamation} />
           {actionError || error}
         </div>
@@ -966,7 +1032,10 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
         {loading ? (
           <div className="grid min-h-[55vh] place-items-center text-center">
             <div>
-              <FontAwesomeIcon icon={faRotate} className="text-4xl animate-spin text-[#E8A53A]" />
+              <FontAwesomeIcon
+                icon={faRotate}
+                className="text-4xl animate-spin text-[#E8A53A]"
+              />
               <p className="mt-4 text-lg font-black">Loading kitchen queue…</p>
             </div>
           </div>
@@ -981,8 +1050,12 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-4xl font-black text-[#C8102E]">×{item.quantity}</p>
-                      <h2 className="mt-2 text-2xl font-black leading-tight">{item.name}</h2>
+                      <p className="text-4xl font-black text-[#C8102E]">
+                        ×{item.quantity}
+                      </p>
+                      <h2 className="mt-2 text-2xl font-black leading-tight">
+                        {item.name}
+                      </h2>
                     </div>
                     <span className="rounded-xl bg-[#173044] px-3 py-2 text-xs font-black text-white">
                       {item.tickets.length} tickets
@@ -991,19 +1064,24 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
                   {item.modifiers.length > 0 && (
                     <div className="mt-4 rounded-2xl bg-[#f4ede6] p-4">
                       {item.modifiers.map((modifier) => (
-                        <p key={modifier} className="font-bold">+ {modifier}</p>
+                        <p key={modifier} className="font-bold">
+                          + {modifier}
+                        </p>
                       ))}
                     </div>
                   )}
                   {item.notes.length > 0 && (
                     <div className="mt-3 rounded-2xl border-2 border-red-300 bg-red-50 p-4 text-red-800">
                       {[...new Set(item.notes)].map((note) => (
-                        <p key={note} className="font-black">{note}</p>
+                        <p key={note} className="font-black">
+                          {note}
+                        </p>
                       ))}
                     </div>
                   )}
                   <p className="mt-4 text-sm font-black text-[#71645b]">
-                    Orders: {item.tickets.map((ticket) => `#${ticket}`).join(", ")}
+                    Orders:{" "}
+                    {item.tickets.map((ticket) => `#${ticket}`).join(", ")}
                   </p>
                 </motion.article>
               ))}
@@ -1012,7 +1090,10 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
             <EmptyState />
           )
         ) : filteredTickets.length > 0 ? (
-          <motion.div layout className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <motion.div
+            layout
+            className="grid items-start gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+          >
             <AnimatePresence mode="popLayout">
               {filteredTickets.map((ticket) => (
                 <TicketCard
@@ -1020,7 +1101,9 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
                   ticket={ticket}
                   now={now}
                   acting={actingTicketId === ticket._id}
-                  onStatus={(selectedTicket, status) => void updateStatus(selectedTicket, status)}
+                  onStatus={(selectedTicket, status) =>
+                    void updateStatus(selectedTicket, status)
+                  }
                   onDetails={setDetailsTicket}
                   onAddTime={(selectedTicket, minutes) =>
                     void addPreparationTime(selectedTicket, minutes)
@@ -1036,7 +1119,11 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
 
       <CustomActionModal
         open={Boolean(detailsTicket)}
-        title={detailsTicket ? `Order #${detailsTicket.orderNumber}` : "Order details"}
+        title={
+          detailsTicket
+            ? `Order #${detailsTicket.orderNumber}`
+            : "Order details"
+        }
         description={detailsTicket ? buildDetails(detailsTicket) : ""}
         confirmLabel="Close"
         cancelLabel="Back"
@@ -1055,7 +1142,9 @@ function EmptyState() {
           <FontAwesomeIcon icon={faBell} />
         </span>
         <h2 className="mt-5 text-2xl font-black">Kitchen queue is clear</h2>
-        <p className="mt-2 font-bold text-white/50">New tickets will appear automatically.</p>
+        <p className="mt-2 font-bold text-white/50">
+          New tickets will appear automatically.
+        </p>
       </div>
     </div>
   );

@@ -15,13 +15,21 @@ type Hero = {
 
 type ResponseBody = { data?: Hero | null };
 
-export function CmsHeroImage({ pageKey, priority = false }: { pageKey: PageHeroKey; priority?: boolean }) {
+export function CmsHeroImage({
+  pageKey,
+  priority = false,
+}: {
+  pageKey: PageHeroKey;
+  priority?: boolean;
+}) {
   const [hero, setHero] = useState<Hero | null>(null);
   const load = useCallback(async () => {
     try {
-      const response = await fetch(`/api/v1/public/page-heroes/${pageKey}`, { cache: "no-store" });
+      const response = await fetch(`/api/v1/public/page-heroes/${pageKey}`, {
+        cache: "no-store",
+      });
       if (!response.ok) return;
-      const json = await response.json() as ResponseBody;
+      const json = (await response.json()) as ResponseBody;
       setHero(json.data?.desktopImageUrl ? json.data : null);
     } catch {
       setHero(null);
@@ -37,10 +45,34 @@ export function CmsHeroImage({ pageKey, priority = false }: { pageKey: PageHeroK
   const position = `${hero.focalPointX}% ${hero.focalPointY}%`;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-      <Image src={hero.desktopImageUrl} alt="" fill unoptimized priority={priority} sizes="100vw" className="hidden object-cover sm:block" style={{ objectPosition: position }} />
-      <Image src={hero.mobileImageUrl || hero.desktopImageUrl} alt="" fill unoptimized priority={priority} sizes="100vw" className="object-cover sm:hidden" style={{ objectPosition: position }} />
-      <div className="absolute inset-0 bg-[#FFFDF9]" style={{ opacity: hero.overlayOpacity / 100 }} />
+    <div
+      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      aria-hidden="true"
+    >
+      <Image
+        src={hero.desktopImageUrl}
+        alt=""
+        fill
+        unoptimized
+        priority={priority}
+        sizes="100vw"
+        className="hidden object-cover sm:block"
+        style={{ objectPosition: position }}
+      />
+      <Image
+        src={hero.mobileImageUrl || hero.desktopImageUrl}
+        alt=""
+        fill
+        unoptimized
+        priority={priority}
+        sizes="100vw"
+        className="object-cover sm:hidden"
+        style={{ objectPosition: position }}
+      />
+      <div
+        className="absolute inset-0 bg-[#FFFDF9]"
+        style={{ opacity: hero.overlayOpacity / 100 }}
+      />
     </div>
   );
 }

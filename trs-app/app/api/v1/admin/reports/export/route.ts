@@ -18,23 +18,16 @@ export async function GET(request: Request) {
 
     if (!parsed.success) {
       throw new AppError(
-        parsed.error.issues[0]?.message ??
-          "Invalid export query.",
+        parsed.error.issues[0]?.message ?? "Invalid export query.",
         400,
       );
     }
 
     await connectToDatabase();
 
-    const range = resolveReportRange(
-      parsed.data.from,
-      parsed.data.to,
-    );
+    const range = resolveReportRange(parsed.data.from, parsed.data.to);
 
-    const rows = await getExportRows(
-      parsed.data.report,
-      range,
-    );
+    const rows = await getExportRows(parsed.data.report, range);
     const csv = rowsToCsv(rows);
     const filename = [
       "trs",
@@ -46,10 +39,8 @@ export async function GET(request: Request) {
     return new Response(csv, {
       status: 200,
       headers: {
-        "Content-Type":
-          "text/csv; charset=utf-8",
-        "Content-Disposition":
-          `attachment; filename="${filename}.csv"`,
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}.csv"`,
         "Cache-Control": "no-store",
       },
     });

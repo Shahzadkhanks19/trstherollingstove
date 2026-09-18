@@ -11,13 +11,19 @@ import { applyCouponSchema } from "@/validators/rewards";
 export async function POST(request: Request) {
   try {
     const actor = await requireAuthenticatedUser();
-    if (actor.roleKey !== "customer") throw new AppError("Customer access required.", 403);
+    if (actor.roleKey !== "customer")
+      throw new AppError("Customer access required.", 403);
     const input = await validateRequestBody(request, applyCouponSchema);
     await connectToDatabase();
 
     const cart = await Cart.findOne({ customerId: actor.id }).lean();
-    if (!cart || cart.items.length === 0) throw new AppError("Your cart is empty.", 400);
-    if (cart.items.some((item) => item.isCombo === true || item.isDiscountedItem === true)) {
+    if (!cart || cart.items.length === 0)
+      throw new AppError("Your cart is empty.", 400);
+    if (
+      cart.items.some(
+        (item) => item.isCombo === true || item.isDiscountedItem === true,
+      )
+    ) {
       throw new AppError(
         "Coupons are not available when the cart contains a combo or discounted menu item.",
         400,

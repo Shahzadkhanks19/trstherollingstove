@@ -57,12 +57,7 @@ export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<ApiResponse<T>> {
-  const {
-    body,
-    retryOnUnauthorized = true,
-    headers,
-    ...requestInit
-  } = options;
+  const { body, retryOnUnauthorized = true, headers, ...requestInit } = options;
 
   const response = await authenticatedFetch(
     `${API_BASE_URL}${path}`,

@@ -3,7 +3,11 @@ import { isValidObjectId } from "mongoose";
 import { AppError } from "@/lib/errors/AppError";
 import { Cart } from "@/models/Cart";
 import { Order } from "@/models/Order";
-import { getOrCreateCart, recalculateCart, resolveCartLine } from "@/services/cart.service";
+import {
+  getOrCreateCart,
+  recalculateCart,
+  resolveCartLine,
+} from "@/services/cart.service";
 
 const ACTIVE_STATUSES = ["placed", "accepted", "preparing", "ready"] as const;
 
@@ -48,19 +52,25 @@ export async function reorderCustomerOrder(input: {
       });
 
       const modifierKey = line.modifiers
-        .map((entry) => `${entry.groupId.toString()}:${entry.optionId.toString()}`)
+        .map(
+          (entry) => `${entry.groupId.toString()}:${entry.optionId.toString()}`,
+        )
         .sort()
         .join("|");
 
       const existing = cart.items.find((entry) => {
         const existingModifierKey = entry.modifiers
-          .map((modifier) => `${modifier.groupId.toString()}:${modifier.optionId.toString()}`)
+          .map(
+            (modifier) =>
+              `${modifier.groupId.toString()}:${modifier.optionId.toString()}`,
+          )
           .sort()
           .join("|");
 
         return (
           entry.menuItemId.toString() === line.menuItemId.toString() &&
-          (entry.variantId?.toString() ?? "") === (line.variantId?.toString() ?? "") &&
+          (entry.variantId?.toString() ?? "") ===
+            (line.variantId?.toString() ?? "") &&
           existingModifierKey === modifierKey &&
           entry.specialInstructions === line.specialInstructions
         );
@@ -73,7 +83,8 @@ export async function reorderCustomerOrder(input: {
           continue;
         }
         existing.quantity = nextQuantity;
-        existing.lineTotal = Math.round(existing.lineUnitPrice * nextQuantity * 100) / 100;
+        existing.lineTotal =
+          Math.round(existing.lineUnitPrice * nextQuantity * 100) / 100;
       } else {
         cart.items.push(line);
       }
@@ -85,7 +96,10 @@ export async function reorderCustomerOrder(input: {
   }
 
   if (addedItems === 0) {
-    throw new AppError("The items from this order are no longer available.", 409);
+    throw new AppError(
+      "The items from this order are no longer available.",
+      409,
+    );
   }
 
   cart.orderMode = order.orderMode;

@@ -1,7 +1,4 @@
-import {
-  escapeInvoiceHtml,
-  formatInvoiceMoney,
-} from "@/lib/invoices/format";
+import { escapeInvoiceHtml, formatInvoiceMoney } from "@/lib/invoices/format";
 import { invoiceQrImageUrl } from "@/lib/invoices/verification";
 import {
   TRS_INSTAGRAM_QR_IMAGE_URL,
@@ -31,8 +28,21 @@ type InvoiceView = {
   } | null;
   orderMode: "dine_in" | "takeaway";
   tableNumber?: string;
-  saleType?: "customer" | "staff_meal" | "family_meal" | "complimentary" | "food_wastage" | "kitchen_test";
-  internalConsumption?: { personName?: string; reason?: string; notes?: string; menuValue?: number; approvalStatus?: string; approvalReason?: string } | null;
+  saleType?:
+    | "customer"
+    | "staff_meal"
+    | "family_meal"
+    | "complimentary"
+    | "food_wastage"
+    | "kitchen_test";
+  internalConsumption?: {
+    personName?: string;
+    reason?: string;
+    notes?: string;
+    menuValue?: number;
+    approvalStatus?: string;
+    approvalReason?: string;
+  } | null;
   paymentMethod?: string;
   paymentStatus?: string;
   paymentBreakdown?: Array<{
@@ -71,29 +81,20 @@ type InvoiceView = {
 
 const INVOICE_LOGO_PATH = "/images/trs-logo.png";
 
-function renderItemDetails(
-  item: InvoiceView["items"][number],
-) {
+function renderItemDetails(item: InvoiceView["items"][number]) {
   const details: string[] = [];
 
   if (item.variantName) {
-    details.push(
-      escapeInvoiceHtml(item.variantName),
-    );
+    details.push(escapeInvoiceHtml(item.variantName));
   }
 
   for (const modifier of item.modifiers ?? []) {
-    const label = [
-      modifier.groupName,
-      modifier.optionName,
-    ]
+    const label = [modifier.groupName, modifier.optionName]
       .filter(Boolean)
       .join(": ");
 
     if (label) {
-      details.push(
-        escapeInvoiceHtml(label),
-      );
+      details.push(escapeInvoiceHtml(label));
     }
   }
 
@@ -109,10 +110,7 @@ function renderItemDetails(
   `;
 }
 
-function renderContactLine(
-  label: string,
-  value: string | undefined,
-) {
+function renderContactLine(label: string, value: string | undefined) {
   if (!value) {
     return "";
   }
@@ -124,7 +122,6 @@ function renderContactLine(
     </p>
   `;
 }
-
 
 function formatPaymentMethod(method: string) {
   const labels: Record<string, string> = {
@@ -143,7 +140,9 @@ function getPaymentDisplay(invoice: InvoiceView) {
   );
 
   if (validParts.length > 0) {
-    return [...new Set(validParts.map((part) => formatPaymentMethod(part.method)))].join(" + ");
+    return [
+      ...new Set(validParts.map((part) => formatPaymentMethod(part.method))),
+    ].join(" + ");
   }
 
   if (invoice.paymentMethod === "split") {
@@ -166,11 +165,12 @@ function renderPaymentBreakdown(invoice: InvoiceView, currency: string) {
 
   return validParts
     .map(
-      (part) => `<div class="totals-row"><span>${escapeInvoiceHtml(
-        formatPaymentMethod(part.method),
-      )}</span><strong>${escapeInvoiceHtml(
-        formatInvoiceMoney(part.amount, currency),
-      )}</strong></div>`,
+      (part) =>
+        `<div class="totals-row"><span>${escapeInvoiceHtml(
+          formatPaymentMethod(part.method),
+        )}</span><strong>${escapeInvoiceHtml(
+          formatInvoiceMoney(part.amount, currency),
+        )}</strong></div>`,
     )
     .join("");
 }
@@ -184,10 +184,8 @@ export function renderInvoiceHtml(
   options: InvoiceRenderOptions = {},
 ) {
   const currency = invoice.currency ?? "INR";
-  const businessSnapshot =
-    invoice.businessSnapshot ?? {};
-  const customerSnapshot =
-    invoice.customerSnapshot ?? {};
+  const businessSnapshot = invoice.businessSnapshot ?? {};
+  const customerSnapshot = invoice.customerSnapshot ?? {};
 
   const businessName =
     businessSnapshot.tradeName ||
@@ -197,13 +195,9 @@ export function renderInvoiceHtml(
     businessSnapshot.phone?.trim() ||
     `+91 ${TRS_CONTACT_NUMBER.slice(0, 5)} ${TRS_CONTACT_NUMBER.slice(5)}`;
 
-  const customerName =
-    customerSnapshot.name || "Customer";
+  const customerName = customerSnapshot.name || "Customer";
 
-  const orderMode =
-    invoice.orderMode === "dine_in"
-      ? "Dine-in"
-      : "Takeaway";
+  const orderMode = invoice.orderMode === "dine_in" ? "Dine-in" : "Takeaway";
 
   const itemRows = invoice.items
     .map(
@@ -221,21 +215,11 @@ export function renderInvoiceHtml(
           </td>
 
           <td class="number">
-            ${escapeInvoiceHtml(
-              formatInvoiceMoney(
-                item.unitPrice,
-                currency,
-              ),
-            )}
+            ${escapeInvoiceHtml(formatInvoiceMoney(item.unitPrice, currency))}
           </td>
 
           <td class="number item-total">
-            ${escapeInvoiceHtml(
-              formatInvoiceMoney(
-                item.lineTotal,
-                currency,
-              ),
-            )}
+            ${escapeInvoiceHtml(formatInvoiceMoney(item.lineTotal, currency))}
           </td>
         </tr>
       `,
@@ -1282,18 +1266,14 @@ export function renderInvoiceHtml(
             <div>
               <dt>Invoice</dt>
               <dd>
-                ${escapeInvoiceHtml(
-                  invoice.invoiceNumber,
-                )}
+                ${escapeInvoiceHtml(invoice.invoiceNumber)}
               </dd>
             </div>
 
             <div>
               <dt>Order</dt>
               <dd>
-                ${escapeInvoiceHtml(
-                  invoice.orderNumber,
-                )}
+                ${escapeInvoiceHtml(invoice.orderNumber)}
               </dd>
             </div>
 
@@ -1301,9 +1281,7 @@ export function renderInvoiceHtml(
               <dt>Issued</dt>
               <dd>
                 ${escapeInvoiceHtml(
-                  new Date(
-                    invoice.issuedAt,
-                  ).toLocaleString("en-IN", {
+                  new Date(invoice.issuedAt).toLocaleString("en-IN", {
                     timeZone: "Asia/Kolkata",
                     dateStyle: "medium",
                     timeStyle: "short",
@@ -1319,15 +1297,9 @@ export function renderInvoiceHtml(
         <article class="detail-card">
           <h2>Customer Details</h2>
 
-          ${renderContactLine(
-            "Name",
-            customerName,
-          )}
+          ${renderContactLine("Name", customerName)}
 
-          ${renderContactLine(
-            "Phone",
-            customerSnapshot.phone,
-          )}
+          ${renderContactLine("Phone", customerSnapshot.phone)}
 
           ${renderContactLine(
             "Email",
@@ -1340,22 +1312,20 @@ export function renderInvoiceHtml(
         <article class="detail-card">
           <h2>Order Details</h2>
 
-          ${renderContactLine(
-            "Order type",
-            orderMode,
-          )}
+          ${renderContactLine("Order type", orderMode)}
 
-          ${renderContactLine(
-            "Table",
-            invoice.tableNumber,
-          )}
+          ${renderContactLine("Table", invoice.tableNumber)}
 
-          ${invoice.saleType && invoice.saleType !== "customer" ? `
+          ${
+            invoice.saleType && invoice.saleType !== "customer"
+              ? `
             ${renderContactLine("Classification", invoice.saleType.replaceAll("_", " "))}
             ${renderContactLine("Person / recipient", invoice.internalConsumption?.personName)}
             ${renderContactLine("Internal reason", invoice.internalConsumption?.reason)}
             ${renderContactLine("Approval", invoice.internalConsumption?.approvalStatus)}
-          ` : ""}
+          `
+              : ""
+          }
 
           ${renderContactLine(
             "Payment",
@@ -1368,10 +1338,7 @@ export function renderInvoiceHtml(
             <span>Status</span>
             <strong>
               <span class="status-chip">
-                ${escapeInvoiceHtml(
-                  invoice.paymentStatus ||
-                    "Not specified",
-                )}
+                ${escapeInvoiceHtml(invoice.paymentStatus || "Not specified")}
               </span>
             </strong>
           </p>
@@ -1414,10 +1381,7 @@ export function renderInvoiceHtml(
               <span>Subtotal</span>
               <strong>
                 ${escapeInvoiceHtml(
-                  formatInvoiceMoney(
-                    invoice.subtotal,
-                    currency,
-                  ),
+                  formatInvoiceMoney(invoice.subtotal, currency),
                 )}
               </strong>
             </div>
@@ -1432,10 +1396,7 @@ export function renderInvoiceHtml(
               <span>Discount</span>
               <strong>
                 - ${escapeInvoiceHtml(
-                  formatInvoiceMoney(
-                    invoice.discountTotal,
-                    currency,
-                  ),
+                  formatInvoiceMoney(invoice.discountTotal, currency),
                 )}
               </strong>
             </div>
@@ -1446,10 +1407,7 @@ export function renderInvoiceHtml(
 
             <span>
               ${escapeInvoiceHtml(
-                formatInvoiceMoney(
-                  invoice.grandTotal,
-                  currency,
-                ),
+                formatInvoiceMoney(invoice.grandTotal, currency),
               )}
             </span>
           </div>
@@ -1458,11 +1416,17 @@ export function renderInvoiceHtml(
         </article>
       </section>
 
-      ${options.showVerificationQr === true && invoice.verificationEnabled !== false && invoice.verificationPublicId ? `
+      ${
+        options.showVerificationQr === true &&
+        invoice.verificationEnabled !== false &&
+        invoice.verificationPublicId
+          ? `
       <section class="invoice-verification-card">
         <img src="${escapeInvoiceHtml(invoiceQrImageUrl({ publicId: invoice.verificationPublicId, invoiceNumber: invoice.invoiceNumber }))}" alt="Invoice verification QR code" />
         <div><h2>✓ Secure invoice verification</h2><p>Scan to confirm this invoice, its items, amount, payment status and authenticity on the official TRS website.</p></div>
-      </section>` : ""}
+      </section>`
+          : ""
+      }
 
       <h2 class="invoice-social-title">Connect with The Rolling Stove</h2>
       <section class="invoice-social-grid">

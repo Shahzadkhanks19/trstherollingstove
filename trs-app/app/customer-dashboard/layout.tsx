@@ -10,8 +10,7 @@ export default async function CustomerDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const availability =
-    await getPublicOrderingAvailability();
+  const availability = await getPublicOrderingAvailability();
 
   if (!availability.enabled) {
     redirect("/ordering-coming-soon");

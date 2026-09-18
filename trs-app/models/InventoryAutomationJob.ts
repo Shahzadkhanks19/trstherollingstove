@@ -112,15 +112,14 @@ InventoryAutomationJobSchema.index({
   createdAt: -1,
 });
 
-export type InventoryAutomationJobDocument =
-  InferSchemaType<typeof InventoryAutomationJobSchema>;
+export type InventoryAutomationJobDocument = InferSchemaType<
+  typeof InventoryAutomationJobSchema
+>;
 
-export const InventoryAutomationJob:
-  Model<InventoryAutomationJobDocument> =
-    (models.InventoryAutomationJob as
-      | Model<InventoryAutomationJobDocument>
-      | undefined) ??
-    model<InventoryAutomationJobDocument>(
-      "InventoryAutomationJob",
-      InventoryAutomationJobSchema,
-    );
+export const InventoryAutomationJob: Model<InventoryAutomationJobDocument> =
+  (models.InventoryAutomationJob as
+    Model<InventoryAutomationJobDocument> | undefined) ??
+  model<InventoryAutomationJobDocument>(
+    "InventoryAutomationJob",
+    InventoryAutomationJobSchema,
+  );

@@ -211,8 +211,8 @@ export function SiteFooter() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex w-[min(100%-2rem,1280px)] flex-col gap-3 py-4 text-[9px] text-white/55 md:flex-row md:items-center md:justify-between">
           <span>
-            © {new Date().getFullYear()} The Rolling Stove Pizzeria. All
-            rights reserved.
+            © {new Date().getFullYear()} The Rolling Stove Pizzeria. All rights
+            reserved.
           </span>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -224,10 +224,7 @@ export function SiteFooter() {
               Terms &amp; Conditions
             </Link>
 
-            <Link
-              href="/refund-policy"
-              className="transition hover:text-white"
-            >
+            <Link href="/refund-policy" className="transition hover:text-white">
               Refund Policy
             </Link>
           </div>

@@ -1,10 +1,29 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const CareerOpeningSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 160 },
-    slug: { type: String, required: true, trim: true, lowercase: true, maxlength: 180, unique: true, index: true },
-    employmentType: { type: String, enum: ["Full-time", "Part-time", "Full-time / Part-time", "Internship"], required: true, index: true },
+    slug: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      maxlength: 180,
+      unique: true,
+      index: true,
+    },
+    employmentType: {
+      type: String,
+      enum: ["Full-time", "Part-time", "Full-time / Part-time", "Internship"],
+      required: true,
+      index: true,
+    },
     location: { type: String, required: true, trim: true, maxlength: 180 },
     summary: { type: String, required: true, trim: true, maxlength: 600 },
     responsibilities: { type: [String], default: [] },

@@ -12,9 +12,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const limit = Number(url.searchParams.get("limit") ?? 10);
 
-    return successResponse(
-      await getInventoryDashboardTopItems(limit),
-    );
+    return successResponse(await getInventoryDashboardTopItems(limit));
   } catch (error) {
     return handleApiError(error);
   }

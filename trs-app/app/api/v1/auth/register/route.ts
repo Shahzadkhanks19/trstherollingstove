@@ -14,7 +14,12 @@ export async function POST(request: Request) {
     const { user, verificationEmailSent } = await createCustomer(input);
 
     return successResponse(
-      { id: user.id, name: user.name, email: user.email, verificationEmailSent },
+      {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        verificationEmailSent,
+      },
       verificationEmailSent
         ? "Registration successful. Check your email for the verification link."
         : "Registration successful, but email delivery is not configured yet. Configure SMTP and resend the verification link.",

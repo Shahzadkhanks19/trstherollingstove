@@ -12,7 +12,9 @@ export async function GET() {
       $or: [{ closesAt: null }, { closesAt: { $gt: now } }],
     })
       .sort({ sortOrder: 1, createdAt: -1 })
-      .select("title slug employmentType location summary responsibilities requirements vacancies closesAt")
+      .select(
+        "title slug employmentType location summary responsibilities requirements vacancies closesAt",
+      )
       .lean();
     return successResponse(jobs);
   } catch (error) {

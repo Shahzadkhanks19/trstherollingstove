@@ -118,8 +118,13 @@ function formatMoney(value: number): string {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const menuItems = (await getPublicMenuItems()).filter((item) => item.isAvailable);
-  const categoryMap = new Map<string, { id: string; name: string; slug: string; count: number }>();
+  const menuItems = (await getPublicMenuItems()).filter(
+    (item) => item.isAvailable,
+  );
+  const categoryMap = new Map<
+    string,
+    { id: string; name: string; slug: string; count: number }
+  >();
 
   for (const item of menuItems) {
     const existing = categoryMap.get(item.category.id);
@@ -228,7 +233,9 @@ export default async function HomePage() {
                   />
                 ) : null}
               </div>
-              <h3 className="mt-3 text-[10px] font-black uppercase">{category.name}</h3>
+              <h3 className="mt-3 text-[10px] font-black uppercase">
+                {category.name}
+              </h3>
               <p className="mt-1 text-[8px] font-semibold text-[#756b63]">
                 {category.count} active item{category.count === 1 ? "" : "s"}
               </p>
@@ -264,9 +271,7 @@ export default async function HomePage() {
       <section className="mx-auto w-[min(100%-2rem,1240px)] py-9">
         <div className="flex items-center gap-3">
           <FontAwesomeIcon icon={faStar} className="h-3 text-[#E8A53A]" />
-          <h2 className="text-[21px] font-black uppercase">
-            Our Bestsellers
-          </h2>
+          <h2 className="text-[21px] font-black uppercase">Our Bestsellers</h2>
           <span className="h-px w-12 bg-[#E8A53A]" />
         </div>
         <div className="mt-4">
@@ -369,46 +374,65 @@ export default async function HomePage() {
         {combos.length > 0 ? (
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {combos.slice(0, 4).map((combo) => (
-            <article
-              key={combo.id}
-              className="grid min-h-[185px] grid-cols-[.9fr_1.1fr] overflow-hidden rounded-[18px] border border-[#e7ddd4] bg-white p-3 shadow-[0_8px_20px_rgba(67,45,26,.05)]"
-            >
-              <div className="flex flex-col items-start">
-                <h3 className="text-[10px] font-black uppercase text-[#C8102E]">
-                  {combo.name}
-                </h3>
-                <p className="mt-2 text-[9px] leading-4 text-[#625a53]">
-                  {combo.shortDescription || "Open this combo to view included items and available choices."}
-                </p>
-                <div className="mt-2 flex flex-wrap items-baseline gap-2">
-                  <p className="text-[16px] font-black text-[#C8102E]">{formatMoney(combo.priceFrom)}</p>
-                  {combo.compareAtPriceFrom && combo.compareAtPriceFrom > combo.priceFrom ? <span className="text-[10px] font-bold text-[#8A8179] line-through">{formatMoney(combo.compareAtPriceFrom)}</span> : null}
+              <article
+                key={combo.id}
+                className="grid min-h-[185px] grid-cols-[.9fr_1.1fr] overflow-hidden rounded-[18px] border border-[#e7ddd4] bg-white p-3 shadow-[0_8px_20px_rgba(67,45,26,.05)]"
+              >
+                <div className="flex flex-col items-start">
+                  <h3 className="text-[10px] font-black uppercase text-[#C8102E]">
+                    {combo.name}
+                  </h3>
+                  <p className="mt-2 text-[9px] leading-4 text-[#625a53]">
+                    {combo.shortDescription ||
+                      "Open this combo to view included items and available choices."}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                    <p className="text-[16px] font-black text-[#C8102E]">
+                      {formatMoney(combo.priceFrom)}
+                    </p>
+                    {combo.compareAtPriceFrom &&
+                    combo.compareAtPriceFrom > combo.priceFrom ? (
+                      <span className="text-[10px] font-bold text-[#8A8179] line-through">
+                        {formatMoney(combo.compareAtPriceFrom)}
+                      </span>
+                    ) : null}
+                  </div>
+                  {combo.compareAtPriceFrom &&
+                  combo.compareAtPriceFrom > combo.priceFrom ? (
+                    <span className="mt-2 rounded-full bg-[#173044] px-2 py-1 text-[8px] font-black uppercase text-white">
+                      {Math.round(
+                        ((combo.compareAtPriceFrom - combo.priceFrom) /
+                          combo.compareAtPriceFrom) *
+                          100,
+                      )}
+                      % off
+                    </span>
+                  ) : null}
+                  <Link
+                    href={`/menu/${combo.slug}`}
+                    className="mt-auto rounded-lg border border-[#efc9bf] px-3 py-2 text-[8px] font-black uppercase text-[#C8102E]"
+                  >
+                    Order Now
+                  </Link>
                 </div>
-                {combo.compareAtPriceFrom && combo.compareAtPriceFrom > combo.priceFrom ? <span className="mt-2 rounded-full bg-[#173044] px-2 py-1 text-[8px] font-black uppercase text-white">{Math.round(((combo.compareAtPriceFrom - combo.priceFrom) / combo.compareAtPriceFrom) * 100)}% off</span> : null}
-                <Link
-                  href={`/menu/${combo.slug}`}
-                  className="mt-auto rounded-lg border border-[#efc9bf] px-3 py-2 text-[8px] font-black uppercase text-[#C8102E]"
-                >
-                  Order Now
-                </Link>
-              </div>
-              <div className="relative h-full min-h-[155px] overflow-hidden rounded-xl bg-[#f8f3ed]">
-                {combo.thumbnail?.url ? (
-                  <Image
-                    src={combo.thumbnail.url}
-                    alt={combo.thumbnail.alt || combo.name}
-                    fill
-                    sizes="(max-width: 640px) 50vw, 25vw"
-                    className="object-cover"
-                  />
-                ) : null}
-              </div>
-            </article>
+                <div className="relative h-full min-h-[155px] overflow-hidden rounded-xl bg-[#f8f3ed]">
+                  {combo.thumbnail?.url ? (
+                    <Image
+                      src={combo.thumbnail.url}
+                      alt={combo.thumbnail.alt || combo.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, 25vw"
+                      className="object-cover"
+                    />
+                  ) : null}
+                </div>
+              </article>
             ))}
           </div>
         ) : (
           <div className="mt-4 rounded-[18px] border border-dashed border-[#dfcbb9] bg-white px-6 py-10 text-center text-sm font-semibold text-[#756b63]">
-            No active combo items are available. Add them under a menu category containing “Combo” in the admin dashboard.
+            No active combo items are available. Add them under a menu category
+            containing “Combo” in the admin dashboard.
           </div>
         )}
       </section>

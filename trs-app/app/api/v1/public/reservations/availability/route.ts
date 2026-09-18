@@ -54,10 +54,7 @@ export async function GET(request: Request) {
           bookedGuests + input.guestCount <= MAX_GUESTS_PER_SLOT,
         reservationsCount: overlapping.length,
         bookedGuests,
-        remainingGuestCapacity: Math.max(
-          0,
-          MAX_GUESTS_PER_SLOT - bookedGuests,
-        ),
+        remainingGuestCapacity: Math.max(0, MAX_GUESTS_PER_SLOT - bookedGuests),
       };
     });
 

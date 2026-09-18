@@ -1,1 +1,14 @@
-import {requirePermission} from "@/lib/auth/session";import {connectToDatabase} from "@/lib/db/mongoose";import {handleApiError} from "@/lib/errors/handleApiError";import {successResponse} from "@/lib/http/apiResponse";import {getCrmSummary} from "@/services/crm.service";export async function GET(){try{await requirePermission("users.read");await connectToDatabase();return successResponse(await getCrmSummary(),"CRM summary loaded.");}catch(error){return handleApiError(error);}}
+import { requirePermission } from "@/lib/auth/session";
+import { connectToDatabase } from "@/lib/db/mongoose";
+import { handleApiError } from "@/lib/errors/handleApiError";
+import { successResponse } from "@/lib/http/apiResponse";
+import { getCrmSummary } from "@/services/crm.service";
+export async function GET() {
+  try {
+    await requirePermission("users.read");
+    await connectToDatabase();
+    return successResponse(await getCrmSummary(), "CRM summary loaded.");
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

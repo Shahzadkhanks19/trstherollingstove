@@ -10,15 +10,9 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const page = Math.max(
-      Number(url.searchParams.get("page") ?? 1),
-      1,
-    );
+    const page = Math.max(Number(url.searchParams.get("page") ?? 1), 1);
     const limit = Math.min(
-      Math.max(
-        Number(url.searchParams.get("limit") ?? 25),
-        1,
-      ),
+      Math.max(Number(url.searchParams.get("limit") ?? 25), 1),
       100,
     );
     const status = url.searchParams.get("status");

@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-const objectId = z
-  .string()
-  .regex(/^[a-f\d]{24}$/i, "Invalid ID.");
+const objectId = z.string().regex(/^[a-f\d]{24}$/i, "Invalid ID.");
 
 export const inventoryAlertTypeSchema = z.enum([
   "low_stock",

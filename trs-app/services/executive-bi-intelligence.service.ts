@@ -1,7 +1,16 @@
-import { getBusinessForecast, type BusinessForecastResult } from "@/services/business-forecast.service";
+import {
+  getBusinessForecast,
+  type BusinessForecastResult,
+} from "@/services/business-forecast.service";
 import { getLatestExecutiveBI } from "@/services/executive-bi.service";
-import { getKpiIntelligence, type KpiIntelligenceResult } from "@/services/kpi-intelligence.service";
-import { getProcurementIntelligence, type ProcurementIntelligenceResult } from "@/services/procurement-intelligence.service";
+import {
+  getKpiIntelligence,
+  type KpiIntelligenceResult,
+} from "@/services/kpi-intelligence.service";
+import {
+  getProcurementIntelligence,
+  type ProcurementIntelligenceResult,
+} from "@/services/procurement-intelligence.service";
 
 export type UnifiedExecutiveAlert = {
   source: "kpi" | "procurement" | "forecast";
@@ -54,8 +63,16 @@ export async function getExecutiveBIIntelligence(input: {
   const lookbackDays = input.lookbackDays ?? 30;
   const [executive, kpi, forecast, procurement] = await Promise.all([
     getLatestExecutiveBI(),
-    getKpiIntelligence({ lookbackDays, requestedBy: input.requestedBy, refresh: input.refresh }),
-    getBusinessForecast({ lookbackDays: Math.max(60, lookbackDays), requestedBy: input.requestedBy, refresh: input.refresh }),
+    getKpiIntelligence({
+      lookbackDays,
+      requestedBy: input.requestedBy,
+      refresh: input.refresh,
+    }),
+    getBusinessForecast({
+      lookbackDays: Math.max(60, lookbackDays),
+      requestedBy: input.requestedBy,
+      refresh: input.refresh,
+    }),
     getProcurementIntelligence({
       lookbackDays: Math.max(60, lookbackDays),
       horizonDays: 30,
@@ -67,7 +84,10 @@ export async function getExecutiveBIIntelligence(input: {
 
   const alerts: UnifiedExecutiveAlert[] = [
     ...kpi.alerts.map((alert) => ({ ...alert, source: "kpi" as const })),
-    ...procurement.alerts.map((alert) => ({ ...alert, source: "procurement" as const })),
+    ...procurement.alerts.map((alert) => ({
+      ...alert,
+      source: "procurement" as const,
+    })),
   ];
 
   if (forecast.quality.level === "low") {
@@ -77,14 +97,21 @@ export async function getExecutiveBIIntelligence(input: {
       code: "forecast_data_quality",
       title: "Forecast confidence is limited",
       message: forecast.quality.message,
-      suggestedAction: "Continue recording complete daily sales, inventory movement, wastage and internal-consumption data.",
+      suggestedAction:
+        "Continue recording complete daily sales, inventory movement, wastage and internal-consumption data.",
     });
   }
 
-  alerts.sort((left, right) => severityRank[left.severity] - severityRank[right.severity]);
+  alerts.sort(
+    (left, right) => severityRank[left.severity] - severityRank[right.severity],
+  );
 
   const actualVsForecast = [
-    ...kpi.daily.slice(-14).map((row) => ({ date: row.date, kind: "actual" as const, revenue: row.revenue })),
+    ...kpi.daily.slice(-14).map((row) => ({
+      date: row.date,
+      kind: "actual" as const,
+      revenue: row.revenue,
+    })),
     ...forecast.forecasts.slice(0, 14).map((row) => ({
       date: row.date,
       kind: "forecast" as const,
@@ -109,9 +136,11 @@ export async function getExecutiveBIIntelligence(input: {
       revenueChangePercent: kpi.kpis.revenueChange,
       inventoryHealthScore: procurement.kpis.inventoryHealthScore,
       forecastQualityScore: forecast.quality.score,
-      criticalProcurementItems: procurement.kpis.criticalItems + procurement.kpis.highRiskItems,
+      criticalProcurementItems:
+        procurement.kpis.criticalItems + procurement.kpis.highRiskItems,
       totalAlerts: alerts.length,
-      criticalAlerts: alerts.filter((alert) => alert.severity === "critical").length,
+      criticalAlerts: alerts.filter((alert) => alert.severity === "critical")
+        .length,
     },
   };
 }

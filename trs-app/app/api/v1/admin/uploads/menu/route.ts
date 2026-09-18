@@ -20,7 +20,10 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   try {
     const user = await requireAuthenticatedUser();
-    if (!user.permissions.includes("menu.create") && !user.permissions.includes("menu.update")) {
+    if (
+      !user.permissions.includes("menu.create") &&
+      !user.permissions.includes("menu.update")
+    ) {
       throw new AppError("Permission denied.", 403);
     }
 
@@ -33,18 +36,29 @@ export async function POST(request: Request) {
 
     const extension = ALLOWED_TYPES[file.type];
     if (!extension) {
-      throw new AppError("Only JPG, PNG, WebP and AVIF images are allowed.", 400);
+      throw new AppError(
+        "Only JPG, PNG, WebP and AVIF images are allowed.",
+        400,
+      );
     }
 
     if (file.size === 0 || file.size > MAX_FILE_SIZE) {
       throw new AppError("Image must be smaller than 5 MB.", 400);
     }
 
-    const uploadDirectory = path.join(process.cwd(), "public", "uploads", "menu");
+    const uploadDirectory = path.join(
+      process.cwd(),
+      "public",
+      "uploads",
+      "menu",
+    );
     await mkdir(uploadDirectory, { recursive: true });
 
     const filename = `${Date.now()}-${randomUUID()}.${extension}`;
-    await writeFile(path.join(uploadDirectory, filename), Buffer.from(await file.arrayBuffer()));
+    await writeFile(
+      path.join(uploadDirectory, filename),
+      Buffer.from(await file.arrayBuffer()),
+    );
 
     return successResponse(
       { url: `/uploads/menu/${filename}`, filename },

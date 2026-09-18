@@ -37,8 +37,8 @@ export async function GET() {
       users.map((u) => {
         const p = map.get(String(u._id));
         const role = u.roleId as unknown as {
-  name?: string;
-};
+          name?: string;
+        };
         return [
           p?.employeeCode ?? "",
           u.name,

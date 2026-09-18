@@ -34,7 +34,9 @@ export function DashboardShell({
           ))}
         </nav>
 
-        {footer ? <div className="dashboard-sidebar-footer">{footer}</div> : null}
+        {footer ? (
+          <div className="dashboard-sidebar-footer">{footer}</div>
+        ) : null}
       </aside>
 
       <div className="dashboard-workspace">

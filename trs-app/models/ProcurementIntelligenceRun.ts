@@ -17,7 +17,12 @@ const ProcurementIntelligenceRunSchema = new Schema(
     lookbackDays: { type: Number, min: 14, max: 730, required: true },
     horizonDays: { type: Number, min: 1, max: 180, required: true },
     leadTimeDays: { type: Number, min: 1, max: 90, required: true },
-    requestedBy: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
+    requestedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
     startedAt: { type: Date, required: true, default: Date.now },
     completedAt: { type: Date, default: null },
     durationMs: { type: Number, min: 0, default: 0 },
@@ -38,15 +43,14 @@ ProcurementIntelligenceRunSchema.index({
   createdAt: -1,
 });
 
-export type ProcurementIntelligenceRunDocument =
-  InferSchemaType<typeof ProcurementIntelligenceRunSchema>;
+export type ProcurementIntelligenceRunDocument = InferSchemaType<
+  typeof ProcurementIntelligenceRunSchema
+>;
 
-export const ProcurementIntelligenceRun:
-  Model<ProcurementIntelligenceRunDocument> =
-    (models.ProcurementIntelligenceRun as
-      | Model<ProcurementIntelligenceRunDocument>
-      | undefined) ??
-    model<ProcurementIntelligenceRunDocument>(
-      "ProcurementIntelligenceRun",
-      ProcurementIntelligenceRunSchema,
-    );
+export const ProcurementIntelligenceRun: Model<ProcurementIntelligenceRunDocument> =
+  (models.ProcurementIntelligenceRun as
+    Model<ProcurementIntelligenceRunDocument> | undefined) ??
+  model<ProcurementIntelligenceRunDocument>(
+    "ProcurementIntelligenceRun",
+    ProcurementIntelligenceRunSchema,
+  );

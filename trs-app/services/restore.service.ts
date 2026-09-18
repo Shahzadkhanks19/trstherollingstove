@@ -1,17 +1,8 @@
 import mongoose from "mongoose";
-import type {
-  Collection,
-  Document,
-  Filter,
-} from "mongodb";
+import type { Collection, Document, Filter } from "mongodb";
 
-import {
-  assertSafeCollectionName,
-} from "@/lib/data-transfer/sanitize";
-import type {
-  LogicalBackupFile,
-  RestoreMode,
-} from "@/types/dataTransfer";
+import { assertSafeCollectionName } from "@/lib/data-transfer/sanitize";
+import type { LogicalBackupFile, RestoreMode } from "@/types/dataTransfer";
 
 type RestoreInput = {
   backup: LogicalBackupFile;
@@ -27,93 +18,51 @@ type RestoreCollectionResult = {
   skipped: number;
 };
 
-function getCollection(
-  collectionName: string,
-): Collection<Document> {
-  const database =
-    mongoose.connection.db;
+function getCollection(collectionName: string): Collection<Document> {
+  const database = mongoose.connection.db;
 
   if (!database) {
-    throw new Error(
-      "Database connection is not ready.",
-    );
+    throw new Error("Database connection is not ready.");
   }
 
-  return database.collection(
-    assertSafeCollectionName(
-      collectionName,
-    ),
-  );
+  return database.collection(assertSafeCollectionName(collectionName));
 }
 
-function isPlainRecord(
-  value: unknown,
-): value is Record<string, unknown> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value)
-  );
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export async function restoreLogicalBackup(
-  input: RestoreInput,
-) {
-  const results:
-    RestoreCollectionResult[] = [];
+export async function restoreLogicalBackup(input: RestoreInput) {
+  const results: RestoreCollectionResult[] = [];
 
-  for (
-    const manifestEntry of
-    input.backup.manifest.collections
-  ) {
-    const collectionName =
-      assertSafeCollectionName(
-        manifestEntry.name,
-      );
+  for (const manifestEntry of input.backup.manifest.collections) {
+    const collectionName = assertSafeCollectionName(manifestEntry.name);
 
-    const rawDocuments =
-      input.backup.data[
-        collectionName
-      ] ?? [];
+    const rawDocuments = input.backup.data[collectionName] ?? [];
 
-    const documents =
-      rawDocuments.filter(
-        isPlainRecord,
-      );
+    const documents = rawDocuments.filter(isPlainRecord);
 
-    const result:
-      RestoreCollectionResult = {
-        collection: collectionName,
-        received: documents.length,
-        inserted: 0,
-        upserted: 0,
-        skipped:
-          rawDocuments.length -
-          documents.length,
-      };
+    const result: RestoreCollectionResult = {
+      collection: collectionName,
+      received: documents.length,
+      inserted: 0,
+      upserted: 0,
+      skipped: rawDocuments.length - documents.length,
+    };
 
-    if (
-      input.dryRun ||
-      documents.length === 0
-    ) {
+    if (input.dryRun || documents.length === 0) {
       results.push(result);
       continue;
     }
 
-    const collection =
-      getCollection(collectionName);
+    const collection = getCollection(collectionName);
 
     if (input.mode === "insert") {
-      const insertResult =
-        await collection.insertMany(
-          documents,
-          {
-            ordered: false,
-          },
-        );
+      const insertResult = await collection.insertMany(documents, {
+        ordered: false,
+      });
 
-      result.inserted =
-        insertResult.insertedCount;
+      result.inserted = insertResult.insertedCount;
 
       results.push(result);
       continue;
@@ -122,13 +71,8 @@ export async function restoreLogicalBackup(
     for (const document of documents) {
       const id = document._id;
 
-      if (
-        id === undefined ||
-        id === null
-      ) {
-        await collection.insertOne(
-          document,
-        );
+      if (id === undefined || id === null) {
+        await collection.insertOne(document);
 
         result.inserted += 1;
         continue;
@@ -165,26 +109,10 @@ export async function restoreLogicalBackup(
     mode: input.mode,
     collections: results,
     summary: {
-      received: results.reduce(
-        (sum, entry) =>
-          sum + entry.received,
-        0,
-      ),
-      inserted: results.reduce(
-        (sum, entry) =>
-          sum + entry.inserted,
-        0,
-      ),
-      upserted: results.reduce(
-        (sum, entry) =>
-          sum + entry.upserted,
-        0,
-      ),
-      skipped: results.reduce(
-        (sum, entry) =>
-          sum + entry.skipped,
-        0,
-      ),
+      received: results.reduce((sum, entry) => sum + entry.received, 0),
+      inserted: results.reduce((sum, entry) => sum + entry.inserted, 0),
+      upserted: results.reduce((sum, entry) => sum + entry.upserted, 0),
+      skipped: results.reduce((sum, entry) => sum + entry.skipped, 0),
     },
   };
 }

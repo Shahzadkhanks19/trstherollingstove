@@ -23,14 +23,10 @@ export async function generateMetadata({
 
   return {
     title: `${item.name}`,
-    description:
-      item.shortDescription ||
-      item.description.slice(0, 155),
+    description: item.shortDescription || item.description.slice(0, 155),
     openGraph: {
       title: `${item.name}`,
-      description:
-        item.shortDescription ||
-        item.description.slice(0, 155),
+      description: item.shortDescription || item.description.slice(0, 155),
       images: item.media[0]?.url ? [item.media[0].url] : undefined,
     },
   };

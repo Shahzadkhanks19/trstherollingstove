@@ -12,7 +12,6 @@ declare module "qrcode" {
     };
   };
 
-
   type PngOptions = {
     type?: "png";
     errorCorrectionLevel?: ErrorCorrectionLevel;
@@ -29,8 +28,5 @@ declare module "qrcode" {
     options?: PngOptions,
   ): Promise<Uint8Array>;
 
-  export function toString(
-    text: string,
-    options: SvgOptions,
-  ): Promise<string>;
+  export function toString(text: string, options: SvgOptions): Promise<string>;
 }

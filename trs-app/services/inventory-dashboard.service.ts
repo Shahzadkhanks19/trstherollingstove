@@ -9,120 +9,109 @@ export async function getInventoryDashboardSummary() {
   const now = new Date();
   const expiryBoundary = new Date(now.getTime() + 7 * DAY_MS);
 
-  const [
-    itemSummary,
-    alertSummary,
-    movementSummary,
-    purchaseSummary,
-  ] = await Promise.all([
-    InventoryItem.aggregate([
-      { $match: { isActive: true } },
-      {
-        $group: {
-          _id: null,
-          totalItems: { $sum: 1 },
-          totalStockUnits: { $sum: "$currentStock" },
-          inventoryValue: {
-            $sum: {
-              $multiply: [
-                { $ifNull: ["$currentStock", 0] },
-                {
-                  $ifNull: [
-                    "$averageUnitCost",
-                    0,
-                  ],
-                },
-              ],
+  const [itemSummary, alertSummary, movementSummary, purchaseSummary] =
+    await Promise.all([
+      InventoryItem.aggregate([
+        { $match: { isActive: true } },
+        {
+          $group: {
+            _id: null,
+            totalItems: { $sum: 1 },
+            totalStockUnits: { $sum: "$currentStock" },
+            inventoryValue: {
+              $sum: {
+                $multiply: [
+                  { $ifNull: ["$currentStock", 0] },
+                  {
+                    $ifNull: ["$averageUnitCost", 0],
+                  },
+                ],
+              },
             },
-          },
-          lowStockItems: {
-            $sum: {
-              $cond: [
-                {
-                  $lte: [
-                    "$currentStock",
-                    "$reorderLevel",
-                  ],
-                },
-                1,
-                0,
-              ],
+            lowStockItems: {
+              $sum: {
+                $cond: [
+                  {
+                    $lte: ["$currentStock", "$reorderLevel"],
+                  },
+                  1,
+                  0,
+                ],
+              },
             },
-          },
-          outOfStockItems: {
-            $sum: {
-              $cond: [{ $lte: ["$currentStock", 0] }, 1, 0],
+            outOfStockItems: {
+              $sum: {
+                $cond: [{ $lte: ["$currentStock", 0] }, 1, 0],
+              },
             },
           },
         },
-      },
-    ]),
-    InventoryAlertEvent.aggregate([
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
-    ]),
-    InventoryMovement.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: new Date(now.getTime() - 30 * DAY_MS),
+      ]),
+      InventoryAlertEvent.aggregate([
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
           },
         },
-      },
-      {
-        $group: {
-          _id: "$type",
-          quantity: { $sum: "$quantity" },
-          value: {
-            $sum: {
-              $multiply: [
-                { $ifNull: ["$quantity", 0] },
-                { $ifNull: ["$unitCost", 0] },
-              ],
+      ]),
+      InventoryMovement.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: new Date(now.getTime() - 30 * DAY_MS),
             },
           },
         },
-      },
-    ]),
-    PurchaseOrder.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: new Date(now.getTime() - 30 * DAY_MS),
-          },
-        },
-      },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-          total: {
-            $sum: {
-              $ifNull: ["$grandTotal", "$totalAmount"],
+        {
+          $group: {
+            _id: "$type",
+            quantity: { $sum: "$quantity" },
+            value: {
+              $sum: {
+                $multiply: [
+                  { $ifNull: ["$quantity", 0] },
+                  { $ifNull: ["$unitCost", 0] },
+                ],
+              },
             },
           },
         },
-      },
-    ]),
-  ]);
+      ]),
+      PurchaseOrder.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: new Date(now.getTime() - 30 * DAY_MS),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
+            total: {
+              $sum: {
+                $ifNull: ["$grandTotal", "$totalAmount"],
+              },
+            },
+          },
+        },
+      ]),
+    ]);
 
   const expiredCount = await InventoryMovement.countDocuments({
     expiryDate: { $lt: now },
     type: { $in: ["opening", "purchase", "return_in"] },
   });
 
-  const expiringSoonCount =
-    await InventoryMovement.countDocuments({
-      expiryDate: {
-        $gte: now,
-        $lte: expiryBoundary,
-      },
-      type: { $in: ["opening", "purchase", "return_in"] },
-    });
+  const expiringSoonCount = await InventoryMovement.countDocuments({
+    expiryDate: {
+      $gte: now,
+      $lte: expiryBoundary,
+    },
+    type: { $in: ["opening", "purchase", "return_in"] },
+  });
 
   const base = itemSummary[0] ?? {
     totalItems: 0,
@@ -137,10 +126,7 @@ export async function getInventoryDashboardSummary() {
     expiredCount,
     expiringSoonCount,
     alerts: Object.fromEntries(
-      alertSummary.map((entry) => [
-        String(entry._id),
-        entry.count,
-      ]),
+      alertSummary.map((entry) => [String(entry._id), entry.count]),
     ),
     last30Days: {
       movements: Object.fromEntries(
@@ -168,9 +154,7 @@ export async function getInventoryDashboardSummary() {
 
 export async function getInventoryDashboardTrends(days = 30) {
   const safeDays = Math.max(7, Math.min(days, 365));
-  const from = new Date(
-    Date.now() - (safeDays - 1) * DAY_MS,
-  );
+  const from = new Date(Date.now() - (safeDays - 1) * DAY_MS);
 
   const movements = await InventoryMovement.aggregate([
     {
@@ -205,10 +189,7 @@ export async function getInventoryDashboardTrends(days = 30) {
     },
   ]);
 
-  const rows = new Map<
-    string,
-    Record<string, number | string>
-  >();
+  const rows = new Map<string, Record<string, number | string>>();
 
   for (const entry of movements) {
     const day = String(entry._id.day);
@@ -228,9 +209,7 @@ export async function getInventoryDashboardTrends(days = 30) {
   };
 }
 
-export async function getInventoryDashboardTopItems(
-  limit = 10,
-) {
+export async function getInventoryDashboardTopItems(limit = 10) {
   const safeLimit = Math.max(1, Math.min(limit, 50));
   const from = new Date(Date.now() - 30 * DAY_MS);
 
@@ -289,10 +268,7 @@ export async function getInventoryDashboardTopItems(
             $multiply: [
               { $ifNull: ["$currentStock", 0] },
               {
-                $ifNull: [
-                  "$averageCost",
-                  { $ifNull: ["$costPrice", 0] },
-                ],
+                $ifNull: ["$averageCost", { $ifNull: ["$costPrice", 0] }],
               },
             ],
           },

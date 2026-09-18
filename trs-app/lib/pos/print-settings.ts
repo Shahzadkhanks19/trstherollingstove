@@ -39,7 +39,10 @@ export function readPosPrintSettings(): PosPrintSettings {
       ...DEFAULT_POS_PRINT_SETTINGS,
       ...parsed,
       kotCopies: Math.min(3, Math.max(1, Number(parsed.kotCopies ?? 1))),
-      invoiceCopies: Math.min(3, Math.max(1, Number(parsed.invoiceCopies ?? 1))),
+      invoiceCopies: Math.min(
+        3,
+        Math.max(1, Number(parsed.invoiceCopies ?? 1)),
+      ),
     };
   } catch {
     return DEFAULT_POS_PRINT_SETTINGS;

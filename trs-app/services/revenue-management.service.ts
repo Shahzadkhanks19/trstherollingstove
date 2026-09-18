@@ -3,7 +3,8 @@ import { Order } from "@/models/Order";
 import { Payment } from "@/models/Payment";
 import { RevenueSnapshot } from "@/models/RevenueSnapshot";
 
-const round = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+const round = (value: number) =>
+  Math.round((value + Number.EPSILON) * 100) / 100;
 const dayKey = (value: Date) => value.toISOString().slice(0, 10);
 
 export type RevenueRange = { start: Date; end: Date; days: number };
@@ -18,11 +19,34 @@ export function getRevenueRange(days: number): RevenueRange {
 }
 
 function addBreakdown(
-  map: Map<string, { orders: number; grossRevenue: number; netRevenue: number; tax: number; discounts: number; refunds: number }>,
+  map: Map<
+    string,
+    {
+      orders: number;
+      grossRevenue: number;
+      netRevenue: number;
+      tax: number;
+      discounts: number;
+      refunds: number;
+    }
+  >,
   key: string,
-  values: { grossRevenue: number; netRevenue: number; tax: number; discounts: number; refunds: number },
+  values: {
+    grossRevenue: number;
+    netRevenue: number;
+    tax: number;
+    discounts: number;
+    refunds: number;
+  },
 ) {
-  const row = map.get(key) ?? { orders: 0, grossRevenue: 0, netRevenue: 0, tax: 0, discounts: 0, refunds: 0 };
+  const row = map.get(key) ?? {
+    orders: 0,
+    grossRevenue: 0,
+    netRevenue: 0,
+    tax: 0,
+    discounts: 0,
+    refunds: 0,
+  };
   row.orders += 1;
   row.grossRevenue += values.grossRevenue;
   row.netRevenue += values.netRevenue;
@@ -32,7 +56,19 @@ function addBreakdown(
   map.set(key, row);
 }
 
-function finalize(map: Map<string, { orders: number; grossRevenue: number; netRevenue: number; tax: number; discounts: number; refunds: number }>) {
+function finalize(
+  map: Map<
+    string,
+    {
+      orders: number;
+      grossRevenue: number;
+      netRevenue: number;
+      tax: number;
+      discounts: number;
+      refunds: number;
+    }
+  >,
+) {
   return [...map.entries()].map(([key, row]) => ({
     key,
     orders: row.orders,
@@ -44,23 +80,76 @@ function finalize(map: Map<string, { orders: number; grossRevenue: number; netRe
   }));
 }
 
-export async function buildRevenueSnapshot(input: { days: number; source: "manual" | "scheduled" | "system"; generatedBy?: string | null }) {
+export async function buildRevenueSnapshot(input: {
+  days: number;
+  source: "manual" | "scheduled" | "system";
+  generatedBy?: string | null;
+}) {
   await connectToDatabase();
   const range = getRevenueRange(input.days);
-  const orders = await Order.find({ createdAt: { $gte: range.start, $lte: range.end } }).lean();
+  const orders = await Order.find({
+    createdAt: { $gte: range.start, $lte: range.end },
+  }).lean();
   const orderIds = orders.map((order) => order._id);
   const payments = orderIds.length
-    ? await Payment.find({ orderId: { $in: orderIds }, status: { $in: ["captured", "partially_refunded", "refunded"] } }).lean()
+    ? await Payment.find({
+        orderId: { $in: orderIds },
+        status: { $in: ["captured", "partially_refunded", "refunded"] },
+      }).lean()
     : [];
   const refundsByOrder = new Map<string, number>();
   for (const payment of payments) {
-    refundsByOrder.set(String(payment.orderId), (refundsByOrder.get(String(payment.orderId)) ?? 0) + Number(payment.amountRefunded ?? 0));
+    refundsByOrder.set(
+      String(payment.orderId),
+      (refundsByOrder.get(String(payment.orderId)) ?? 0) +
+        Number(payment.amountRefunded ?? 0),
+    );
   }
 
-  const byDay = new Map<string, { orders: number; grossRevenue: number; netRevenue: number; tax: number; discounts: number; refunds: number }>();
-  const byPaymentMethod = new Map<string, { orders: number; grossRevenue: number; netRevenue: number; tax: number; discounts: number; refunds: number }>();
-  const byOrderMode = new Map<string, { orders: number; grossRevenue: number; netRevenue: number; tax: number; discounts: number; refunds: number }>();
-  const bySource = new Map<string, { orders: number; grossRevenue: number; netRevenue: number; tax: number; discounts: number; refunds: number }>();
+  const byDay = new Map<
+    string,
+    {
+      orders: number;
+      grossRevenue: number;
+      netRevenue: number;
+      tax: number;
+      discounts: number;
+      refunds: number;
+    }
+  >();
+  const byPaymentMethod = new Map<
+    string,
+    {
+      orders: number;
+      grossRevenue: number;
+      netRevenue: number;
+      tax: number;
+      discounts: number;
+      refunds: number;
+    }
+  >();
+  const byOrderMode = new Map<
+    string,
+    {
+      orders: number;
+      grossRevenue: number;
+      netRevenue: number;
+      tax: number;
+      discounts: number;
+      refunds: number;
+    }
+  >();
+  const bySource = new Map<
+    string,
+    {
+      orders: number;
+      grossRevenue: number;
+      netRevenue: number;
+      tax: number;
+      discounts: number;
+      refunds: number;
+    }
+  >();
 
   let paidOrderCount = 0;
   let completedOrderCount = 0;
@@ -75,12 +164,15 @@ export async function buildRevenueSnapshot(input: { days: number; source: "manua
   let takeawayRevenue = 0;
 
   for (const order of orders) {
-    const paid = order.paymentStatus === "paid" || order.paymentStatus === "refunded";
+    const paid =
+      order.paymentStatus === "paid" || order.paymentStatus === "refunded";
     const completed = order.status === "completed";
     if (paid) paidOrderCount += 1;
     if (completed) completedOrderCount += 1;
     const gross = Number(order.grandTotal ?? 0);
-    const refund = refundsByOrder.get(String(order._id)) ?? (order.paymentStatus === "refunded" ? gross : 0);
+    const refund =
+      refundsByOrder.get(String(order._id)) ??
+      (order.paymentStatus === "refunded" ? gross : 0);
     const recognized = paid && completed ? Math.max(0, gross - refund) : 0;
     const tax = paid ? Number(order.taxTotal ?? 0) : 0;
     const discounts = paid ? Number(order.discountTotal ?? 0) : 0;
@@ -96,7 +188,13 @@ export async function buildRevenueSnapshot(input: { days: number; source: "manua
       if (order.orderMode === "dine_in") dineInRevenue += recognized;
       if (order.orderMode === "takeaway") takeawayRevenue += recognized;
 
-      const values = { grossRevenue: gross, netRevenue: recognized, tax, discounts, refunds: refund };
+      const values = {
+        grossRevenue: gross,
+        netRevenue: recognized,
+        tax,
+        discounts,
+        refunds: refund,
+      };
       addBreakdown(byDay, dayKey(new Date(order.createdAt)), values);
       addBreakdown(byPaymentMethod, order.paymentMethod || "unknown", values);
       addBreakdown(byOrderMode, order.orderMode, values);
@@ -117,7 +215,9 @@ export async function buildRevenueSnapshot(input: { days: number; source: "manua
     couponDiscount: round(couponDiscount),
     coinDiscount: round(coinDiscount),
     refundTotal: round(refundTotal),
-    averageOrderValue: paidOrderCount ? round(grossRevenue / paidOrderCount) : 0,
+    averageOrderValue: paidOrderCount
+      ? round(grossRevenue / paidOrderCount)
+      : 0,
     dineInRevenue: round(dineInRevenue),
     takeawayRevenue: round(takeawayRevenue),
   };
@@ -132,9 +232,15 @@ export async function buildRevenueSnapshot(input: { days: number; source: "manua
         currency: "INR",
         metrics,
         byDay: finalize(byDay).sort((a, b) => a.key.localeCompare(b.key)),
-        byPaymentMethod: finalize(byPaymentMethod).sort((a, b) => b.netRevenue - a.netRevenue),
-        byOrderMode: finalize(byOrderMode).sort((a, b) => b.netRevenue - a.netRevenue),
-        bySource: finalize(bySource).sort((a, b) => b.netRevenue - a.netRevenue),
+        byPaymentMethod: finalize(byPaymentMethod).sort(
+          (a, b) => b.netRevenue - a.netRevenue,
+        ),
+        byOrderMode: finalize(byOrderMode).sort(
+          (a, b) => b.netRevenue - a.netRevenue,
+        ),
+        bySource: finalize(bySource).sort(
+          (a, b) => b.netRevenue - a.netRevenue,
+        ),
         generatedAt: new Date(),
         generatedBy: input.generatedBy || null,
         source: input.source,

@@ -14,11 +14,20 @@ export async function GET(request: Request) {
     const search = url.searchParams.get("search")?.trim();
     const active = url.searchParams.get("active");
     const filter: Record<string, unknown> = {};
-    if (search) filter.$or = [{ name: { $regex: search, $options: "i" } }, { code: { $regex: search, $options: "i" } }];
-    if (active === "true" || active === "false") filter.isActive = active === "true";
-    const rows = await InventoryCategory.find(filter).sort({ sortOrder: 1, name: 1 }).lean();
+    if (search)
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { code: { $regex: search, $options: "i" } },
+      ];
+    if (active === "true" || active === "false")
+      filter.isActive = active === "true";
+    const rows = await InventoryCategory.find(filter)
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
     return successResponse(rows);
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 export async function POST(request: Request) {
@@ -26,7 +35,13 @@ export async function POST(request: Request) {
     const actor = await requirePermission("inventory.manage");
     const input = await validateRequestBody(request, inventoryCategorySchema);
     await connectToDatabase();
-    const row = await InventoryCategory.create({ ...input, createdBy: actor.id, updatedBy: actor.id });
+    const row = await InventoryCategory.create({
+      ...input,
+      createdBy: actor.id,
+      updatedBy: actor.id,
+    });
     return successResponse(row, "Created successfully.", 201);
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

@@ -49,9 +49,7 @@ async function nextInvoiceNumber() {
   return `TRS-INV-${displayDate}-${String(counter.sequence).padStart(3, "0")}`;
 }
 
-function buildBusinessAddress(
-  data: Record<string, unknown>,
-) {
+function buildBusinessAddress(data: Record<string, unknown>) {
   return [
     data.addressLine1,
     data.addressLine2,
@@ -62,24 +60,19 @@ function buildBusinessAddress(
   ]
     .filter(
       (value): value is string =>
-        typeof value === "string" &&
-        value.trim().length > 0,
+        typeof value === "string" && value.trim().length > 0,
     )
     .join(", ");
 }
 
-export async function getOrCreateInvoice(
-  orderId: string,
-  actorId: string,
-) {
+export async function getOrCreateInvoice(orderId: string, actorId: string) {
   const existing = await Invoice.findOne({
     orderId,
   });
 
   if (existing) {
     if (!existing.verificationPublicId) {
-      existing.verificationPublicId =
-        createInvoicePublicId();
+      existing.verificationPublicId = createInvoicePublicId();
       await existing.save();
     }
 
@@ -92,8 +85,7 @@ export async function getOrCreateInvoice(
     throw new AppError("Order not found.", 404);
   }
 
-  const customerSnapshot =
-    order.customerSnapshot;
+  const customerSnapshot = order.customerSnapshot;
 
   if (!customerSnapshot) {
     throw new AppError(
@@ -102,34 +94,50 @@ export async function getOrCreateInvoice(
     );
   }
 
-  const businessSetting =
-    await SystemSetting.findOne(
-      {
-        section: "business",
-      },
-      {
-        data: 1,
-      },
-    ).lean();
+  const businessSetting = await SystemSetting.findOne(
+    {
+      section: "business",
+    },
+    {
+      data: 1,
+    },
+  ).lean();
 
-  const menuItemIds = order.items.flatMap((item) => item.menuItemId ? [item.menuItemId] : []);
+  const menuItemIds = order.items.flatMap((item) =>
+    item.menuItemId ? [item.menuItemId] : [],
+  );
   const menuItems = menuItemIds.length
-    ? await MenuItem.find({ _id: { $in: menuItemIds } }).select("_id categoryId").lean()
+    ? await MenuItem.find({ _id: { $in: menuItemIds } })
+        .select("_id categoryId")
+        .lean()
     : [];
-  const categoryIds = [...new Set(menuItems.flatMap((item) => item.categoryId ? [String(item.categoryId)] : []))];
+  const categoryIds = [
+    ...new Set(
+      menuItems.flatMap((item) =>
+        item.categoryId ? [String(item.categoryId)] : [],
+      ),
+    ),
+  ];
   const menuCategories = categoryIds.length
-    ? await MenuCategory.find({ _id: { $in: categoryIds } }).select("_id name").lean()
+    ? await MenuCategory.find({ _id: { $in: categoryIds } })
+        .select("_id name")
+        .lean()
     : [];
-  const categoryNameById = new Map(menuCategories.map((category) => [String(category._id), category.name]));
+  const categoryNameById = new Map(
+    menuCategories.map((category) => [String(category._id), category.name]),
+  );
   const categoryNameByMenuItemId = new Map(
-    menuItems.map((item) => [String(item._id), item.categoryId ? categoryNameById.get(String(item.categoryId)) ?? "" : ""]),
+    menuItems.map((item) => [
+      String(item._id),
+      item.categoryId
+        ? (categoryNameById.get(String(item.categoryId)) ?? "")
+        : "",
+    ]),
   );
 
   const businessData = {
     ...DEFAULT_SETTINGS.business.data,
-    ...((businessSetting?.data as
-      | Record<string, unknown>
-      | undefined) ?? {}),
+    ...((businessSetting?.data as Record<string, unknown> | undefined) ?? {}),
   };
 
   try {
@@ -142,42 +150,33 @@ export async function getOrCreateInvoice(
       orderNumber: order.orderNumber,
       issuedAt: new Date(),
       businessSnapshot: {
-        legalName: String(
-          businessData.legalName ?? "",
-        ),
-        tradeName: String(
-          businessData.tradeName ?? "",
-        ),
-        phone: String(
-          businessData.phone ?? "",
-        ),
-        email: String(
-          businessData.email ?? "",
-        ),
-        gstin: String(
-          businessData.gstin ?? "",
-        ),
-        address:
-          buildBusinessAddress(businessData),
+        legalName: String(businessData.legalName ?? ""),
+        tradeName: String(businessData.tradeName ?? ""),
+        phone: String(businessData.phone ?? ""),
+        email: String(businessData.email ?? ""),
+        gstin: String(businessData.gstin ?? ""),
+        address: buildBusinessAddress(businessData),
       },
       customerSnapshot: {
         name: customerSnapshot.name,
-        phone:
-          customerSnapshot.phone ?? "",
-        email:
-          customerSnapshot.email ?? "",
+        phone: customerSnapshot.phone ?? "",
+        email: customerSnapshot.email ?? "",
       },
       orderMode: order.orderMode,
       tableNumber: order.tableNumber ?? "",
       saleType: order.saleType ?? "customer",
-      internalConsumption: order.saleType !== "customer" ? {
-        personName: order.internalConsumption?.personName ?? "",
-        reason: order.internalConsumption?.reason ?? "",
-        notes: order.internalConsumption?.notes ?? "",
-        menuValue: order.internalConsumption?.menuValue ?? order.subtotal,
-        approvalStatus: order.internalConsumption?.approvalStatus ?? "not_required",
-        approvalReason: order.internalConsumption?.approvalReason ?? "",
-      } : undefined,
+      internalConsumption:
+        order.saleType !== "customer"
+          ? {
+              personName: order.internalConsumption?.personName ?? "",
+              reason: order.internalConsumption?.reason ?? "",
+              notes: order.internalConsumption?.notes ?? "",
+              menuValue: order.internalConsumption?.menuValue ?? order.subtotal,
+              approvalStatus:
+                order.internalConsumption?.approvalStatus ?? "not_required",
+              approvalReason: order.internalConsumption?.approvalReason ?? "",
+            }
+          : undefined,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
       paymentBreakdown: (order.paymentBreakdown ?? []).map((part) => ({
@@ -191,16 +190,16 @@ export async function getOrCreateInvoice(
       changeDue: order.changeDue ?? 0,
       items: order.items.map((item) => ({
         name: item.name,
-        categoryName: item.menuItemId ? categoryNameByMenuItemId.get(String(item.menuItemId)) ?? "" : "",
+        categoryName: item.menuItemId
+          ? (categoryNameByMenuItemId.get(String(item.menuItemId)) ?? "")
+          : "",
         variantName: item.variantName ?? "",
         specialInstructions: item.specialInstructions ?? "",
-        modifiers: item.modifiers.map(
-          (modifier) => ({
-            groupName: modifier.groupName,
-            optionName: modifier.optionName,
-            unitPrice: modifier.unitPrice,
-          }),
-        ),
+        modifiers: item.modifiers.map((modifier) => ({
+          groupName: modifier.groupName,
+          optionName: modifier.optionName,
+          unitPrice: modifier.unitPrice,
+        })),
         quantity: item.quantity,
         unitPrice: item.lineUnitPrice,
         lineTotal: item.lineTotal,
@@ -216,17 +215,12 @@ export async function getOrCreateInvoice(
       taxMode: order.taxMode ?? "exclusive",
       discountReason: order.discountReason ?? "",
       grandTotal: order.grandTotal,
-      currency: String(
-        businessData.currency ?? "INR",
-      ),
-      currencySymbol: String(
-        businessData.currencySymbol ?? "₹",
-      ),
+      currency: String(businessData.currency ?? "INR"),
+      currencySymbol: String(businessData.currencySymbol ?? "₹"),
       generatedBy: new Types.ObjectId(actorId),
     });
   } catch (error) {
-    const duplicateInvoice =
-      await Invoice.findOne({ orderId });
+    const duplicateInvoice = await Invoice.findOne({ orderId });
 
     if (duplicateInvoice) {
       return duplicateInvoice;

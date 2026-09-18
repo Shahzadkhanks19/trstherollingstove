@@ -16,7 +16,6 @@ function roundMoney(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-
 export async function createOrderFromCart(input: {
   customerId: string;
   orderMode: "dine_in" | "takeaway";
@@ -46,7 +45,9 @@ export async function createOrderFromCart(input: {
     storeStatus === "not_accepting_orders"
   ) {
     throw new AppError(
-      String(ordering.statusMessage ?? "TRS is not accepting orders right now."),
+      String(
+        ordering.statusMessage ?? "TRS is not accepting orders right now.",
+      ),
       409,
     );
   }
@@ -65,7 +66,10 @@ export async function createOrderFromCart(input: {
   );
   const maximumItems = Number(ordering.maxItemsPerOrder ?? 50);
   if (itemQuantity > maximumItems) {
-    throw new AppError(`An order may contain at most ${maximumItems} items.`, 400);
+    throw new AppError(
+      `An order may contain at most ${maximumItems} items.`,
+      400,
+    );
   }
 
   const minimumOrderAmount = Number(ordering.minimumOrderAmount ?? 0);
@@ -95,7 +99,9 @@ export async function createOrderFromCart(input: {
   }
 
   const clockDate = (clock: unknown) => {
-    const [hours, minutes] = String(clock ?? "00:00").split(":").map(Number);
+    const [hours, minutes] = String(clock ?? "00:00")
+      .split(":")
+      .map(Number);
     const value = new Date(currentTime);
     value.setHours(hours, minutes, 0, 0);
     return value;
@@ -124,7 +130,10 @@ export async function createOrderFromCart(input: {
   const containsNonStackableDiscount = cart.items.some(
     (item) => item.isCombo === true || item.isDiscountedItem === true,
   );
-  if (containsNonStackableDiscount && (input.couponCode || input.coinsToRedeem > 0)) {
+  if (
+    containsNonStackableDiscount &&
+    (input.couponCode || input.coinsToRedeem > 0)
+  ) {
     throw new AppError(
       "Coupons and TRS Coin redemption are not available when the cart contains a combo or discounted menu item.",
       400,
@@ -249,10 +258,7 @@ export async function createOrderFromCart(input: {
         discountAmount: couponDiscount,
         redeemedAt: now,
       });
-      await Coupon.updateOne(
-        { _id: couponId },
-        { $inc: { usedCount: 1 } },
-      );
+      await Coupon.updateOne({ _id: couponId }, { $inc: { usedCount: 1 } });
     }
 
     if (coinsRedeemed > 0) {

@@ -14,8 +14,13 @@ function formatPrice(value: number): string {
 
 export function MenuItemCard({ item }: { item: MenuItemSummary }) {
   const detailsHref = `/menu/${item.slug}`;
-  const originalPrice = item.compareAtPriceFrom && item.compareAtPriceFrom > item.priceFrom ? item.compareAtPriceFrom : null;
-  const discountPercent = originalPrice ? Math.round(((originalPrice - item.priceFrom) / originalPrice) * 100) : 0;
+  const originalPrice =
+    item.compareAtPriceFrom && item.compareAtPriceFrom > item.priceFrom
+      ? item.compareAtPriceFrom
+      : null;
+  const discountPercent = originalPrice
+    ? Math.round(((originalPrice - item.priceFrom) / originalPrice) * 100)
+    : 0;
 
   return (
     <article className="group min-w-0 overflow-hidden rounded-2xl border border-[#EDE3D8] bg-white transition duration-300 hover:-translate-y-1 hover:border-[#C8102E] hover:shadow-[0_18px_40px_rgba(50,30,15,.08)]">
@@ -87,8 +92,14 @@ export function MenuItemCard({ item }: { item: MenuItemSummary }) {
               Starting from
             </span>
             <div className="mt-1 flex flex-wrap items-baseline gap-2">
-              <strong className="text-base font-black text-[#C8102E]">{formatPrice(item.priceFrom)}</strong>
-              {originalPrice ? <span className="text-xs font-bold text-[#8A8179] line-through">{formatPrice(originalPrice)}</span> : null}
+              <strong className="text-base font-black text-[#C8102E]">
+                {formatPrice(item.priceFrom)}
+              </strong>
+              {originalPrice ? (
+                <span className="text-xs font-bold text-[#8A8179] line-through">
+                  {formatPrice(originalPrice)}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>

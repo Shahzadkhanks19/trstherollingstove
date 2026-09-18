@@ -1,9 +1,5 @@
 import ExcelJS from "exceljs";
-import {
-  PDFDocument,
-  StandardFonts,
-  rgb,
-} from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 function displayValue(value: unknown): string {
   if (value === null || value === undefined) return "";
@@ -12,9 +8,7 @@ function displayValue(value: unknown): string {
   return String(value);
 }
 
-function columnsForRows(
-  rows: Array<Record<string, unknown>>,
-) {
+function columnsForRows(rows: Array<Record<string, unknown>>) {
   const columns = new Set<string>();
 
   for (const row of rows) {
@@ -63,18 +57,14 @@ export async function createInventoryReportWorkbook(input: {
     header: key
       .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
       .replace(/_/g, " ")
-      .replace(/\b\w/g, (character) =>
-        character.toUpperCase(),
-      ),
+      .replace(/\b\w/g, (character) => character.toUpperCase()),
     key,
     width: Math.max(14, Math.min(36, key.length + 8)),
   }));
 
   for (const row of input.rows) {
     data.addRow(
-      Object.fromEntries(
-        keys.map((key) => [key, displayValue(row[key])]),
-      ),
+      Object.fromEntries(keys.map((key) => [key, displayValue(row[key])])),
     );
   }
 
@@ -91,9 +81,7 @@ export async function createInventoryReportWorkbook(input: {
 }
 
 function truncate(value: string, length: number) {
-  return value.length <= length
-    ? value
-    : `${value.slice(0, length - 1)}…`;
+  return value.length <= length ? value : `${value.slice(0, length - 1)}…`;
 }
 
 export async function createInventoryReportPdf(input: {
@@ -104,20 +92,14 @@ export async function createInventoryReportPdf(input: {
   generatedAt?: Date;
 }) {
   const document = await PDFDocument.create();
-  const regular = await document.embedFont(
-    StandardFonts.Helvetica,
-  );
-  const bold = await document.embedFont(
-    StandardFonts.HelveticaBold,
-  );
+  const regular = await document.embedFont(StandardFonts.Helvetica);
+  const bold = await document.embedFont(StandardFonts.HelveticaBold);
   const pageSize: [number, number] = [842, 595];
   const margin = 36;
   const columns = columnsForRows(input.rows).slice(0, 7);
   const usableWidth = pageSize[0] - margin * 2;
   const columnWidth =
-    columns.length > 0
-      ? usableWidth / columns.length
-      : usableWidth;
+    columns.length > 0 ? usableWidth / columns.length : usableWidth;
   const rowHeight = 18;
 
   let page = document.addPage(pageSize);
@@ -156,9 +138,7 @@ export async function createInventoryReportPdf(input: {
     columns.forEach((column, index) => {
       page.drawText(
         truncate(
-          column
-            .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-            .replace(/_/g, " "),
+          column.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/_/g, " "),
           18,
         ),
         {
@@ -181,15 +161,12 @@ export async function createInventoryReportPdf(input: {
     }
 
     columns.forEach((column, index) => {
-      page.drawText(
-        truncate(displayValue(row[column]), 24),
-        {
-          x: margin + index * columnWidth + 3,
-          y,
-          size: 6.5,
-          font: regular,
-        },
-      );
+      page.drawText(truncate(displayValue(row[column]), 24), {
+        x: margin + index * columnWidth + 3,
+        y,
+        size: 6.5,
+        font: regular,
+      });
     });
 
     page.drawLine({
@@ -206,15 +183,12 @@ export async function createInventoryReportPdf(input: {
 
   const pages = document.getPages();
   pages.forEach((currentPage, index) => {
-    currentPage.drawText(
-      `Page ${index + 1} of ${pages.length}`,
-      {
-        x: pageSize[0] - 110,
-        y: 18,
-        size: 7,
-        font: regular,
-      },
-    );
+    currentPage.drawText(`Page ${index + 1} of ${pages.length}`, {
+      x: pageSize[0] - 110,
+      y: 18,
+      size: 7,
+      font: regular,
+    });
   });
 
   return document.save();

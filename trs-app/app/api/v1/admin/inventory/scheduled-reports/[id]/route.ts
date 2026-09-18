@@ -11,10 +11,7 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
     await requirePermission("reports.read");
     const { id } = await context.params;
@@ -25,55 +22,38 @@ export async function PATCH(
 
     await connectToDatabase();
 
-    const schedule =
-      await InventoryScheduledReport.findByIdAndUpdate(
-        id,
-        { $set: input },
-        {
-          returnDocument: "after",
-          runValidators: true,
-        },
-      );
+    const schedule = await InventoryScheduledReport.findByIdAndUpdate(
+      id,
+      { $set: input },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      },
+    );
 
     if (!schedule) {
-      throw new AppError(
-        "Scheduled inventory report not found.",
-        404,
-      );
+      throw new AppError("Scheduled inventory report not found.", 404);
     }
 
-    return successResponse(
-      schedule,
-      "Scheduled inventory report updated.",
-    );
+    return successResponse(schedule, "Scheduled inventory report updated.");
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  context: Context,
-) {
+export async function DELETE(_request: Request, context: Context) {
   try {
     await requirePermission("reports.read");
     const { id } = await context.params;
     await connectToDatabase();
 
-    const schedule =
-      await InventoryScheduledReport.findByIdAndDelete(id);
+    const schedule = await InventoryScheduledReport.findByIdAndDelete(id);
 
     if (!schedule) {
-      throw new AppError(
-        "Scheduled inventory report not found.",
-        404,
-      );
+      throw new AppError("Scheduled inventory report not found.", 404);
     }
 
-    return successResponse(
-      { id },
-      "Scheduled inventory report deleted.",
-    );
+    return successResponse({ id }, "Scheduled inventory report deleted.");
   } catch (error) {
     return handleApiError(error);
   }

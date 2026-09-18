@@ -1,10 +1,7 @@
 import { Types } from "mongoose";
 
 import { SystemAuditLog } from "@/models/SystemAuditLog";
-import type {
-  AuditOutcome,
-  AuditSeverity,
-} from "@/types/audit";
+import type { AuditOutcome, AuditSeverity } from "@/types/audit";
 
 type AuditActor = {
   id?: string;
@@ -41,40 +38,30 @@ type WriteAuditLogInput = {
   metadata?: Record<string, unknown>;
 };
 
-function deriveAuditModule(
-  input: WriteAuditLogInput,
-) {
+function deriveAuditModule(input: WriteAuditLogInput) {
   if (input.module?.trim()) {
     return input.module.trim();
   }
 
-  const actionPrefix = input.action
-    .split(".")[0]
-    ?.trim();
+  const actionPrefix = input.action.split(".")[0]?.trim();
 
   if (actionPrefix) {
     return actionPrefix;
   }
 
   if (input.entityType?.trim()) {
-    return input.entityType
-      .trim()
-      .toLowerCase();
+    return input.entityType.trim().toLowerCase();
   }
 
   return "system";
 }
 
-export async function writeAuditLog(
-  input: WriteAuditLogInput,
-) {
-  const actorId =
-    input.actor?.id ?? input.actorUserId;
+export async function writeAuditLog(input: WriteAuditLogInput) {
+  const actorId = input.actor?.id ?? input.actorUserId;
 
   return SystemAuditLog.create({
     actorId:
-      actorId &&
-      Types.ObjectId.isValid(actorId)
+      actorId && Types.ObjectId.isValid(actorId)
         ? new Types.ObjectId(actorId)
         : null,
     actorName: input.actor?.name ?? "",

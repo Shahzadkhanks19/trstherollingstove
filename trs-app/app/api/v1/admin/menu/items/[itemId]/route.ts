@@ -16,15 +16,55 @@ import { menuItemUpdateSchema } from "@/validators/menu";
 import { Types } from "mongoose";
 import { resolveComboComponents } from "@/services/combo.service";
 
-async function validateCombinationPricing(input: { enabled: boolean; modifierGroupId: string | null; entries: Array<{ variantLabel: string; optionId: string; optionName: string; price: number }> } | undefined, modifierGroupIds: string[] | undefined) {
+async function validateCombinationPricing(
+  input:
+    | {
+        enabled: boolean;
+        modifierGroupId: string | null;
+        entries: Array<{
+          variantLabel: string;
+          optionId: string;
+          optionName: string;
+          price: number;
+        }>;
+      }
+    | undefined,
+  modifierGroupIds: string[] | undefined,
+) {
   if (!input?.enabled) return;
-  if (!input.modifierGroupId || !modifierGroupIds?.includes(input.modifierGroupId)) throw new AppError("The combination-pricing group must be attached to the item.", 400);
-  const group = await ModifierGroup.findOne({ _id: input.modifierGroupId, isActive: true }).lean();
-  if (!group) throw new AppError("Select a valid active combination-pricing group.", 400);
-  const activeOptionIds = new Set((group.options ?? []).filter((option) => option.isActive && option.isAvailable !== false).map((option) => option._id?.toString()).filter((value): value is string => Boolean(value)));
-  if (input.entries.some((entry) => !activeOptionIds.has(entry.optionId))) throw new AppError("One or more combination prices reference an unavailable option.", 400);
-  const keys = input.entries.map((entry) => `${entry.variantLabel.trim().toLowerCase()}::${entry.optionId}`);
-  if (new Set(keys).size !== keys.length) throw new AppError("Duplicate platter combination prices are not allowed.", 400);
+  if (
+    !input.modifierGroupId ||
+    !modifierGroupIds?.includes(input.modifierGroupId)
+  )
+    throw new AppError(
+      "The combination-pricing group must be attached to the item.",
+      400,
+    );
+  const group = await ModifierGroup.findOne({
+    _id: input.modifierGroupId,
+    isActive: true,
+  }).lean();
+  if (!group)
+    throw new AppError("Select a valid active combination-pricing group.", 400);
+  const activeOptionIds = new Set(
+    (group.options ?? [])
+      .filter((option) => option.isActive && option.isAvailable !== false)
+      .map((option) => option._id?.toString())
+      .filter((value): value is string => Boolean(value)),
+  );
+  if (input.entries.some((entry) => !activeOptionIds.has(entry.optionId)))
+    throw new AppError(
+      "One or more combination prices reference an unavailable option.",
+      400,
+    );
+  const keys = input.entries.map(
+    (entry) => `${entry.variantLabel.trim().toLowerCase()}::${entry.optionId}`,
+  );
+  if (new Set(keys).size !== keys.length)
+    throw new AppError(
+      "Duplicate platter combination prices are not allowed.",
+      400,
+    );
 }
 
 export async function GET(
@@ -37,11 +77,24 @@ export async function GET(
     await connectToDatabase();
 
     const item = await MenuItem.findOne({ _id: itemId, deletedAt: null })
-      .populate({ path: "categoryId", model: MenuCategory, select: "name slug" })
+      .populate({
+        path: "categoryId",
+        model: MenuCategory,
+        select: "name slug",
+      })
       .populate("taxClassId", "name code percentage isInclusive")
       .populate({ path: "modifierGroupIds", model: ModifierGroup })
-      .populate({ path: "frequentlyOrderedWithIds", model: MenuItem, select: "name slug imageUrl basePrice variants isAvailable isActive deletedAt" })
-      .populate({ path: "comboComponents.menuItemId", model: MenuItem, select: "name slug basePrice variants isActive isAvailable deletedAt" })
+      .populate({
+        path: "frequentlyOrderedWithIds",
+        model: MenuItem,
+        select:
+          "name slug imageUrl basePrice variants isAvailable isActive deletedAt",
+      })
+      .populate({
+        path: "comboComponents.menuItemId",
+        model: MenuItem,
+        select: "name slug basePrice variants isActive isAvailable deletedAt",
+      })
       .lean();
 
     if (!item) throw new AppError("Menu item not found.", 404);
@@ -66,11 +119,18 @@ export async function PATCH(
     const previousSlug = item.slug;
 
     if (input.categoryId) {
-      const category = await MenuCategory.exists({ _id: input.categoryId, deletedAt: null, isActive: true });
+      const category = await MenuCategory.exists({
+        _id: input.categoryId,
+        deletedAt: null,
+        isActive: true,
+      });
       if (!category) throw new AppError("Select a valid active category.", 400);
     }
 
-    if (input.taxClassId && !(await TaxClass.exists({ _id: input.taxClassId, isActive: true }))) {
+    if (
+      input.taxClassId &&
+      !(await TaxClass.exists({ _id: input.taxClassId, isActive: true }))
+    ) {
       throw new AppError("Select a valid active tax class.", 400);
     }
 
@@ -80,29 +140,44 @@ export async function PATCH(
         isActive: true,
       });
       if (modifierCount !== input.modifierGroupIds.length) {
-        throw new AppError("One or more modifier groups are invalid or inactive.", 400);
+        throw new AppError(
+          "One or more modifier groups are invalid or inactive.",
+          400,
+        );
       }
     }
 
-    await validateCombinationPricing(input.combinationPricing, input.modifierGroupIds ?? (item.modifierGroupIds ?? []).map((id) => id.toString()));
+    await validateCombinationPricing(
+      input.combinationPricing,
+      input.modifierGroupIds ??
+        (item.modifierGroupIds ?? []).map((id) => id.toString()),
+    );
 
     let validFrequentlyOrderedWithIds: string[] | undefined;
     if (input.frequentlyOrderedWithIds) {
-      const requestedIds = [...new Set(input.frequentlyOrderedWithIds)]
-        .filter((relatedId) => relatedId !== itemId);
+      const requestedIds = [...new Set(input.frequentlyOrderedWithIds)].filter(
+        (relatedId) => relatedId !== itemId,
+      );
       const validRelatedItems = await MenuItem.find({
         _id: { $in: requestedIds },
         deletedAt: null,
         isActive: true,
-      }).select("_id").lean();
-      const validIdSet = new Set(validRelatedItems.map((related) => related._id.toString()));
-      validFrequentlyOrderedWithIds = requestedIds.filter((relatedId) => validIdSet.has(relatedId));
+      })
+        .select("_id")
+        .lean();
+      const validIdSet = new Set(
+        validRelatedItems.map((related) => related._id.toString()),
+      );
+      validFrequentlyOrderedWithIds = requestedIds.filter((relatedId) =>
+        validIdSet.has(relatedId),
+      );
     }
 
     if (input.slug || input.name) {
       const slug = createSlug(input.slug || input.name || item.name);
       const duplicate = await MenuItem.exists({ slug, _id: { $ne: item._id } });
-      if (duplicate) throw new AppError("A menu item with this slug already exists.", 409);
+      if (duplicate)
+        throw new AppError("A menu item with this slug already exists.", 409);
       item.slug = slug;
     }
 
@@ -120,29 +195,45 @@ export async function PATCH(
         : null;
 
     const targetCategoryId = input.categoryId ?? item.categoryId.toString();
-    const targetCategory = await MenuCategory.findOne({ _id: targetCategoryId, deletedAt: null, isActive: true }).lean();
-    if (!targetCategory) throw new AppError("Select a valid active category.", 400);
+    const targetCategory = await MenuCategory.findOne({
+      _id: targetCategoryId,
+      deletedAt: null,
+      isActive: true,
+    }).lean();
+    if (!targetCategory)
+      throw new AppError("Select a valid active category.", 400);
     const nextIsCombo = targetCategory.slug === "combos";
     const comboPricing = nextIsCombo
       ? await resolveComboComponents(
-          input.comboComponents ?? (item.comboComponents ?? []).map((entry) => ({ menuItemId: entry.menuItemId.toString(), variantId: entry.variantId?.toString() ?? null, quantity: entry.quantity })),
+          input.comboComponents ??
+            (item.comboComponents ?? []).map((entry) => ({
+              menuItemId: entry.menuItemId.toString(),
+              variantId: entry.variantId?.toString() ?? null,
+              quantity: entry.quantity,
+            })),
           input.basePrice ?? item.basePrice,
           itemId,
         )
       : null;
-    const nextComboSection = input.comboOffersPageSection ?? item.comboOffersPageSection;
+    const nextComboSection =
+      input.comboOffersPageSection ?? item.comboOffersPageSection;
     const nextComboType = input.comboOfferType ?? item.comboOfferType;
-    const nextComboStartsAt = input.comboOfferStartsAt !== undefined
-      ? input.comboOfferStartsAt ? new Date(input.comboOfferStartsAt) : null
-      : item.comboOfferStartsAt;
+    const nextComboStartsAt =
+      input.comboOfferStartsAt !== undefined
+        ? input.comboOfferStartsAt
+          ? new Date(input.comboOfferStartsAt)
+          : null
+        : item.comboOfferStartsAt;
     const nextComboExpiresAt = !nextIsCombo
       ? null
       : nextComboSection === "todays" && nextComboStartsAt
         ? new Date(nextComboStartsAt.getTime() + 24 * 60 * 60 * 1000)
         : nextComboType === "limited"
-          ? (input.comboOfferExpiresAt !== undefined
-              ? input.comboOfferExpiresAt ? new Date(input.comboOfferExpiresAt) : null
-              : item.comboOfferExpiresAt)
+          ? input.comboOfferExpiresAt !== undefined
+            ? input.comboOfferExpiresAt
+              ? new Date(input.comboOfferExpiresAt)
+              : null
+            : item.comboOfferExpiresAt
           : null;
 
     Object.assign(item, {
@@ -153,13 +244,19 @@ export async function PATCH(
       comboOriginalPrice: comboPricing?.originalPrice ?? null,
       comboSavings: comboPricing?.savings ?? null,
       comboDiscountPercent: comboPricing?.discountPercent ?? null,
-      compareAtPrice: comboPricing?.originalPrice ?? (input.compareAtPrice ?? item.compareAtPrice),
+      compareAtPrice:
+        comboPricing?.originalPrice ??
+        input.compareAtPrice ??
+        item.compareAtPrice,
       comboOfferStartsAt: nextIsCombo ? nextComboStartsAt : null,
       comboOfferExpiresAt: nextComboExpiresAt,
       isTodaysSpecialOffer: nextIsTodaysSpecialOffer,
-      todaysSpecialOfferStartsAt: nextIsTodaysSpecialOffer ? nextSpecialStartsAt : null,
+      todaysSpecialOfferStartsAt: nextIsTodaysSpecialOffer
+        ? nextSpecialStartsAt
+        : null,
       todaysSpecialOfferExpiresAt: nextSpecialExpiresAt,
-      allergens: input.allergens?.map((value) => value.toLowerCase()) ?? item.allergens,
+      allergens:
+        input.allergens?.map((value) => value.toLowerCase()) ?? item.allergens,
       tags: input.tags?.map((value) => value.toLowerCase()) ?? item.tags,
       frequentlyOrderedWithIds:
         validFrequentlyOrderedWithIds ?? item.frequentlyOrderedWithIds,
@@ -175,7 +272,11 @@ export async function PATCH(
       description: `Menu item ${item.name} updated.`,
     });
 
-    publishMenuUpdated({ action: "updated", itemId: item.id, actorId: actor.id });
+    publishMenuUpdated({
+      action: "updated",
+      itemId: item.id,
+      actorId: actor.id,
+    });
     revalidatePublicMenuPaths([previousSlug, item.slug]);
 
     return successResponse(item, "Menu item updated.");
@@ -210,7 +311,11 @@ export async function DELETE(
       description: `Menu item ${item.name} deleted.`,
     });
 
-    publishMenuUpdated({ action: "deleted", itemId: item.id, actorId: actor.id });
+    publishMenuUpdated({
+      action: "deleted",
+      itemId: item.id,
+      actorId: actor.id,
+    });
     revalidatePublicMenuPaths([item.slug]);
 
     return successResponse(null, "Menu item deleted.");

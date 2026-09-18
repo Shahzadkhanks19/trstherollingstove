@@ -1,2 +1,23 @@
-import { requirePermission } from "@/lib/auth/session";import { connectToDatabase } from "@/lib/db/mongoose";import { handleApiError } from "@/lib/errors/handleApiError";import { successResponse } from "@/lib/http/apiResponse";import { validateRequestBody } from "@/lib/validation/validateRequest";import { evaluateCustomerTier,rebuildAllLoyaltyMemberships } from "@/services/loyalty.service";import { loyaltyEvaluateSchema } from "@/validators/loyalty";
-export async function POST(request:Request){try{await requirePermission("settings.manage");const input=await validateRequestBody(request,loyaltyEvaluateSchema);await connectToDatabase();const result=input.customerId?await evaluateCustomerTier(input.customerId):await rebuildAllLoyaltyMemberships(input.limit);return successResponse(result,"Loyalty evaluation completed.");}catch(error){return handleApiError(error);}}
+import { requirePermission } from "@/lib/auth/session";
+import { connectToDatabase } from "@/lib/db/mongoose";
+import { handleApiError } from "@/lib/errors/handleApiError";
+import { successResponse } from "@/lib/http/apiResponse";
+import { validateRequestBody } from "@/lib/validation/validateRequest";
+import {
+  evaluateCustomerTier,
+  rebuildAllLoyaltyMemberships,
+} from "@/services/loyalty.service";
+import { loyaltyEvaluateSchema } from "@/validators/loyalty";
+export async function POST(request: Request) {
+  try {
+    await requirePermission("settings.manage");
+    const input = await validateRequestBody(request, loyaltyEvaluateSchema);
+    await connectToDatabase();
+    const result = input.customerId
+      ? await evaluateCustomerTier(input.customerId)
+      : await rebuildAllLoyaltyMemberships(input.limit);
+    return successResponse(result, "Loyalty evaluation completed.");
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

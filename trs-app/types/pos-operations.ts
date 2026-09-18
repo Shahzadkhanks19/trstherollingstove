@@ -1,7 +1,8 @@
 import type { PosCartState, PosCartTotals } from "@/types/pos";
 
 export type PosTableStatus = "available" | "reserved" | "out_of_service";
-export type PosRunningOrderStatus = "open" | "sent_to_kitchen" | "partially_paid" | "settled" | "voided";
+export type PosRunningOrderStatus =
+  "open" | "sent_to_kitchen" | "partially_paid" | "settled" | "voided";
 
 export type PosTableView = {
   id: string;

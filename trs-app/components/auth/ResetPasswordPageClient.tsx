@@ -171,7 +171,9 @@ export function ResetPasswordPageClient() {
 
     if (!/^\d{6}$/.test(otp)) {
       setStatus("error");
-      setMessage("Enter the 6-digit OTP sent to your registered mobile number.");
+      setMessage(
+        "Enter the 6-digit OTP sent to your registered mobile number.",
+      );
       return;
     }
 
@@ -190,17 +192,13 @@ export function ResetPasswordPageClient() {
         }),
       });
 
-      const data = (await response.json().catch(() => null)) as
-        | {
-            message?: string;
-            resetToken?: string;
-          }
-        | null;
+      const data = (await response.json().catch(() => null)) as {
+        message?: string;
+        resetToken?: string;
+      } | null;
 
       if (!response.ok || !data?.resetToken) {
-        throw new Error(
-          data?.message ?? "The OTP is invalid or has expired.",
-        );
+        throw new Error(data?.message ?? "The OTP is invalid or has expired.");
       }
 
       setResetToken(data.resetToken);
@@ -254,19 +252,17 @@ export function ResetPasswordPageClient() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-  token: resetToken,
-  newPassword: password,
-}),
+          token: resetToken,
+          newPassword: password,
+        }),
       });
 
-      const data = (await response.json().catch(() => null)) as
-        | { message?: string }
-        | null;
+      const data = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
 
       if (!response.ok) {
-        throw new Error(
-          data?.message ?? "The password could not be reset.",
-        );
+        throw new Error(data?.message ?? "The password could not be reset.");
       }
 
       setStage("completed");
@@ -312,9 +308,9 @@ export function ResetPasswordPageClient() {
         }),
       });
 
-      const data = (await response.json().catch(() => null)) as
-        | { message?: string }
-        | null;
+      const data = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
 
       if (!response.ok) {
         throw new Error(data?.message ?? "Unable to resend the OTP.");
@@ -328,9 +324,7 @@ export function ResetPasswordPageClient() {
     } catch (error) {
       setStatus("error");
       setMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to resend the OTP.",
+        error instanceof Error ? error.message : "Unable to resend the OTP.",
       );
     }
   };
@@ -409,10 +403,7 @@ export function ResetPasswordPageClient() {
             ) : invalidEmailLink ? (
               <div className="py-8 text-center">
                 <span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#FFF3F3] text-[#C8102E]">
-                  <FontAwesomeIcon
-                    icon={faCircleExclamation}
-                    className="h-8"
-                  />
+                  <FontAwesomeIcon icon={faCircleExclamation} className="h-8" />
                 </span>
                 <h2 className="mt-6 text-2xl font-black uppercase tracking-[-0.04em] sm:text-3xl">
                   Invalid Reset Link
@@ -559,7 +550,10 @@ export function ResetPasswordPageClient() {
                         />
                       </button>
                     </div>
-                    <span className="mt-2 block text-[9px] font-medium normal-case leading-4 text-[#655E57]">Use 10–128 characters with uppercase, lowercase, a number and a special character.</span>
+                    <span className="mt-2 block text-[9px] font-medium normal-case leading-4 text-[#655E57]">
+                      Use 10–128 characters with uppercase, lowercase, a number
+                      and a special character.
+                    </span>
                   </label>
 
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">

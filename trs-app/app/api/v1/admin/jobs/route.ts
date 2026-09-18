@@ -29,10 +29,7 @@ export async function GET(request: Request) {
         $options: "i",
       };
 
-      filter.$or = [
-        { deduplicationKey: regex },
-        { lastError: regex },
-      ];
+      filter.$or = [{ deduplicationKey: regex }, { lastError: regex }];
     }
 
     const skip = (parsed.page - 1) * parsed.limit;
@@ -64,10 +61,7 @@ export async function POST(request: Request) {
   try {
     const actor = await requirePermission("settings.manage");
 
-    const input = await validateRequestBody(
-      request,
-      enqueueJobSchema,
-    );
+    const input = await validateRequestBody(request, enqueueJobSchema);
 
     await connectToDatabase();
 

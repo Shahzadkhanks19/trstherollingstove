@@ -42,7 +42,7 @@ export async function GET() {
         database: "connected",
         realtimeConfigured: Boolean(
           process.env.REALTIME_SERVER_URL &&
-            process.env.REALTIME_INTERNAL_SECRET,
+          process.env.REALTIME_INTERNAL_SECRET,
         ),
         cronConfigured: Boolean(process.env.CRON_SECRET),
       },

@@ -11,8 +11,16 @@ export const PAGE_HERO_DEFINITIONS = [
   { pageKey: "faq", pageName: "FAQ", group: "Support" },
   { pageKey: "careers", pageName: "Careers", group: "Support" },
   { pageKey: "privacy-policy", pageName: "Privacy Policy", group: "Legal" },
-  { pageKey: "terms-and-conditions", pageName: "Terms & Conditions", group: "Legal" },
-  { pageKey: "refund-cancellation-policy", pageName: "Refund & Cancellation Policy", group: "Legal" },
+  {
+    pageKey: "terms-and-conditions",
+    pageName: "Terms & Conditions",
+    group: "Legal",
+  },
+  {
+    pageKey: "refund-cancellation-policy",
+    pageName: "Refund & Cancellation Policy",
+    group: "Legal",
+  },
   { pageKey: "not-found", pageName: "404 Not Found", group: "System" },
   { pageKey: "error", pageName: "Error", group: "System" },
   { pageKey: "global-error", pageName: "Global Error", group: "System" },

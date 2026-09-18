@@ -16,11 +16,21 @@ export async function GET(request: Request) {
     await requirePermission("inventory.read");
     await connectToDatabase();
     const url = new URL(request.url);
-    const historyLimit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit")) || 20));
+    const historyLimit = Math.min(
+      100,
+      Math.max(1, Number(url.searchParams.get("limit")) || 20),
+    );
 
     const [items, history] = await Promise.all([
-      InventoryItem.find({ isActive: true }).sort({ category: 1, name: 1 }).lean(),
-      StockCount.find().populate("createdBy", "name email").populate("postedBy", "name email").sort({ countedAt: -1 }).limit(historyLimit).lean(),
+      InventoryItem.find({ isActive: true })
+        .sort({ category: 1, name: 1 })
+        .lean(),
+      StockCount.find()
+        .populate("createdBy", "name email")
+        .populate("postedBy", "name email")
+        .sort({ countedAt: -1 })
+        .limit(historyLimit)
+        .lean(),
     ]);
 
     return successResponse({ items, history });

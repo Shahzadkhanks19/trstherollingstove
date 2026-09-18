@@ -32,7 +32,6 @@ const InvoiceModifierSchema = new Schema(
   },
 );
 
-
 const InvoicePaymentPartSchema = new Schema(
   {
     method: {
@@ -222,13 +221,29 @@ const InvoiceSchema = new Schema(
       maxlength: 30,
       default: "",
     },
-    saleType: { type: String, enum: ["customer", "staff_meal", "family_meal", "complimentary", "food_wastage", "kitchen_test"], default: "customer" },
+    saleType: {
+      type: String,
+      enum: [
+        "customer",
+        "staff_meal",
+        "family_meal",
+        "complimentary",
+        "food_wastage",
+        "kitchen_test",
+      ],
+      default: "customer",
+    },
     internalConsumption: {
       personName: { type: String, trim: true, maxlength: 120, default: "" },
       reason: { type: String, trim: true, maxlength: 240, default: "" },
       notes: { type: String, trim: true, maxlength: 500, default: "" },
       menuValue: { type: Number, min: 0, default: 0 },
-      approvalStatus: { type: String, trim: true, maxlength: 30, default: "not_required" },
+      approvalStatus: {
+        type: String,
+        trim: true,
+        maxlength: 30,
+        default: "not_required",
+      },
       approvalReason: { type: String, trim: true, maxlength: 500, default: "" },
     },
     paymentMethod: {
@@ -272,9 +287,18 @@ const InvoiceSchema = new Schema(
     packingCharge: { type: Number, required: true, min: 0, default: 0 },
     serviceCharge: { type: Number, required: true, min: 0, default: 0 },
     additionalCharge: { type: Number, required: true, min: 0, default: 0 },
-    additionalChargeLabel: { type: String, trim: true, maxlength: 60, default: "Additional charge" },
+    additionalChargeLabel: {
+      type: String,
+      trim: true,
+      maxlength: 60,
+      default: "Additional charge",
+    },
     taxRate: { type: Number, min: 0, max: 100, default: 0 },
-    taxMode: { type: String, enum: ["exclusive", "inclusive"], default: "exclusive" },
+    taxMode: {
+      type: String,
+      enum: ["exclusive", "inclusive"],
+      default: "exclusive",
+    },
     discountReason: { type: String, trim: true, maxlength: 120, default: "" },
     grandTotal: {
       type: Number,
@@ -308,8 +332,7 @@ const InvoiceSchema = new Schema(
   },
 );
 
-export type InvoiceDocument =
-  InferSchemaType<typeof InvoiceSchema>;
+export type InvoiceDocument = InferSchemaType<typeof InvoiceSchema>;
 
 export const Invoice: Model<InvoiceDocument> =
   (models.Invoice as Model<InvoiceDocument>) ||

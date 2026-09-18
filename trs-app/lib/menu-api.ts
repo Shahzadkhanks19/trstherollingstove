@@ -14,9 +14,10 @@ type ApiEnvelope<T> = {
 };
 
 async function parseApiError(response: Response): Promise<string> {
-  const body = (await response.json().catch(() => null)) as
-    | { message?: string; error?: string }
-    | null;
+  const body = (await response.json().catch(() => null)) as {
+    message?: string;
+    error?: string;
+  } | null;
 
   return (
     body?.message ??

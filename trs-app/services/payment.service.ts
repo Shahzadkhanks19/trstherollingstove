@@ -10,7 +10,10 @@ import {
 import { Order } from "@/models/Order";
 import { Payment } from "@/models/Payment";
 import { PaymentWebhookEvent } from "@/models/PaymentWebhookEvent";
-import { publishOrderCreated, publishPaymentUpdated } from "@/services/realtimeEvents.service";
+import {
+  publishOrderCreated,
+  publishPaymentUpdated,
+} from "@/services/realtimeEvents.service";
 import { createKitchenTicketsFromOrder } from "@/services/kds.service";
 
 function toPaise(amount: number) {
@@ -66,11 +69,8 @@ async function finalizeCapturedOrder(input: {
       orderNumber: paidOrder.orderNumber,
       source: "website",
       actorId: input.actorId,
-      fulfilmentType:
-        paidOrder.orderMode === "dine_in" ? "dine_in" : "pickup",
-      ...(paidOrder.tableNumber
-        ? { tableLabel: paidOrder.tableNumber }
-        : {}),
+      fulfilmentType: paidOrder.orderMode === "dine_in" ? "dine_in" : "pickup",
+      ...(paidOrder.tableNumber ? { tableLabel: paidOrder.tableNumber } : {}),
       ...(paidOrder.customerSnapshot?.name
         ? { customerName: paidOrder.customerSnapshot.name }
         : {}),
@@ -92,8 +92,7 @@ async function finalizeCapturedOrder(input: {
   } catch (error) {
     console.error("[kds] Unable to create tickets for paid order.", {
       orderId: paidOrder.id,
-      error:
-        error instanceof Error ? error.message : "Unknown KDS error.",
+      error: error instanceof Error ? error.message : "Unknown KDS error.",
     });
   }
 
@@ -121,9 +120,7 @@ export function verifyWebhookSignature(rawBody: string, signature: string) {
     throw new AppError("Razorpay webhook secret is not configured.", 500);
   }
 
-  const expected = createHmac("sha256", secret)
-    .update(rawBody)
-    .digest("hex");
+  const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
 
   return secureEqual(expected, signature);
 }
@@ -237,7 +234,9 @@ export async function markRazorpayPaymentFailed(input: {
   payment.status = "failed";
   payment.failureCode = input.code?.slice(0, 200) ?? "";
   payment.failureDescription =
-    input.description?.slice(0, 500) || input.reason?.slice(0, 500) || "Payment failed.";
+    input.description?.slice(0, 500) ||
+    input.reason?.slice(0, 500) ||
+    "Payment failed.";
   payment.rawMetadata = {
     ...((payment.rawMetadata as Record<string, unknown>) ?? {}),
     checkoutFailure: {
@@ -268,7 +267,8 @@ export async function confirmRazorpayPayment(input: {
   razorpaySignature: string;
 }) {
   const isValid = verifyCheckoutSignature(input);
-  if (!isValid) throw new AppError("Payment signature verification failed.", 400);
+  if (!isValid)
+    throw new AppError("Payment signature verification failed.", 400);
 
   const payment = await Payment.findOne({
     orderId: input.orderId,
@@ -340,10 +340,7 @@ export async function refundRazorpayPayment(input: {
   if (!payment.providerPaymentId) {
     throw new AppError("Provider payment ID is unavailable.", 400);
   }
-  if (![
-    "captured",
-    "partially_refunded",
-  ].includes(payment.status)) {
+  if (!["captured", "partially_refunded"].includes(payment.status)) {
     throw new AppError("Only captured payments can be refunded.", 409);
   }
 
@@ -351,9 +348,7 @@ export async function refundRazorpayPayment(input: {
     0,
     Number((payment.amount - payment.amountRefunded).toFixed(2)),
   );
-  const requestedAmount = Number(
-    (input.amount ?? refundableAmount).toFixed(2),
-  );
+  const requestedAmount = Number((input.amount ?? refundableAmount).toFixed(2));
 
   if (requestedAmount <= 0 || requestedAmount > refundableAmount) {
     throw new AppError("Invalid refund amount.", 400);
@@ -516,10 +511,7 @@ export async function processRazorpayWebhook(input: {
           : payment.contact;
         payment.rawMetadata = input.payload;
 
-        if (
-          eventName === "payment.captured" ||
-          eventName === "order.paid"
-        ) {
+        if (eventName === "payment.captured" || eventName === "order.paid") {
           if (
             paymentEntity.amount !== undefined &&
             Number(paymentEntity.amount) !== toPaise(payment.amount)
@@ -535,8 +527,7 @@ export async function processRazorpayWebhook(input: {
           if (payment.status !== "captured") {
             payment.status = "failed";
             payment.failureCode = paymentEntity.error_code ?? "";
-            payment.failureDescription =
-              paymentEntity.error_description ?? "";
+            payment.failureDescription = paymentEntity.error_description ?? "";
           }
         }
 
@@ -574,9 +565,7 @@ export async function processRazorpayWebhook(input: {
           : false;
 
         const providerCumulativeAmount = paymentEntity?.amount_refunded;
-        const webhookRefundAmount = fromPaise(
-          Number(refundEntity.amount ?? 0),
-        );
+        const webhookRefundAmount = fromPaise(Number(refundEntity.amount ?? 0));
         const nextRefundedAmount = Math.min(
           payment.amount,
           providerCumulativeAmount !== undefined

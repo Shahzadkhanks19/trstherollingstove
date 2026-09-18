@@ -11,8 +11,12 @@ export async function GET() {
   try {
     await requirePermission("pos.use");
     await connectToDatabase();
-    return successResponse(await POSItem.find().sort({ category: 1, sortOrder: 1, name: 1 }).lean());
-  } catch (error) { return handleApiError(error); }
+    return successResponse(
+      await POSItem.find().sort({ category: 1, sortOrder: 1, name: 1 }).lean(),
+    );
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 
 export async function POST(request: Request) {
@@ -39,5 +43,7 @@ export async function POST(request: Request) {
       updatedBy: actor.id,
     });
     return successResponse(item, "POS-only item created.", 201);
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

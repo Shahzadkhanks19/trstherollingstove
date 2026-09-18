@@ -22,19 +22,30 @@ export async function PATCH(request: Request, context: Context) {
     })();
     await connectToDatabase();
 
-    if (!Types.ObjectId.isValid(referralId)) throw new AppError("Invalid referral identifier.", 400);
+    if (!Types.ObjectId.isValid(referralId))
+      throw new AppError("Invalid referral identifier.", 400);
     const referral = await Referral.findById(referralId);
     if (!referral) throw new AppError("Referral not found.", 404);
 
     const terminalStatuses = new Set(["rewarded", "rejected", "expired"]);
-    if (terminalStatuses.has(referral.status) && input.status !== referral.status) {
-      throw new AppError(`A ${referral.status} referral cannot be moved to another status.`, 409);
+    if (
+      terminalStatuses.has(referral.status) &&
+      input.status !== referral.status
+    ) {
+      throw new AppError(
+        `A ${referral.status} referral cannot be moved to another status.`,
+        409,
+      );
     }
 
     if (input.status === "rewarded") {
-      if (referral.rewardedAt) return successResponse(referral, "Referral was already rewarded.");
+      if (referral.rewardedAt)
+        return successResponse(referral, "Referral was already rewarded.");
       if (!referral.firstOrderId && referral.status !== "order_completed") {
-        throw new AppError("Complete and verify the referred customer’s first order before rewarding.", 409);
+        throw new AppError(
+          "Complete and verify the referred customer’s first order before rewarding.",
+          409,
+        );
       }
 
       referral.status = "rewarded";
@@ -59,7 +70,8 @@ export async function PATCH(request: Request, context: Context) {
       }
     } else {
       referral.status = input.status;
-      referral.rejectionReason = input.status === "rejected" ? input.rejectionReason : "";
+      referral.rejectionReason =
+        input.status === "rejected" ? input.rejectionReason : "";
       await referral.save();
     }
 

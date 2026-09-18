@@ -55,7 +55,10 @@ export async function GET(request: Request) {
         amountPaid: order.grandTotal,
         coinsEarned: order.coinsEarned ?? 0,
         completedAt: order.completedAt?.toISOString() ?? null,
-        itemCount: order.items.reduce((total, item) => total + item.quantity, 0),
+        itemCount: order.items.reduce(
+          (total, item) => total + item.quantity,
+          0,
+        ),
         items: order.items.map((item) => ({
           id: String(item._id),
           menuItemId: String(item.menuItemId),

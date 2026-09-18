@@ -11,10 +11,7 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
     const actor = await requirePermission("kds.manage");
     const { id } = await context.params;
@@ -30,9 +27,7 @@ export async function PATCH(
       {
         $set: {
           ...input,
-          ...(input.code
-            ? { code: input.code.toUpperCase() }
-            : {}),
+          ...(input.code ? { code: input.code.toUpperCase() } : {}),
           updatedBy: actor.id,
         },
       },
@@ -42,16 +37,10 @@ export async function PATCH(
     );
 
     if (!station) {
-      throw new AppError(
-        "Kitchen station not found.",
-        404,
-      );
+      throw new AppError("Kitchen station not found.", 404);
     }
 
-    return successResponse(
-      station,
-      "Kitchen station updated.",
-    );
+    return successResponse(station, "Kitchen station updated.");
   } catch (error) {
     return handleApiError(error);
   }

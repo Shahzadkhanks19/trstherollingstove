@@ -11,33 +11,20 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(
-  _request: Request,
-  context: Context,
-) {
+export async function GET(_request: Request, context: Context) {
   try {
     await requirePermission("purchases.read");
     const { id } = await context.params;
 
     await connectToDatabase();
 
-    const purchaseOrder =
-      await PurchaseOrder.findById(id)
-        .populate(
-          "supplierId",
-          "name code phone gstin",
-        )
-        .populate(
-          "items.inventoryItemId",
-          "name sku unit currentStock",
-        )
-        .lean();
+    const purchaseOrder = await PurchaseOrder.findById(id)
+      .populate("supplierId", "name code phone gstin")
+      .populate("items.inventoryItemId", "name sku unit currentStock")
+      .lean();
 
     if (!purchaseOrder) {
-      throw new AppError(
-        "Purchase order not found.",
-        404,
-      );
+      throw new AppError("Purchase order not found.", 404);
     }
 
     return successResponse(purchaseOrder);
@@ -46,59 +33,41 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
-    const actor = await requirePermission(
-      "purchases.manage",
-    );
+    const actor = await requirePermission("purchases.manage");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      updatePurchaseOrderSchema,
-    );
+    const input = await validateRequestBody(request, updatePurchaseOrderSchema);
 
     await connectToDatabase();
 
-    const purchaseOrder =
-      await PurchaseOrder.findOneAndUpdate(
-        {
-          _id: id,
-          status: "draft",
+    const purchaseOrder = await PurchaseOrder.findOneAndUpdate(
+      {
+        _id: id,
+        status: "draft",
+      },
+      {
+        $set: {
+          ...input,
+          updatedBy: actor.id,
         },
-        {
-          $set: {
-            ...input,
-            updatedBy: actor.id,
-          },
-        },
-        {
-          returnDocument: "after",
-        },
-      );
+      },
+      {
+        returnDocument: "after",
+      },
+    );
 
     if (!purchaseOrder) {
-      throw new AppError(
-        "Editable draft purchase order not found.",
-        404,
-      );
+      throw new AppError("Editable draft purchase order not found.", 404);
     }
 
-    return successResponse(
-      purchaseOrder,
-      "Purchase order updated.",
-    );
+    return successResponse(purchaseOrder, "Purchase order updated.");
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  context: Context,
-) {
+export async function DELETE(_request: Request, context: Context) {
   try {
     await requirePermission("purchases.manage");
     const { id } = await context.params;
@@ -113,7 +82,10 @@ export async function DELETE(
       SupplierPayment.countDocuments({ purchaseOrderId: id }),
     ]);
     if (receiptCount > 0 || paymentCount > 0) {
-      throw new AppError("This order has receipt or payment records and cannot be deleted.", 409);
+      throw new AppError(
+        "This order has receipt or payment records and cannot be deleted.",
+        409,
+      );
     }
 
     const purchaseOrder = await PurchaseOrder.findByIdAndDelete(id);

@@ -14,5 +14,7 @@ export async function GET(_request: Request, context: Context) {
     const invoice = await Invoice.findById(id).lean();
     if (!invoice) throw new AppError("Bill not found.", 404);
     return successResponse(invoice);
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

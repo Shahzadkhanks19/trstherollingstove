@@ -10,10 +10,8 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const purchaseOrderId =
-      url.searchParams.get("purchaseOrderId");
-    const supplierId =
-      url.searchParams.get("supplierId");
+    const purchaseOrderId = url.searchParams.get("purchaseOrderId");
+    const supplierId = url.searchParams.get("supplierId");
 
     const filter: Record<string, unknown> = {};
 
@@ -26,22 +24,10 @@ export async function GET(request: Request) {
     }
 
     const receipts = await GoodsReceipt.find(filter)
-      .populate(
-        "purchaseOrderId",
-        "purchaseOrderNumber status",
-      )
-      .populate(
-        "supplierId",
-        "name code",
-      )
-      .populate(
-        "items.inventoryItemId",
-        "name sku unit",
-      )
-      .populate(
-        "receivedBy",
-        "name",
-      )
+      .populate("purchaseOrderId", "purchaseOrderNumber status")
+      .populate("supplierId", "name code")
+      .populate("items.inventoryItemId", "name sku unit")
+      .populate("receivedBy", "name")
       .sort({ receivedAt: -1 })
       .lean();
 

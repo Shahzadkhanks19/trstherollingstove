@@ -23,7 +23,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { MediaPlaceholder } from "@/components/site/MediaPlaceholder";
 
-type EmploymentType = "Full-time" | "Part-time" | "Full-time / Part-time" | "Internship";
+type EmploymentType =
+  "Full-time" | "Part-time" | "Full-time / Part-time" | "Internship";
 
 type Job = {
   id: string;
@@ -130,23 +131,41 @@ export function CareersPageClient() {
     let cancelled = false;
     void fetch("/api/v1/public/careers/jobs", { cache: "no-store" })
       .then(async (response) => {
-        const json = (await response.json()) as { data?: Array<Job & { _id?: string; slug?: string }>; message?: string };
-        if (!response.ok) throw new Error(json.message || "Unable to load jobs.");
+        const json = (await response.json()) as {
+          data?: Array<Job & { _id?: string; slug?: string }>;
+          message?: string;
+        };
+        if (!response.ok)
+          throw new Error(json.message || "Unable to load jobs.");
         if (!cancelled) {
-          setJobs((json.data || []).map((job) => ({ ...job, id: job._id || job.slug || job.id })));
+          setJobs(
+            (json.data || []).map((job) => ({
+              ...job,
+              id: job._id || job.slug || job.id,
+            })),
+          );
         }
       })
-      .catch(() => { if (!cancelled) setJobs([]); })
-      .finally(() => { if (!cancelled) setJobsLoading(false); });
-    return () => { cancelled = true; };
+      .catch(() => {
+        if (!cancelled) setJobs([]);
+      })
+      .finally(() => {
+        if (!cancelled) setJobsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
   const [selectedJob, setSelectedJob] = useState<string>("all");
-  const [expandedJob, setExpandedJob] = useState<string | null | undefined>(undefined);
+  const [expandedJob, setExpandedJob] = useState<string | null | undefined>(
+    undefined,
+  );
   const [form, setForm] = useState<ApplicationForm>(initialForm);
   const [resume, setResume] = useState<File | null>(null);
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
   const [statusMessage, setStatusMessage] = useState("");
-
 
   const visibleJobs = useMemo(
     () =>
@@ -319,7 +338,10 @@ export function CareersPageClient() {
                   className="min-w-0 rounded-2xl border border-[#EDE3D8] bg-white/90 p-4 text-center shadow-[0_12px_30px_rgba(44,28,14,.06)]"
                 >
                   <span className="mx-auto grid h-11 w-11 place-items-center rounded-full border border-[#E8A53A] bg-[#FFF8EE] text-[#C8102E]">
-                    <FontAwesomeIcon icon={icon as IconDefinition} className="h-4" />
+                    <FontAwesomeIcon
+                      icon={icon as IconDefinition}
+                      className="h-4"
+                    />
                   </span>
                   <strong className="mt-3 block text-[9px] font-black uppercase">
                     {String(title)}
@@ -355,8 +377,12 @@ export function CareersPageClient() {
                 <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#FFF1E5] text-[#C8102E]">
                   <FontAwesomeIcon icon={icon} className="h-5" />
                 </span>
-                <h3 className="mt-4 text-[10px] font-black uppercase">{title}</h3>
-                <p className="mt-2 text-[9px] leading-4 text-[#655E57]">{text}</p>
+                <h3 className="mt-4 text-[10px] font-black uppercase">
+                  {title}
+                </h3>
+                <p className="mt-2 text-[9px] leading-4 text-[#655E57]">
+                  {text}
+                </p>
               </article>
             ))}
           </div>
@@ -371,7 +397,9 @@ export function CareersPageClient() {
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-[#C8102E]">
                   Current Opportunities
                 </p>
-                <h2 className="mt-2 text-2xl font-black uppercase">Open Positions</h2>
+                <h2 className="mt-2 text-2xl font-black uppercase">
+                  Open Positions
+                </h2>
               </div>
 
               <label className="text-[9px] font-black uppercase">
@@ -394,105 +422,119 @@ export function CareersPageClient() {
 
             <div className="mt-5 grid gap-3">
               {jobsLoading ? (
-                <p className="rounded-2xl border border-[#EDE3D8] bg-white p-6 text-center text-sm font-semibold text-[#655E57]">Loading current openings...</p>
+                <p className="rounded-2xl border border-[#EDE3D8] bg-white p-6 text-center text-sm font-semibold text-[#655E57]">
+                  Loading current openings...
+                </p>
               ) : visibleJobs.length === 0 ? (
-                <p className="rounded-2xl border border-[#EDE3D8] bg-white p-6 text-center text-sm font-semibold text-[#655E57]">No matching openings are available right now.</p>
-              ) : visibleJobs.map((job) => {
-                const expanded = (expandedJob ?? jobs[0]?.id ?? null) === job.id;
+                <p className="rounded-2xl border border-[#EDE3D8] bg-white p-6 text-center text-sm font-semibold text-[#655E57]">
+                  No matching openings are available right now.
+                </p>
+              ) : (
+                visibleJobs.map((job) => {
+                  const expanded =
+                    (expandedJob ?? jobs[0]?.id ?? null) === job.id;
 
-                return (
-                  <article
-                    key={job.id}
-                    className="overflow-hidden rounded-2xl border border-[#EDE3D8] bg-white shadow-[0_10px_26px_rgba(50,30,15,.04)]"
-                  >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedJob(expanded ? null : job.id)
-                      }
-                      className="flex w-full min-w-0 flex-col gap-4 p-4 text-left sm:flex-row sm:items-center sm:justify-between"
+                  return (
+                    <article
+                      key={job.id}
+                      className="overflow-hidden rounded-2xl border border-[#EDE3D8] bg-white shadow-[0_10px_26px_rgba(50,30,15,.04)]"
                     >
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-sm font-black">{job.title}</h3>
-                          <span className="rounded-full border border-[#E8B9B5] bg-[#FFF4F2] px-2.5 py-1 text-[8px] font-black uppercase text-[#C8102E]">
-                            {job.employmentType}
-                          </span>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedJob(expanded ? null : job.id)}
+                        className="flex w-full min-w-0 flex-col gap-4 p-4 text-left sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-sm font-black">{job.title}</h3>
+                            <span className="rounded-full border border-[#E8B9B5] bg-[#FFF4F2] px-2.5 py-1 text-[8px] font-black uppercase text-[#C8102E]">
+                              {job.employmentType}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 flex items-center gap-2 text-[9px] text-[#655E57]">
+                            <FontAwesomeIcon
+                              icon={faLocationDot}
+                              className="h-3 text-[#C8102E]"
+                            />
+                            {job.location}
+                          </p>
+
+                          <p className="mt-2 text-[10px] leading-5 text-[#655E57]">
+                            {job.summary}
+                          </p>
                         </div>
 
-                        <p className="mt-2 flex items-center gap-2 text-[9px] text-[#655E57]">
-                          <FontAwesomeIcon icon={faLocationDot} className="h-3 text-[#C8102E]" />
-                          {job.location}
-                        </p>
+                        <span className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#C8102E] px-4 text-[8px] font-black uppercase text-[#C8102E]">
+                          {expanded ? "Hide Details" : "View Details"}
+                          <FontAwesomeIcon
+                            icon={faArrowRight}
+                            className="h-3"
+                          />
+                        </span>
+                      </button>
 
-                        <p className="mt-2 text-[10px] leading-5 text-[#655E57]">
-                          {job.summary}
-                        </p>
-                      </div>
+                      {expanded && (
+                        <div className="border-t border-[#EDE3D8] bg-[#FFFDF9] p-4">
+                          <div className="grid gap-5 sm:grid-cols-2">
+                            <div>
+                              <h4 className="text-[9px] font-black uppercase text-[#C8102E]">
+                                Responsibilities
+                              </h4>
+                              <div className="mt-3 grid gap-2">
+                                {job.responsibilities.map((item) => (
+                                  <p
+                                    key={item}
+                                    className="flex gap-2 text-[9px] leading-4 text-[#655E57]"
+                                  >
+                                    <FontAwesomeIcon
+                                      icon={faCheck}
+                                      className="mt-0.5 h-3 shrink-0 text-[#D99219]"
+                                    />
+                                    {item}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
 
-                      <span className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#C8102E] px-4 text-[8px] font-black uppercase text-[#C8102E]">
-                        {expanded ? "Hide Details" : "View Details"}
-                        <FontAwesomeIcon icon={faArrowRight} className="h-3" />
-                      </span>
-                    </button>
-
-                    {expanded && (
-                      <div className="border-t border-[#EDE3D8] bg-[#FFFDF9] p-4">
-                        <div className="grid gap-5 sm:grid-cols-2">
-                          <div>
-                            <h4 className="text-[9px] font-black uppercase text-[#C8102E]">
-                              Responsibilities
-                            </h4>
-                            <div className="mt-3 grid gap-2">
-                              {job.responsibilities.map((item) => (
-                                <p
-                                  key={item}
-                                  className="flex gap-2 text-[9px] leading-4 text-[#655E57]"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={faCheck}
-                                    className="mt-0.5 h-3 shrink-0 text-[#D99219]"
-                                  />
-                                  {item}
-                                </p>
-                              ))}
+                            <div>
+                              <h4 className="text-[9px] font-black uppercase text-[#C8102E]">
+                                Requirements
+                              </h4>
+                              <div className="mt-3 grid gap-2">
+                                {job.requirements.map((item) => (
+                                  <p
+                                    key={item}
+                                    className="flex gap-2 text-[9px] leading-4 text-[#655E57]"
+                                  >
+                                    <FontAwesomeIcon
+                                      icon={faCheck}
+                                      className="mt-0.5 h-3 shrink-0 text-[#D99219]"
+                                    />
+                                    {item}
+                                  </p>
+                                ))}
+                              </div>
                             </div>
                           </div>
 
-                          <div>
-                            <h4 className="text-[9px] font-black uppercase text-[#C8102E]">
-                              Requirements
-                            </h4>
-                            <div className="mt-3 grid gap-2">
-                              {job.requirements.map((item) => (
-                                <p
-                                  key={item}
-                                  className="flex gap-2 text-[9px] leading-4 text-[#655E57]"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={faCheck}
-                                    className="mt-0.5 h-3 shrink-0 text-[#D99219]"
-                                  />
-                                  {item}
-                                </p>
-                              ))}
-                            </div>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => selectPosition(job)}
+                            className="mt-5 inline-flex h-10 items-center gap-3 rounded-xl bg-[#C8102E] px-5 text-[8px] font-black uppercase text-white"
+                          >
+                            Apply for This Role
+                            <FontAwesomeIcon
+                              icon={faArrowRight}
+                              className="h-3"
+                            />
+                          </button>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => selectPosition(job)}
-                          className="mt-5 inline-flex h-10 items-center gap-3 rounded-xl bg-[#C8102E] px-5 text-[8px] font-black uppercase text-white"
-                        >
-                          Apply for This Role
-                          <FontAwesomeIcon icon={faArrowRight} className="h-3" />
-                        </button>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
+                      )}
+                    </article>
+                  );
+                })
+              )}
             </div>
           </section>
 
@@ -537,7 +579,9 @@ export function CareersPageClient() {
                 <span className="mx-auto grid h-20 w-20 place-items-center rounded-full border border-[#E8D8C9] bg-[#FFF7EE] text-[#D99219]">
                   <FontAwesomeIcon icon={icon} className="h-7" />
                 </span>
-                <h3 className="mt-4 text-[10px] font-black uppercase">{title}</h3>
+                <h3 className="mt-4 text-[10px] font-black uppercase">
+                  {title}
+                </h3>
                 <p className="mx-auto mt-2 max-w-[180px] text-[9px] leading-4 text-[#655E57]">
                   {text}
                 </p>
@@ -558,7 +602,9 @@ export function CareersPageClient() {
                 <FontAwesomeIcon icon={faBriefcase} className="h-5" />
               </span>
               <div>
-                <h2 className="text-xl font-black uppercase">Apply to Join TRS</h2>
+                <h2 className="text-xl font-black uppercase">
+                  Apply to Join TRS
+                </h2>
                 <p className="mt-1 text-[10px] leading-5 text-[#655E57]">
                   Complete the form. Shortlisted applicants will be contacted.
                 </p>
@@ -611,7 +657,9 @@ export function CareersPageClient() {
                 Position *
                 <select
                   value={form.position}
-                  onChange={(event) => updateField("position", event.target.value)}
+                  onChange={(event) =>
+                    updateField("position", event.target.value)
+                  }
                   className="mt-2 h-11 w-full min-w-0 rounded-xl border border-[#E5D9CD] bg-[#FFFDF9] px-4 text-sm font-medium normal-case outline-none focus:border-[#C8102E]"
                 >
                   <option value="">Select a position</option>
@@ -663,12 +711,14 @@ export function CareersPageClient() {
             <label className="mt-4 flex items-start gap-3 text-[9px] leading-5 text-[#655E57]">
               <input
                 checked={form.consent}
-                onChange={(event) => updateField("consent", event.target.checked)}
+                onChange={(event) =>
+                  updateField("consent", event.target.checked)
+                }
                 type="checkbox"
                 className="mt-0.5 h-4 w-4 shrink-0 accent-[#C8102E]"
               />
-              I confirm that the information provided is correct and may be
-              used by TRS to evaluate my application.
+              I confirm that the information provided is correct and may be used
+              by TRS to evaluate my application.
             </label>
 
             {statusMessage && (

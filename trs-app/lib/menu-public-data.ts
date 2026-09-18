@@ -6,7 +6,11 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { MenuCategory } from "@/models/MenuCategory";
 import { MenuItem } from "@/models/MenuItem";
 import { ModifierGroup } from "@/models/ModifierGroup";
-import { isThinCrustEnabled, thinCrustGroupId, thinCrustOptionId } from "@/lib/menu-special-config";
+import {
+  isThinCrustEnabled,
+  thinCrustGroupId,
+  thinCrustOptionId,
+} from "@/lib/menu-special-config";
 import type {
   MenuItemDetails,
   MenuItemSummary,
@@ -24,7 +28,6 @@ function asString(value: unknown): string {
   return String(value ?? "");
 }
 
-
 function categoryIdentity(category: { name?: string; slug?: string }): string {
   return `${category.slug ?? ""} ${category.name ?? ""}`
     .trim()
@@ -36,7 +39,10 @@ function isPizzaCategory(category: { name?: string; slug?: string }): boolean {
   return categoryIdentity(category).includes("pizza");
 }
 
-function isChurChurNaanCategory(category: { name?: string; slug?: string }): boolean {
+function isChurChurNaanCategory(category: {
+  name?: string;
+  slug?: string;
+}): boolean {
   const identity = categoryIdentity(category);
   return identity.includes("chur") && identity.includes("naan");
 }
@@ -50,12 +56,23 @@ function inferOptionCode(name: string): MenuOptionGroup["code"] {
   if (value.includes("sweet")) return "sweetness";
   if (value.includes("ice")) return "ice_preference";
   if (value.includes("dip")) return "dips";
-  if (value.includes("sabji") || value.includes("sabzi") || value.includes("chole") || value.includes("kadhai paneer")) return "sabji_choice";
+  if (
+    value.includes("sabji") ||
+    value.includes("sabzi") ||
+    value.includes("chole") ||
+    value.includes("kadhai paneer")
+  )
+    return "sabji_choice";
   if (value.includes("extra naan")) return "extra_naan";
-  if (value.includes("extra cheese") || value === "cheese") return "extra_cheese";
+  if (value.includes("extra cheese") || value === "cheese")
+    return "extra_cheese";
   if (value.includes("topping")) return "extra_toppings";
   if (value.includes("size")) return "size";
-  if (value.includes("portion") || value.includes("half") || value.includes("full")) {
+  if (
+    value.includes("portion") ||
+    value.includes("half") ||
+    value.includes("full")
+  ) {
     return "portion";
   }
 
@@ -80,20 +97,17 @@ function mapVariants(item: LeanRecord): MenuPriceOption[] {
   const variants = Array.isArray(item.variants) ? item.variants : [];
 
   const mapped = variants
-    .filter((variant): variant is LeanRecord => Boolean(variant && typeof variant === "object"))
-    .filter((variant) => variant.isActive !== false)
-    .sort(
-      (a, b) =>
-        Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0),
+    .filter((variant): variant is LeanRecord =>
+      Boolean(variant && typeof variant === "object"),
     )
+    .filter((variant) => variant.isActive !== false)
+    .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0))
     .map((variant) => ({
       id: asString(variant._id),
       label: String(variant.name ?? "Regular"),
       price: Number(variant.price ?? 0),
       compareAtPrice:
-        variant.compareAtPrice == null
-          ? null
-          : Number(variant.compareAtPrice),
+        variant.compareAtPrice == null ? null : Number(variant.compareAtPrice),
       isDefault: Boolean(variant.isDefault),
       isAvailable: variant.isActive !== false,
     }));
@@ -119,13 +133,15 @@ function mapModifierGroups(item: LeanRecord): MenuOptionGroup[] {
     : [];
 
   const mappedGroups = groups
-    .filter((group): group is LeanRecord => Boolean(group && typeof group === "object"))
-    .filter((group) => group.isActive !== false)
-    .filter((group) => !isPosOnlyGroup(String(group.internalName ?? group.name ?? "")))
-    .sort(
-      (a, b) =>
-        Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0),
+    .filter((group): group is LeanRecord =>
+      Boolean(group && typeof group === "object"),
     )
+    .filter((group) => group.isActive !== false)
+    .filter(
+      (group) =>
+        !isPosOnlyGroup(String(group.internalName ?? group.name ?? "")),
+    )
+    .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0))
     .map((group) => {
       const groupName = String(group.name ?? "Options");
       const options = Array.isArray(group.options) ? group.options : [];
@@ -133,9 +149,7 @@ function mapModifierGroups(item: LeanRecord): MenuOptionGroup[] {
       return {
         id: asString(group._id),
         name: groupName,
-        code: inferOptionCode(
-          String(group.internalName ?? group.name ?? ""),
-        ),
+        code: inferOptionCode(String(group.internalName ?? group.name ?? "")),
         selectionType:
           group.selectionType === "single"
             ? "single"
@@ -146,24 +160,19 @@ function mapModifierGroups(item: LeanRecord): MenuOptionGroup[] {
         minSelections: Number(group.minSelections ?? 0),
         maxSelections: Number(group.maxSelections ?? 1),
         choices: options
-          .filter(
-            (option): option is LeanRecord =>
-              Boolean(option && typeof option === "object"),
+          .filter((option): option is LeanRecord =>
+            Boolean(option && typeof option === "object"),
           )
           .filter((option) => option.isActive !== false)
-          .sort(
-            (a, b) =>
-              Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0),
-          )
+          .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0))
           .map((option) => ({
             id: asString(option._id),
             name: String(option.name ?? "Option"),
             price: Number(option.price ?? 0),
             variantPrices: Array.isArray(option.variantPrices)
               ? option.variantPrices
-                  .filter(
-                    (entry): entry is LeanRecord =>
-                      Boolean(entry && typeof entry === "object"),
+                  .filter((entry): entry is LeanRecord =>
+                    Boolean(entry && typeof entry === "object"),
                   )
                   .map((entry) => ({
                     variantLabel: String(entry.variantLabel ?? ""),
@@ -186,10 +195,13 @@ function mapModifierGroups(item: LeanRecord): MenuOptionGroup[] {
       ? (item.pizzaConfiguration as LeanRecord)
       : null;
 
-  if (isPizzaCategory(category) && isThinCrustEnabled(String(item.name ?? ""), {
-    thinCrustAvailable: pizzaConfiguration?.thinCrustAvailable !== false,
-    thinCrustPriceAdjustment: 0,
-  })) {
+  if (
+    isPizzaCategory(category) &&
+    isThinCrustEnabled(String(item.name ?? ""), {
+      thinCrustAvailable: pizzaConfiguration?.thinCrustAvailable !== false,
+      thinCrustPriceAdjustment: 0,
+    })
+  ) {
     mappedGroups.unshift({
       id: thinCrustGroupId(itemId),
       name: "Crust",
@@ -198,21 +210,22 @@ function mapModifierGroups(item: LeanRecord): MenuOptionGroup[] {
       required: false,
       minSelections: 0,
       maxSelections: 1,
-      choices: [{
-        id: thinCrustOptionId(itemId),
-        name: "Thin Crust",
-        price: 0,
-        variantPrices: [],
-        isDefault: false,
-        isAvailable: true,
-        maxQuantity: 1,
-      }],
+      choices: [
+        {
+          id: thinCrustOptionId(itemId),
+          name: "Thin Crust",
+          price: 0,
+          variantPrices: [],
+          isDefault: false,
+          isAvailable: true,
+          maxQuantity: 1,
+        },
+      ],
     });
   }
 
   return mappedGroups;
 }
-
 
 function mapCombinationPricing(item: LeanRecord) {
   const raw = item.combinationPricing;
@@ -222,24 +235,28 @@ function mapCombinationPricing(item: LeanRecord) {
   const entries = Array.isArray(record.entries) ? record.entries : [];
   return {
     enabled: true,
-    modifierGroupId: record.modifierGroupId ? asString(record.modifierGroupId) : null,
+    modifierGroupId: record.modifierGroupId
+      ? asString(record.modifierGroupId)
+      : null,
     entries: entries
-      .filter((entry): entry is LeanRecord => Boolean(entry && typeof entry === "object"))
+      .filter((entry): entry is LeanRecord =>
+        Boolean(entry && typeof entry === "object"),
+      )
       .map((entry) => ({
         variantLabel: String(entry.variantLabel ?? ""),
         optionId: asString(entry.optionId),
         optionName: String(entry.optionName ?? ""),
         price: Number(entry.price ?? 0),
       }))
-      .filter((entry) => entry.variantLabel && entry.optionId && entry.optionName),
+      .filter(
+        (entry) => entry.variantLabel && entry.optionId && entry.optionName,
+      ),
   };
 }
 
 function mapCategory(category: unknown) {
   const record =
-    category && typeof category === "object"
-      ? (category as LeanRecord)
-      : {};
+    category && typeof category === "object" ? (category as LeanRecord) : {};
 
   return {
     id: asString(record._id),
@@ -252,7 +269,9 @@ function mapSummary(item: LeanRecord): MenuItemSummary {
   const category = mapCategory(item.categoryId);
   const pricingOptions = mapVariants(item);
   const priceFrom = Math.min(...pricingOptions.map((option) => option.price));
-  const lowestPriceOption = pricingOptions.find((option) => option.price === priceFrom);
+  const lowestPriceOption = pricingOptions.find(
+    (option) => option.price === priceFrom,
+  );
 
   return {
     id: asString(item._id),
@@ -269,20 +288,35 @@ function mapSummary(item: LeanRecord): MenuItemSummary {
       : null,
     priceFrom,
     compareAtPriceFrom:
-      lowestPriceOption?.compareAtPrice != null && lowestPriceOption.compareAtPrice > priceFrom
+      lowestPriceOption?.compareAtPrice != null &&
+      lowestPriceOption.compareAtPrice > priceFrom
         ? lowestPriceOption.compareAtPrice
-        : item.compareAtPrice == null ? null : Number(item.compareAtPrice),
+        : item.compareAtPrice == null
+          ? null
+          : Number(item.compareAtPrice),
     pricingOptions,
     isVegetarian: item.foodType !== "non_veg",
     isBestseller: Boolean(item.isBestseller),
     isCombo: Boolean(item.isCombo),
     comboOfferType: item.comboOfferType === "limited" ? "limited" : "permanent",
-    comboOfferStartsAt: item.comboOfferStartsAt == null ? null : new Date(String(item.comboOfferStartsAt)).toISOString(),
-    comboOfferExpiresAt: item.comboOfferExpiresAt == null ? null : new Date(String(item.comboOfferExpiresAt)).toISOString(),
+    comboOfferStartsAt:
+      item.comboOfferStartsAt == null
+        ? null
+        : new Date(String(item.comboOfferStartsAt)).toISOString(),
+    comboOfferExpiresAt:
+      item.comboOfferExpiresAt == null
+        ? null
+        : new Date(String(item.comboOfferExpiresAt)).toISOString(),
     publishComboOnMenuPage: item.publishComboOnMenuPage !== false,
     publishComboOnOffersPage: Boolean(item.publishComboOnOffersPage),
-    comboOffersPageSection: item.comboOffersPageSection === "todays" ? "todays" : "permanent",
-    eligibleTierKeys: Array.isArray(item.eligibleTierKeys) && item.eligibleTierKeys.length ? item.eligibleTierKeys.map(String) as Array<"bronze" | "silver" | "gold" | "platinum"> : ["bronze", "silver", "gold", "platinum"],
+    comboOffersPageSection:
+      item.comboOffersPageSection === "todays" ? "todays" : "permanent",
+    eligibleTierKeys:
+      Array.isArray(item.eligibleTierKeys) && item.eligibleTierKeys.length
+        ? (item.eligibleTierKeys.map(String) as Array<
+            "bronze" | "silver" | "gold" | "platinum"
+          >)
+        : ["bronze", "silver", "gold", "platinum"],
     isNew: Array.isArray(item.tags)
       ? item.tags.some((tag) => String(tag).toLowerCase() === "new")
       : false,
@@ -290,7 +324,8 @@ function mapSummary(item: LeanRecord): MenuItemSummary {
       item.isTodaysSpecialOffer === true &&
       item.todaysSpecialOfferStartsAt != null &&
       item.todaysSpecialOfferExpiresAt != null &&
-      new Date(String(item.todaysSpecialOfferStartsAt)).getTime() <= Date.now() &&
+      new Date(String(item.todaysSpecialOfferStartsAt)).getTime() <=
+        Date.now() &&
       new Date(String(item.todaysSpecialOfferExpiresAt)).getTime() > Date.now(),
     todaysSpecialOfferExpiresAt:
       item.todaysSpecialOfferExpiresAt == null
@@ -314,9 +349,7 @@ export async function getPublicMenuItems(): Promise<MenuItemSummary[]> {
     .sort({ sortOrder: 1, name: 1 })
     .lean()) as unknown as LeanRecord[];
 
-  return items
-    .map(mapSummary)
-    .filter((item) => item.slug.length > 0);
+  return items.map(mapSummary).filter((item) => item.slug.length > 0);
 }
 
 export async function getPublicMenuItemBySlug(
@@ -339,8 +372,13 @@ export async function getPublicMenuItemBySlug(
       path: "frequentlyOrderedWithIds",
       model: MenuItem,
       match: { deletedAt: null, isActive: true, isAvailable: true },
-      select: "name slug shortDescription categoryId imageUrl basePrice compareAtPrice variants foodType tags isBestseller isAvailable isActive deletedAt",
-      populate: { path: "categoryId", model: MenuCategory, select: "name slug" },
+      select:
+        "name slug shortDescription categoryId imageUrl basePrice compareAtPrice variants foodType tags isBestseller isAvailable isActive deletedAt",
+      populate: {
+        path: "categoryId",
+        model: MenuCategory,
+        select: "name slug",
+      },
     })
     .lean()) as unknown as LeanRecord | null;
 
@@ -353,30 +391,33 @@ export async function getPublicMenuItemBySlug(
     isChurChurNaanCategory(summary.category) &&
     Types.ObjectId.isValid(currentItemId) &&
     Types.ObjectId.isValid(categoryId)
-      ? ((await MenuItem.find({
-          _id: { $ne: new Types.ObjectId(currentItemId) },
-          categoryId: new Types.ObjectId(categoryId),
-          deletedAt: null,
-          isActive: true,
-          isAvailable: true,
-          "combinationPricing.enabled": true,
-        })
-          .select("name combinationPricing sortOrder")
-          .sort({ sortOrder: 1, name: 1 })
-          .lean()) as unknown as LeanRecord[])
-        .map((candidate) => ({
-          menuItemId: asString(candidate._id),
-          name: asString(candidate.name),
-          prices: mapCombinationPricing(candidate)?.entries ?? [],
-        }))
-        .filter((candidate) =>
-          candidate.menuItemId &&
-          candidate.name &&
-          candidate.prices.some((entry) =>
-            entry.variantLabel.toLowerCase().includes("full"),
-          ),
+      ? (
+          (await MenuItem.find({
+            _id: { $ne: new Types.ObjectId(currentItemId) },
+            categoryId: new Types.ObjectId(categoryId),
+            deletedAt: null,
+            isActive: true,
+            isAvailable: true,
+            "combinationPricing.enabled": true,
+          })
+            .select("name combinationPricing sortOrder")
+            .sort({ sortOrder: 1, name: 1 })
+            .lean()) as unknown as LeanRecord[]
         )
-    : [];
+          .map((candidate) => ({
+            menuItemId: asString(candidate._id),
+            name: asString(candidate.name),
+            prices: mapCombinationPricing(candidate)?.entries ?? [],
+          }))
+          .filter(
+            (candidate) =>
+              candidate.menuItemId &&
+              candidate.name &&
+              candidate.prices.some((entry) =>
+                entry.variantLabel.toLowerCase().includes("full"),
+              ),
+          )
+      : [];
   const galleryUrls = Array.isArray(item.galleryUrls)
     ? item.galleryUrls.map(String).filter(Boolean)
     : [];
@@ -389,14 +430,9 @@ export async function getPublicMenuItemBySlug(
   return {
     ...summary,
     description:
-      String(item.description ?? "") ||
-      String(item.shortDescription ?? ""),
-    ingredients: Array.isArray(item.tags)
-      ? item.tags.map(String)
-      : [],
-    allergens: Array.isArray(item.allergens)
-      ? item.allergens.map(String)
-      : [],
+      String(item.description ?? "") || String(item.shortDescription ?? ""),
+    ingredients: Array.isArray(item.tags) ? item.tags.map(String) : [],
+    allergens: Array.isArray(item.allergens) ? item.allergens.map(String) : [],
     nutrition:
       item.calories == null
         ? null
@@ -412,18 +448,23 @@ export async function getPublicMenuItemBySlug(
     optionGroups: mapModifierGroups(item),
     combinationPricing: mapCombinationPricing(item),
     mixedNaanOptions,
-    pizzaConfiguration:
-      isPizzaCategory(summary.category)
-        ? {
-            thinCrustAvailable: isThinCrustEnabled(summary.name, item.pizzaConfiguration as { thinCrustAvailable?: boolean } | undefined),
-            thinCrustPriceAdjustment: 0,
-          }
-        : null,
+    pizzaConfiguration: isPizzaCategory(summary.category)
+      ? {
+          thinCrustAvailable: isThinCrustEnabled(
+            summary.name,
+            item.pizzaConfiguration as
+              { thinCrustAvailable?: boolean } | undefined,
+          ),
+          thinCrustPriceAdjustment: 0,
+        }
+      : null,
     reviewSummary: null,
     relatedItems: [],
     frequentlyOrderedWith: Array.isArray(item.frequentlyOrderedWithIds)
       ? item.frequentlyOrderedWithIds
-          .filter((entry): entry is LeanRecord => Boolean(entry && typeof entry === "object"))
+          .filter((entry): entry is LeanRecord =>
+            Boolean(entry && typeof entry === "object"),
+          )
           .map(mapSummary)
           .filter((entry) => entry.id !== summary.id && entry.isAvailable)
       : [],
@@ -433,11 +474,15 @@ export async function getPublicMenuItemBySlug(
         : `Estimated preparation time: ${Number(
             item.preparationTimeMinutes,
           )} minutes.`,
-    customerNotice:
-      isChurChurNaanCategory(summary.category)
-        ? "Choose a Half or Full platter and your sabji. Full platters include two naans, and you may choose a different second naan; the higher platter price applies."
-        : isPizzaCategory(summary.category) && isThinCrustEnabled(summary.name, item.pizzaConfiguration as { thinCrustAvailable?: boolean } | undefined)
-          ? "Thin crust is available only with the Medium size. It is not offered for Cheese Burst or Classic Cheese Burst pizzas."
-          : null,
+    customerNotice: isChurChurNaanCategory(summary.category)
+      ? "Choose a Half or Full platter and your sabji. Full platters include two naans, and you may choose a different second naan; the higher platter price applies."
+      : isPizzaCategory(summary.category) &&
+          isThinCrustEnabled(
+            summary.name,
+            item.pizzaConfiguration as
+              { thinCrustAvailable?: boolean } | undefined,
+          )
+        ? "Thin crust is available only with the Medium size. It is not offered for Cheese Burst or Classic Cheese Burst pizzas."
+        : null,
   };
 }

@@ -2,10 +2,7 @@ import { cookies } from "next/headers";
 
 import { ACCESS_COOKIE } from "@/lib/auth/cookies";
 import { requireAuthenticatedUser } from "@/lib/auth/session";
-import {
-  signRealtimeAccessToken,
-  verifyAccessToken,
-} from "@/lib/auth/tokens";
+import { signRealtimeAccessToken, verifyAccessToken } from "@/lib/auth/tokens";
 import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
 

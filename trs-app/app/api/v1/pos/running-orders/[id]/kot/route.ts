@@ -5,7 +5,10 @@ import { AppError } from "@/lib/errors/AppError";
 import { renderKotHtml, type ReceiptPaper } from "@/lib/invoices/receipt-html";
 import { calculatePosCartTotals } from "@/lib/pos/cart";
 import { POSRunningOrder } from "@/models/POSRunningOrder";
-import type { RunningOrderKotItem, RunningOrderKotRevision } from "@/lib/pos/running-order-kot";
+import type {
+  RunningOrderKotItem,
+  RunningOrderKotRevision,
+} from "@/lib/pos/running-order-kot";
 import { createPrintJob } from "@/services/print-audit.service";
 
 export const dynamic = "force-dynamic";
@@ -25,48 +28,83 @@ export async function GET(
     if (!running) throw new AppError("Running order not found.", 404);
 
     const url = new URL(request.url);
-    const requestedRevision = Number(url.searchParams.get("revision") ?? running.kitchenRevision ?? 0);
+    const requestedRevision = Number(
+      url.searchParams.get("revision") ?? running.kitchenRevision ?? 0,
+    );
     const revision = (running.kotRevisions ?? []).find(
-      (entry) => Number((entry as RunningOrderKotRevision).revision) === requestedRevision,
+      (entry) =>
+        Number((entry as RunningOrderKotRevision).revision) ===
+        requestedRevision,
     ) as RunningOrderKotRevision | undefined;
 
     const totals = calculatePosCartTotals(running.cart);
-    const paper = (url.searchParams.get("paper") === "58mm" ? "58mm" : "80mm") as ReceiptPaper;
-    const copies = Math.min(3, Math.max(1, Number(url.searchParams.get("copies") ?? 1)));
-    await createPrintJob({ documentType: revision && revision.revision > 1 ? "revision_kot" : "kot", entityType: "running_order", entityId: String(running._id), orderNumber: running.ticketNumber, label: `${revision?.type ?? "initial"} KOT ${running.ticketNumber} · revision ${revision?.revision ?? running.kitchenRevision ?? 1}`, printUrl: request.url, paper, copies, requestedBy: actor.id, metadata: { revision: revision?.revision ?? running.kitchenRevision ?? 1, kitchenToken: running.kitchenToken } });
-    const sourceItems: RunningOrderKotItem[] = revision?.items ?? running.cart.lines.map((line) => ({
-      action: "initial" as const,
-      lineId: line.lineId,
-      name: line.name,
-      categoryName: line.categoryName,
-      variantName: line.variantName ?? undefined,
-      specialInstructions: line.note,
-      quantity: line.quantity,
-      unitPrice: line.unitPrice,
-      lineTotal: line.unitPrice * line.quantity,
-      modifiers: line.modifiers.map((modifier) => ({
-        optionName: `${modifier.optionName}${modifier.quantity > 1 ? ` ×${modifier.quantity}` : ""}`,
-      })),
-      changeSummary: [] as string[],
-    }));
+    const paper = (
+      url.searchParams.get("paper") === "58mm" ? "58mm" : "80mm"
+    ) as ReceiptPaper;
+    const copies = Math.min(
+      3,
+      Math.max(1, Number(url.searchParams.get("copies") ?? 1)),
+    );
+    await createPrintJob({
+      documentType: revision && revision.revision > 1 ? "revision_kot" : "kot",
+      entityType: "running_order",
+      entityId: String(running._id),
+      orderNumber: running.ticketNumber,
+      label: `${revision?.type ?? "initial"} KOT ${running.ticketNumber} · revision ${revision?.revision ?? running.kitchenRevision ?? 1}`,
+      printUrl: request.url,
+      paper,
+      copies,
+      requestedBy: actor.id,
+      metadata: {
+        revision: revision?.revision ?? running.kitchenRevision ?? 1,
+        kitchenToken: running.kitchenToken,
+      },
+    });
+    const sourceItems: RunningOrderKotItem[] =
+      revision?.items ??
+      running.cart.lines.map((line) => ({
+        action: "initial" as const,
+        lineId: line.lineId,
+        name: line.name,
+        categoryName: line.categoryName,
+        variantName: line.variantName ?? undefined,
+        specialInstructions: line.note,
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        lineTotal: line.unitPrice * line.quantity,
+        modifiers: line.modifiers.map((modifier) => ({
+          optionName: `${modifier.optionName}${modifier.quantity > 1 ? ` ×${modifier.quantity}` : ""}`,
+        })),
+        changeSummary: [] as string[],
+      }));
 
-    const normalize = (value: string | undefined) => (value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const normalize = (value: string | undefined) =>
+      (value ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
     const isNaanCounterItem = (item: RunningOrderKotItem) => {
       const category = normalize(item.categoryName);
       const name = normalize(item.name);
       if (name === "extra dip" || name === "water bottle") return false;
-      return category === "chur chur naan"
-        || category === "extra naans"
-        || category === "extra naan"
-        || category === "counter";
+      return (
+        category === "chur chur naan" ||
+        category === "extra naans" ||
+        category === "extra naan" ||
+        category === "counter"
+      );
     };
 
     const naanItems = sourceItems.filter(isNaanCounterItem);
     const mainItems = sourceItems.filter((item) => !isNaanCounterItem(item));
     const requestedStation = url.searchParams.get("station");
-    const station = requestedStation === "naan" || requestedStation === "main"
-      ? requestedStation
-      : naanItems.length ? "naan" : "main";
+    const station =
+      requestedStation === "naan" || requestedStation === "main"
+        ? requestedStation
+        : naanItems.length
+          ? "naan"
+          : "main";
     const stationItems = station === "naan" ? naanItems : mainItems;
 
     if (!stationItems.length) {
@@ -77,7 +115,12 @@ export async function GET(
     }
 
     let nextPrintUrl = "";
-    if (!requestedStation && naanItems.length && mainItems.length && station === "naan") {
+    if (
+      !requestedStation &&
+      naanItems.length &&
+      mainItems.length &&
+      station === "naan"
+    ) {
       const nextUrl = new URL(request.url);
       nextUrl.searchParams.set("station", "main");
       nextPrintUrl = nextUrl.pathname + nextUrl.search;
@@ -88,7 +131,8 @@ export async function GET(
         invoiceNumber: running.ticketNumber,
         orderNumber: running.ticketNumber,
         kitchenToken: running.kitchenToken,
-        issuedAt: revision?.createdAt ?? running.kitchenSentAt ?? running.openedAt,
+        issuedAt:
+          revision?.createdAt ?? running.kitchenSentAt ?? running.openedAt,
         customerSnapshot: {
           name: running.cart.customer.name,
           phone: running.cart.customer.phone,

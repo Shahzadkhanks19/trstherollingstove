@@ -22,7 +22,6 @@ export async function POST(request: Request) {
       ...input,
     });
 
-
     return successResponse(payment, "Payment verified.");
   } catch (error) {
     return handleApiError(error);

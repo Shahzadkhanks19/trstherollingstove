@@ -5,14 +5,24 @@ import { PageHero } from "@/models/PageHero";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(_request: Request, context: { params: Promise<{ pageKey: string }> }) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ pageKey: string }> },
+) {
   const { pageKey } = await context.params;
-  if (!getPageHeroDefinition(pageKey)) return NextResponse.json({ data: null }, { status: 404 });
+  if (!getPageHeroDefinition(pageKey))
+    return NextResponse.json({ data: null }, { status: 404 });
   try {
     await connectToDatabase();
     const hero = await PageHero.findOne({ pageKey, isActive: true }).lean();
-    return NextResponse.json({ data: hero || null }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      { data: hero || null },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch {
-    return NextResponse.json({ data: null }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      { data: null },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   }
 }

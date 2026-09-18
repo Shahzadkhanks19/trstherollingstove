@@ -68,9 +68,7 @@ export async function GET(request: Request) {
       ...moduleRows,
     ];
 
-    const csv = rows
-      .map((row) => row.map(escapeCsv).join(","))
-      .join("\n");
+    const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
 
     return new Response(csv, {
       headers: {

@@ -18,13 +18,16 @@ export async function GET() {
   ];
 
   const csv = rows
-    .map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","))
+    .map((row) =>
+      row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","),
+    )
     .join("\n");
 
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": "attachment; filename=trs-feedback-reputation-report.csv",
+      "Content-Disposition":
+        "attachment; filename=trs-feedback-reputation-report.csv",
     },
   });
 }

@@ -11,17 +11,11 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
     const actor = await requirePermission("pos.manage");
     const { id } = await context.params;
-    const input = await validateRequestBody(
-      request,
-      updateRegisterSchema,
-    );
+    const input = await validateRequestBody(request, updateRegisterSchema);
 
     await connectToDatabase();
 
@@ -30,9 +24,7 @@ export async function PATCH(
       {
         $set: {
           ...input,
-          ...(input.code
-            ? { code: input.code.toUpperCase() }
-            : {}),
+          ...(input.code ? { code: input.code.toUpperCase() } : {}),
           updatedBy: actor.id,
         },
       },
@@ -43,10 +35,7 @@ export async function PATCH(
       throw new AppError("POS register not found.", 404);
     }
 
-    return successResponse(
-      register,
-      "POS register updated.",
-    );
+    return successResponse(register, "POS register updated.");
   } catch (error) {
     return handleApiError(error);
   }

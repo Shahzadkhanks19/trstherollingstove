@@ -60,14 +60,7 @@ const KitchenTicketItemSchema = new Schema(
     },
     status: {
       type: String,
-      enum: [
-        "queued",
-        "accepted",
-        "preparing",
-        "ready",
-        "served",
-        "cancelled",
-      ],
+      enum: ["queued", "accepted", "preparing", "ready", "served", "cancelled"],
       default: "queued",
       index: true,
     },
@@ -155,14 +148,7 @@ const KitchenTicketSchema = new Schema(
     },
     status: {
       type: String,
-      enum: [
-        "queued",
-        "accepted",
-        "preparing",
-        "ready",
-        "served",
-        "cancelled",
-      ],
+      enum: ["queued", "accepted", "preparing", "ready", "served", "cancelled"],
       default: "queued",
       index: true,
     },
@@ -246,12 +232,8 @@ KitchenTicketSchema.index(
   },
 );
 
-export type KitchenTicketDocument =
-  InferSchemaType<typeof KitchenTicketSchema>;
+export type KitchenTicketDocument = InferSchemaType<typeof KitchenTicketSchema>;
 
 export const KitchenTicket: Model<KitchenTicketDocument> =
   (models.KitchenTicket as Model<KitchenTicketDocument>) ||
-  model<KitchenTicketDocument>(
-    "KitchenTicket",
-    KitchenTicketSchema,
-  );
+  model<KitchenTicketDocument>("KitchenTicket", KitchenTicketSchema);

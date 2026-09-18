@@ -9,13 +9,9 @@ type Context = {
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  request: Request,
-  context: Context,
-) {
+export async function GET(request: Request, context: Context) {
   const { publicId } = await context.params;
-  const signature =
-    new URL(request.url).searchParams.get("sig") ?? "";
+  const signature = new URL(request.url).searchParams.get("sig") ?? "";
 
   await connectToDatabase();
 
@@ -26,11 +22,7 @@ export async function GET(
 
   if (
     !invoice ||
-    !verifyInvoiceSignature(
-      publicId,
-      invoice.invoiceNumber,
-      signature,
-    )
+    !verifyInvoiceSignature(publicId, invoice.invoiceNumber, signature)
   ) {
     return Response.json(
       {
@@ -61,8 +53,7 @@ export async function GET(
         invoice.businessSnapshot?.tradeName ||
         invoice.businessSnapshot?.legalName ||
         "The Rolling Stove",
-      customerName:
-        invoice.customerSnapshot?.name || "Walk-in Customer",
+      customerName: invoice.customerSnapshot?.name || "Walk-in Customer",
       orderMode: invoice.orderMode,
       tableNumber: invoice.tableNumber,
       paymentMethod: invoice.paymentMethod,

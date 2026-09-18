@@ -73,9 +73,7 @@ export async function GET(request: Request) {
 
     if (
       status &&
-      VALID_STATUSES.includes(
-        status as (typeof VALID_STATUSES)[number],
-      )
+      VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])
     ) {
       filter.status = status;
 
@@ -86,12 +84,7 @@ export async function GET(request: Request) {
       filter.$or = [
         {
           status: {
-            $in: [
-              "queued",
-              "accepted",
-              "preparing",
-              "ready",
-            ],
+            $in: ["queued", "accepted", "preparing", "ready"],
           },
         },
         ...todayOrderDateFilter.map((dateFilter) => ({
@@ -101,18 +94,12 @@ export async function GET(request: Request) {
       ];
     }
 
-    if (
-      priority &&
-      ["normal", "high", "urgent"].includes(priority)
-    ) {
+    if (priority && ["normal", "high", "urgent"].includes(priority)) {
       filter.priority = priority;
     }
 
     const tickets = await KitchenTicket.find(filter)
-      .populate(
-        "stationId",
-        "name code targetPreparationMinutes",
-      )
+      .populate("stationId", "name code targetPreparationMinutes")
       .populate("acceptedBy", "name email")
       .sort({
         status: 1,

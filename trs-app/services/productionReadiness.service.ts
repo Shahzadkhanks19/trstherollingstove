@@ -1,14 +1,8 @@
 import mongoose from "mongoose";
 
-import {
-  inspectProductionEnvironment,
-} from "@/config/productionReadiness";
-import {
-  BackgroundJob,
-} from "@/models/BackgroundJob";
-import {
-  SystemSetting,
-} from "@/models/SystemSetting";
+import { inspectProductionEnvironment } from "@/config/productionReadiness";
+import { BackgroundJob } from "@/models/BackgroundJob";
+import { SystemSetting } from "@/models/SystemSetting";
 import type {
   ProductionReadinessReport,
   ReadinessCheck,
@@ -16,55 +10,36 @@ import type {
 
 async function timedCheck(
   name: string,
-  operation: () => Promise<
-    Omit<ReadinessCheck, "name">
-  >,
+  operation: () => Promise<Omit<ReadinessCheck, "name">>,
 ): Promise<ReadinessCheck> {
-  const startedAt =
-    performance.now();
+  const startedAt = performance.now();
 
   try {
-    const result =
-      await operation();
+    const result = await operation();
 
     return {
       name,
       ...result,
-      durationMs: Number(
-        (
-          performance.now() -
-          startedAt
-        ).toFixed(2),
-      ),
+      durationMs: Number((performance.now() - startedAt).toFixed(2)),
     };
   } catch (error) {
     return {
       name,
       status: "fail",
       message:
-        error instanceof Error
-          ? error.message
-          : "Unknown readiness failure.",
-      durationMs: Number(
-        (
-          performance.now() -
-          startedAt
-        ).toFixed(2),
-      ),
+        error instanceof Error ? error.message : "Unknown readiness failure.",
+      durationMs: Number((performance.now() - startedAt).toFixed(2)),
     };
   }
 }
 
-async function checkDatabase():
-Promise<Omit<ReadinessCheck, "name">> {
-  const database =
-    mongoose.connection.db;
+async function checkDatabase(): Promise<Omit<ReadinessCheck, "name">> {
+  const database = mongoose.connection.db;
 
   if (!database) {
     return {
       status: "fail",
-      message:
-        "MongoDB connection is unavailable.",
+      message: "MongoDB connection is unavailable.",
     };
   }
 
@@ -74,25 +49,19 @@ Promise<Omit<ReadinessCheck, "name">> {
 
   return {
     status: "pass",
-    message:
-      "MongoDB responded successfully.",
+    message: "MongoDB responded successfully.",
     details: {
-      database:
-        database.databaseName,
-      readyState:
-        mongoose.connection.readyState,
+      database: database.databaseName,
+      readyState: mongoose.connection.readyState,
     },
   };
 }
 
-async function checkSettings():
-Promise<Omit<ReadinessCheck, "name">> {
-  const count =
-    await SystemSetting.countDocuments();
+async function checkSettings(): Promise<Omit<ReadinessCheck, "name">> {
+  const count = await SystemSetting.countDocuments();
 
   return {
-    status:
-      count > 0 ? "pass" : "warn",
+    status: count > 0 ? "pass" : "warn",
     message:
       count > 0
         ? `${count} settings document(s) found.`
@@ -103,15 +72,10 @@ Promise<Omit<ReadinessCheck, "name">> {
   };
 }
 
-async function checkScheduler():
-Promise<Omit<ReadinessCheck, "name">> {
+async function checkScheduler(): Promise<Omit<ReadinessCheck, "name">> {
   const now = new Date();
 
-  const [
-    pending,
-    processing,
-    failed,
-  ] = await Promise.all([
+  const [pending, processing, failed] = await Promise.all([
     BackgroundJob.countDocuments({
       status: "queued",
     }),
@@ -121,17 +85,13 @@ Promise<Omit<ReadinessCheck, "name">> {
     BackgroundJob.countDocuments({
       status: "failed",
       updatedAt: {
-        $gte: new Date(
-          now.getTime() -
-            24 * 60 * 60 * 1000,
-        ),
+        $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000),
       },
     }),
   ]);
 
   return {
-    status:
-      failed > 0 ? "warn" : "pass",
+    status: failed > 0 ? "warn" : "pass",
     message:
       failed > 0
         ? `${failed} background job(s) failed in the last 24 hours.`
@@ -144,30 +104,17 @@ Promise<Omit<ReadinessCheck, "name">> {
   };
 }
 
-function checkEnvironment():
-Omit<ReadinessCheck, "name"> {
-  const result =
-    inspectProductionEnvironment();
+function checkEnvironment(): Omit<ReadinessCheck, "name"> {
+  const result = inspectProductionEnvironment();
 
-  const errors =
-    result.issues.filter(
-      (issue) =>
-        issue.severity === "error",
-    );
+  const errors = result.issues.filter((issue) => issue.severity === "error");
 
-  const warnings =
-    result.issues.filter(
-      (issue) =>
-        issue.severity === "warning",
-    );
+  const warnings = result.issues.filter(
+    (issue) => issue.severity === "warning",
+  );
 
   return {
-    status:
-      errors.length > 0
-        ? "fail"
-        : warnings.length > 0
-          ? "warn"
-          : "pass",
+    status: errors.length > 0 ? "fail" : warnings.length > 0 ? "warn" : "pass",
     message:
       result.issues.length === 0
         ? "Environment configuration passed."
@@ -178,47 +125,26 @@ Omit<ReadinessCheck, "name"> {
   };
 }
 
-export async function createProductionReadinessReport():
-Promise<ProductionReadinessReport> {
-  const checks =
-    await Promise.all([
-      Promise.resolve({
-        name: "environment",
-        ...checkEnvironment(),
-      }),
-      timedCheck(
-        "database",
-        checkDatabase,
-      ),
-      timedCheck(
-        "system-settings",
-        checkSettings,
-      ),
-      timedCheck(
-        "background-jobs",
-        checkScheduler,
-      ),
-    ]);
+export async function createProductionReadinessReport(): Promise<ProductionReadinessReport> {
+  const checks = await Promise.all([
+    Promise.resolve({
+      name: "environment",
+      ...checkEnvironment(),
+    }),
+    timedCheck("database", checkDatabase),
+    timedCheck("system-settings", checkSettings),
+    timedCheck("background-jobs", checkScheduler),
+  ]);
 
   const summary = {
-    passed: checks.filter(
-      (check) =>
-        check.status === "pass",
-    ).length,
-    warnings: checks.filter(
-      (check) =>
-        check.status === "warn",
-    ).length,
-    failed: checks.filter(
-      (check) =>
-        check.status === "fail",
-    ).length,
+    passed: checks.filter((check) => check.status === "pass").length,
+    warnings: checks.filter((check) => check.status === "warn").length,
+    failed: checks.filter((check) => check.status === "fail").length,
   };
 
   return {
     ready: summary.failed === 0,
-    checkedAt:
-      new Date().toISOString(),
+    checkedAt: new Date().toISOString(),
     checks,
     summary,
   };

@@ -40,18 +40,35 @@ export async function GET(request: Request) {
       ];
     }
     if (categoryId) filter.categoryId = categoryId;
-    if (isActive === "true" || isActive === "false") filter.isActive = isActive === "true";
-    if (isAvailable === "true" || isAvailable === "false") filter.isAvailable = isAvailable === "true";
-    if (featured === "true" || featured === "false") filter.isFeatured = featured === "true";
-    if (bestseller === "true" || bestseller === "false") filter.isBestseller = bestseller === "true";
+    if (isActive === "true" || isActive === "false")
+      filter.isActive = isActive === "true";
+    if (isAvailable === "true" || isAvailable === "false")
+      filter.isAvailable = isAvailable === "true";
+    if (featured === "true" || featured === "false")
+      filter.isFeatured = featured === "true";
+    if (bestseller === "true" || bestseller === "false")
+      filter.isBestseller = bestseller === "true";
 
     const [items, total] = await Promise.all([
       MenuItem.find(filter)
-        .populate({ path: "categoryId", model: MenuCategory, select: "name slug" })
+        .populate({
+          path: "categoryId",
+          model: MenuCategory,
+          select: "name slug",
+        })
         .populate("taxClassId", "name code percentage isInclusive")
         .populate({ path: "modifierGroupIds", model: ModifierGroup })
-        .populate({ path: "frequentlyOrderedWithIds", model: MenuItem, select: "name slug imageUrl basePrice variants isAvailable isActive deletedAt" })
-        .populate({ path: "comboComponents.menuItemId", model: MenuItem, select: "name slug basePrice variants isActive isAvailable deletedAt" })
+        .populate({
+          path: "frequentlyOrderedWithIds",
+          model: MenuItem,
+          select:
+            "name slug imageUrl basePrice variants isAvailable isActive deletedAt",
+        })
+        .populate({
+          path: "comboComponents.menuItemId",
+          model: MenuItem,
+          select: "name slug basePrice variants isActive isAvailable deletedAt",
+        })
         .sort({ sortOrder: 1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -76,10 +93,17 @@ export async function POST(request: Request) {
     const input = await validateRequestBody(request, menuItemCreateSchema);
     await connectToDatabase();
 
-    const category = await MenuCategory.findOne({ _id: input.categoryId, deletedAt: null, isActive: true });
+    const category = await MenuCategory.findOne({
+      _id: input.categoryId,
+      deletedAt: null,
+      isActive: true,
+    });
     if (!category) throw new AppError("Select a valid active category.", 400);
 
-    if (input.taxClassId && !(await TaxClass.exists({ _id: input.taxClassId, isActive: true }))) {
+    if (
+      input.taxClassId &&
+      !(await TaxClass.exists({ _id: input.taxClassId, isActive: true }))
+    ) {
       throw new AppError("Select a valid active tax class.", 400);
     }
 
@@ -88,16 +112,23 @@ export async function POST(request: Request) {
       isActive: true,
     });
     if (modifierCount !== input.modifierGroupIds.length) {
-      throw new AppError("One or more modifier groups are invalid or inactive.", 400);
+      throw new AppError(
+        "One or more modifier groups are invalid or inactive.",
+        400,
+      );
     }
 
-    const requestedFrequentlyOrderedIds = [...new Set(input.frequentlyOrderedWithIds)];
+    const requestedFrequentlyOrderedIds = [
+      ...new Set(input.frequentlyOrderedWithIds),
+    ];
     const validFrequentlyOrderedItems = requestedFrequentlyOrderedIds.length
       ? await MenuItem.find({
           _id: { $in: requestedFrequentlyOrderedIds },
           deletedAt: null,
           isActive: true,
-        }).select("_id").lean()
+        })
+          .select("_id")
+          .lean()
       : [];
     const validFrequentlyOrderedIdSet = new Set(
       validFrequentlyOrderedItems.map((related) => related._id.toString()),
@@ -121,7 +152,10 @@ export async function POST(request: Request) {
     const comboPricing = categoryIsCombo
       ? await resolveComboComponents(input.comboComponents, input.basePrice)
       : null;
-    const comboOfferStartsAt = categoryIsCombo && input.comboOfferStartsAt ? new Date(input.comboOfferStartsAt) : null;
+    const comboOfferStartsAt =
+      categoryIsCombo && input.comboOfferStartsAt
+        ? new Date(input.comboOfferStartsAt)
+        : null;
     const comboOfferExpiresAt = categoryIsCombo
       ? input.comboOffersPageSection === "todays" && comboOfferStartsAt
         ? new Date(comboOfferStartsAt.getTime() + 24 * 60 * 60 * 1000)
@@ -186,12 +220,18 @@ export async function POST(request: Request) {
         : `Menu item ${item.name} created.`,
     });
 
-    publishMenuUpdated({ action: restored ? "updated" : "created", itemId: item.id, actorId: actor.id });
+    publishMenuUpdated({
+      action: restored ? "updated" : "created",
+      itemId: item.id,
+      actorId: actor.id,
+    });
     revalidatePublicMenuPaths([item.slug]);
 
     return successResponse(
       item,
-      restored ? "Deleted menu item restored and updated." : "Menu item created.",
+      restored
+        ? "Deleted menu item restored and updated."
+        : "Menu item created.",
       restored ? 200 : 201,
     );
   } catch (error) {

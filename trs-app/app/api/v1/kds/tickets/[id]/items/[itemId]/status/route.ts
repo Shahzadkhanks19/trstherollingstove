@@ -15,10 +15,7 @@ type Context = {
   }>;
 };
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
     const actor = await requirePermission("kds.use");
     const { id, itemId } = await context.params;
@@ -38,10 +35,7 @@ export async function PATCH(
     const item = ticket.items.id(itemId);
 
     if (!item) {
-      throw new AppError(
-        "Kitchen ticket item not found.",
-        404,
-      );
+      throw new AppError("Kitchen ticket item not found.", 404);
     }
 
     const now = new Date();
@@ -69,8 +63,7 @@ export async function PATCH(
 
     await ticket.save();
 
-    const updatedTicket =
-      await recalculateKitchenTicketStatus(id, actor.id);
+    const updatedTicket = await recalculateKitchenTicketStatus(id, actor.id);
 
     return successResponse(
       updatedTicket,

@@ -86,15 +86,14 @@ InventoryAlertRuleSchema.index({
   type: 1,
 });
 
-export type InventoryAlertRuleDocument =
-  InferSchemaType<typeof InventoryAlertRuleSchema>;
+export type InventoryAlertRuleDocument = InferSchemaType<
+  typeof InventoryAlertRuleSchema
+>;
 
-export const InventoryAlertRule:
-  Model<InventoryAlertRuleDocument> =
-    (models.InventoryAlertRule as
-      | Model<InventoryAlertRuleDocument>
-      | undefined) ??
-    model<InventoryAlertRuleDocument>(
-      "InventoryAlertRule",
-      InventoryAlertRuleSchema,
-    );
+export const InventoryAlertRule: Model<InventoryAlertRuleDocument> =
+  (models.InventoryAlertRule as
+    Model<InventoryAlertRuleDocument> | undefined) ??
+  model<InventoryAlertRuleDocument>(
+    "InventoryAlertRule",
+    InventoryAlertRuleSchema,
+  );

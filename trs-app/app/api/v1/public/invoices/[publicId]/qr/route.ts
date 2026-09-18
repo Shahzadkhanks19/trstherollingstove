@@ -19,10 +19,7 @@ function toResponseArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return copy.buffer;
 }
 
-export async function GET(
-  request: Request,
-  context: Context,
-) {
+export async function GET(request: Request, context: Context) {
   const { publicId } = await context.params;
   const requestUrl = new URL(request.url);
   const signature = requestUrl.searchParams.get("sig") ?? "";
@@ -39,11 +36,7 @@ export async function GET(
 
   if (
     !invoice ||
-    !verifyInvoiceSignature(
-      publicId,
-      invoice.invoiceNumber,
-      signature,
-    )
+    !verifyInvoiceSignature(publicId, invoice.invoiceNumber, signature)
   ) {
     return new Response("Invalid invoice verification request.", {
       status: 404,
@@ -76,19 +69,16 @@ export async function GET(
     });
   }
 
-  const svg = await renderQrSvg(
-    verificationUrl,
-    {
-      type: "svg",
-      errorCorrectionLevel: "M",
-      margin: 1,
-      width: 240,
-      color: {
-        dark: "#111111",
-        light: "#ffffff",
-      },
+  const svg = await renderQrSvg(verificationUrl, {
+    type: "svg",
+    errorCorrectionLevel: "M",
+    margin: 1,
+    width: 240,
+    color: {
+      dark: "#111111",
+      light: "#ffffff",
     },
-  );
+  });
 
   return new Response(svg, {
     headers: {

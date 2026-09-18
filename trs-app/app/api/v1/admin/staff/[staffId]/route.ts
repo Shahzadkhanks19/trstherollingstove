@@ -53,7 +53,11 @@ export async function PATCH(
         "You cannot change your own role or deactivate your own account.",
         400,
       );
-    await assertCanRemoveSuperAdminAccess(user.id, input.roleId, input.isActive);
+    await assertCanRemoveSuperAdminAccess(
+      user.id,
+      input.roleId,
+      input.isActive,
+    );
     if (input.name !== undefined) user.name = input.name;
     if (input.phone !== undefined) user.phone = input.phone ?? undefined;
     if (input.avatarUrl !== undefined) user.avatarUrl = input.avatarUrl;
@@ -113,7 +117,13 @@ export async function DELETE(
     applyActivationState(user, false, actor.id, "Administrative deactivation.");
     await user.save();
     await revokeUserSessions(user.id, "Staff deactivated.");
-    await writeAuditLog({ actorUserId: actor.id, action: "staff.deactivated", entityType: "user", entityId: user.id, description: `Staff ${user.email} deactivated.` });
+    await writeAuditLog({
+      actorUserId: actor.id,
+      action: "staff.deactivated",
+      entityType: "user",
+      entityId: user.id,
+      description: `Staff ${user.email} deactivated.`,
+    });
     return successResponse(null, "Staff deactivated.");
   } catch (e) {
     return handleApiError(e);

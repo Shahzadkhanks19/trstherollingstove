@@ -2,18 +2,24 @@ import ExcelJS from "exceljs";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { ExecutiveBIIntelligenceResult } from "@/services/executive-bi-intelligence.service";
 
-export function executiveBIIntelligenceToCsv(report: ExecutiveBIIntelligenceResult) {
-  const rows = report.actualVsForecast.map((row) => [
-    row.date,
-    row.kind,
-    row.revenue,
-    row.lowerRevenue ?? "",
-    row.upperRevenue ?? "",
-  ].join(","));
+export function executiveBIIntelligenceToCsv(
+  report: ExecutiveBIIntelligenceResult,
+) {
+  const rows = report.actualVsForecast.map((row) =>
+    [
+      row.date,
+      row.kind,
+      row.revenue,
+      row.lowerRevenue ?? "",
+      row.upperRevenue ?? "",
+    ].join(","),
+  );
   return ["Date,Type,Revenue,Lower Revenue,Upper Revenue", ...rows].join("\n");
 }
 
-export async function executiveBIIntelligenceToXlsx(report: ExecutiveBIIntelligenceResult) {
+export async function executiveBIIntelligenceToXlsx(
+  report: ExecutiveBIIntelligenceResult,
+) {
   const workbook = new ExcelJS.Workbook();
   const summary = workbook.addWorksheet("Executive Summary");
   summary.addRows([
@@ -53,25 +59,42 @@ export async function executiveBIIntelligenceToXlsx(report: ExecutiveBIIntellige
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
-export async function executiveBIIntelligenceToPdf(report: ExecutiveBIIntelligenceResult) {
+export async function executiveBIIntelligenceToPdf(
+  report: ExecutiveBIIntelligenceResult,
+) {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   let page = pdf.addPage([595, 842]);
   let y = 800;
   const line = (text: string, size = 9, strong = false) => {
-    if (y < 55) { page = pdf.addPage([595, 842]); y = 800; }
-    page.drawText(text.slice(0, 105), { x: 40, y, size, font: strong ? bold : font, color: rgb(.08, .17, .24) });
+    if (y < 55) {
+      page = pdf.addPage([595, 842]);
+      y = 800;
+    }
+    page.drawText(text.slice(0, 105), {
+      x: 40,
+      y,
+      size,
+      font: strong ? bold : font,
+      color: rgb(0.08, 0.17, 0.24),
+    });
     y -= size + 7;
   };
   line("TRS Unified Executive Business Intelligence", 17, true);
   line(`Generated: ${new Date(report.generatedAt).toLocaleString("en-IN")}`);
   y -= 8;
-  line(`Current revenue: INR ${report.summary.currentRevenue.toFixed(0)}`, 11, true);
+  line(
+    `Current revenue: INR ${report.summary.currentRevenue.toFixed(0)}`,
+    11,
+    true,
+  );
   line(`30-day forecast: INR ${report.summary.forecast30Revenue.toFixed(0)}`);
   line(`Inventory health: ${report.summary.inventoryHealthScore}/100`);
   line(`Forecast quality: ${report.summary.forecastQualityScore}/100`);
-  line(`Critical/high procurement items: ${report.summary.criticalProcurementItems}`);
+  line(
+    `Critical/high procurement items: ${report.summary.criticalProcurementItems}`,
+  );
   y -= 10;
   line("Executive alerts", 12, true);
   report.alerts.slice(0, 20).forEach((alert) => {

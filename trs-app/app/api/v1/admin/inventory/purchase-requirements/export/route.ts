@@ -38,7 +38,10 @@ export async function GET(request: Request) {
       .lean();
 
     const requirements: RequirementRow[] = items.flatMap((item) => {
-      const targetStock = Math.max(item.idealStockLevel ?? 0, item.reorderLevel ?? 0);
+      const targetStock = Math.max(
+        item.idealStockLevel ?? 0,
+        item.reorderLevel ?? 0,
+      );
       const suggestedQuantity = Math.max(
         0,
         Number((targetStock - item.currentStock).toFixed(3)),
@@ -53,19 +56,23 @@ export async function GET(request: Request) {
             ? "high"
             : "medium";
 
-      return [{
-        name: item.name,
-        sku: item.sku,
-        category: item.category,
-        unit: item.unit,
-        currentStock: item.currentStock,
-        reorderLevel: item.reorderLevel,
-        targetStock,
-        suggestedQuantity,
-        averageUnitCost: item.averageUnitCost,
-        estimatedValue: Number((suggestedQuantity * item.averageUnitCost).toFixed(2)),
-        priority,
-      }];
+      return [
+        {
+          name: item.name,
+          sku: item.sku,
+          category: item.category,
+          unit: item.unit,
+          currentStock: item.currentStock,
+          reorderLevel: item.reorderLevel,
+          targetStock,
+          suggestedQuantity,
+          averageUnitCost: item.averageUnitCost,
+          estimatedValue: Number(
+            (suggestedQuantity * item.averageUnitCost).toFixed(2),
+          ),
+          priority,
+        },
+      ];
     });
 
     const date = new Date().toISOString().slice(0, 10);
@@ -119,7 +126,8 @@ export async function GET(request: Request) {
 
     return new Response(buffer as ArrayBuffer, {
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="trs-purchase-requirements-${date}.xlsx"`,
         "Cache-Control": "private, no-store",
       },

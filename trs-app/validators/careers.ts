@@ -1,11 +1,24 @@
 import { z } from "zod";
 
-const stringList = z.array(z.string().trim().min(1).max(300)).max(30).default([]);
+const stringList = z
+  .array(z.string().trim().min(1).max(300))
+  .max(30)
+  .default([]);
 
 const careerOpeningBaseSchema = z.object({
   title: z.string().trim().min(2).max(160),
-  slug: z.string().trim().min(2).max(180).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  employmentType: z.enum(["Full-time", "Part-time", "Full-time / Part-time", "Internship"]),
+  slug: z
+    .string()
+    .trim()
+    .min(2)
+    .max(180)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  employmentType: z.enum([
+    "Full-time",
+    "Part-time",
+    "Full-time / Part-time",
+    "Internship",
+  ]),
   location: z.string().trim().min(2).max(180),
   summary: z.string().trim().min(10).max(600),
   responsibilities: stringList,
@@ -17,11 +30,15 @@ const careerOpeningBaseSchema = z.object({
 });
 
 export const createCareerOpeningSchema = careerOpeningBaseSchema.refine(
-  (value) => value.closesAt === null || new Date(value.closesAt).getTime() > Date.now(),
+  (value) =>
+    value.closesAt === null || new Date(value.closesAt).getTime() > Date.now(),
   { message: "Closing date must be in the future.", path: ["closesAt"] },
 );
 
-export const updateCareerOpeningSchema = careerOpeningBaseSchema.partial().refine(
-  (value) => value.closesAt == null || new Date(value.closesAt).getTime() > Date.now(),
-  { message: "Closing date must be in the future.", path: ["closesAt"] },
-);
+export const updateCareerOpeningSchema = careerOpeningBaseSchema
+  .partial()
+  .refine(
+    (value) =>
+      value.closesAt == null || new Date(value.closesAt).getTime() > Date.now(),
+    { message: "Closing date must be in the future.", path: ["closesAt"] },
+  );

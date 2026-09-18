@@ -2,7 +2,8 @@ import { PrintJob } from "@/models/PrintJob";
 
 type CreatePrintJobInput = {
   documentType: "invoice" | "kot" | "revision_kot" | "report";
-  entityType: "invoice" | "running_order" | "order" | "cash_register" | "sales_report";
+  entityType:
+    "invoice" | "running_order" | "order" | "cash_register" | "sales_report";
   entityId: string;
   orderId?: string | null;
   orderNumber?: string;

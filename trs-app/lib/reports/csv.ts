@@ -13,23 +13,17 @@ function escapeCsvValue(value: unknown) {
   return `"${normalized.replaceAll('"', '""')}"`;
 }
 
-export function rowsToCsv(
-  rows: Array<Record<string, unknown>>,
-) {
+export function rowsToCsv(rows: Array<Record<string, unknown>>) {
   if (rows.length === 0) {
     return "";
   }
 
-  const headers = Array.from(
-    new Set(rows.flatMap((row) => Object.keys(row))),
-  );
+  const headers = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
 
   const lines = [
     headers.map(escapeCsvValue).join(","),
     ...rows.map((row) =>
-      headers
-        .map((header) => escapeCsvValue(row[header]))
-        .join(","),
+      headers.map((header) => escapeCsvValue(row[header])).join(","),
     ),
   ];
 

@@ -19,8 +19,7 @@ const parsedEnvironment = environmentSchema.safeParse({
   APP_NAME: process.env.APP_NAME,
   APP_URL: process.env.APP_URL,
   MONGODB_URI: process.env.MONGODB_URI,
-  NEXT_PUBLIC_REALTIME_SERVER_URL:
-    process.env.NEXT_PUBLIC_REALTIME_SERVER_URL,
+  NEXT_PUBLIC_REALTIME_SERVER_URL: process.env.NEXT_PUBLIC_REALTIME_SERVER_URL,
 });
 
 if (!parsedEnvironment.success) {

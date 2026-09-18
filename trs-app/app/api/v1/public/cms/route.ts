@@ -24,12 +24,9 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const requestedPlacement =
-      url.searchParams.get("placement") ?? "home_hero";
+    const requestedPlacement = url.searchParams.get("placement") ?? "home_hero";
 
-    const placement: BannerPlacement = isBannerPlacement(
-      requestedPlacement,
-    )
+    const placement: BannerPlacement = isBannerPlacement(requestedPlacement)
       ? requestedPlacement
       : "home_hero";
 
@@ -41,16 +38,10 @@ export async function GET(request: Request) {
         isActive: true,
         $and: [
           {
-            $or: [
-              { startsAt: null },
-              { startsAt: { $lte: now } },
-            ],
+            $or: [{ startsAt: null }, { startsAt: { $lte: now } }],
           },
           {
-            $or: [
-              { endsAt: null },
-              { endsAt: { $gte: now } },
-            ],
+            $or: [{ endsAt: null }, { endsAt: { $gte: now } }],
           },
         ],
       })

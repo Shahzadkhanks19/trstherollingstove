@@ -5,51 +5,30 @@ import {
   exportCollection,
   exportCollectionAsCsv,
 } from "@/services/dataExport.service";
-import {
-  exportQuerySchema,
-} from "@/validators/dataTransfer";
+import { exportQuerySchema } from "@/validators/dataTransfer";
 
-function downloadHeaders(
-  filename: string,
-  contentType: string,
-) {
+function downloadHeaders(filename: string, contentType: string) {
   return {
     "content-type": contentType,
-    "content-disposition":
-      `attachment; filename="${filename}"`,
+    "content-disposition": `attachment; filename="${filename}"`,
     "cache-control": "no-store",
   };
 }
 
-export async function GET(
-  request: Request,
-) {
+export async function GET(request: Request) {
   try {
-    await requirePermission(
-      "settings.manage",
-    );
+    await requirePermission("settings.manage");
     await connectToDatabase();
 
     const url = new URL(request.url);
-    const parsed =
-      exportQuerySchema.parse(
-        Object.fromEntries(
-          url.searchParams.entries(),
-        ),
-      );
+    const parsed = exportQuerySchema.parse(
+      Object.fromEntries(url.searchParams.entries()),
+    );
 
-    const safeFileName =
-      parsed.collection.replace(
-        /[^a-zA-Z0-9_.-]/g,
-        "_",
-      );
+    const safeFileName = parsed.collection.replace(/[^a-zA-Z0-9_.-]/g, "_");
 
     if (parsed.format === "csv") {
-      const csv =
-        await exportCollectionAsCsv(
-          parsed.collection,
-          parsed.limit,
-        );
+      const csv = await exportCollectionAsCsv(parsed.collection, parsed.limit);
 
       return new Response(csv, {
         status: 200,
@@ -60,19 +39,13 @@ export async function GET(
       });
     }
 
-    const documents =
-      await exportCollection(
-        parsed.collection,
-        parsed.limit,
-      );
+    const documents = await exportCollection(parsed.collection, parsed.limit);
 
     return new Response(
       JSON.stringify(
         {
-          collection:
-            parsed.collection,
-          exportedAt:
-            new Date().toISOString(),
+          collection: parsed.collection,
+          exportedAt: new Date().toISOString(),
           count: documents.length,
           data: documents,
         },

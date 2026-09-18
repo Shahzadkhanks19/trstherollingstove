@@ -16,9 +16,7 @@ export default async function AdminSecurityPage() {
   const user = await getAuthenticatedUser();
 
   if (!user) {
-    redirect(
-      "/admin/login?redirect=/admin/security",
-    );
+    redirect("/admin/login?redirect=/admin/security");
   }
 
   return (
@@ -31,16 +29,13 @@ export default async function AdminSecurityPage() {
           Admin Login & Security
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-          Manage the email and password used to access
-          this administrator account. Credential changes
-          revoke every active session.
+          Manage the email and password used to access this administrator
+          account. Credential changes revoke every active session.
         </p>
       </header>
 
       <div className="grid gap-6 2xl:grid-cols-2 2xl:items-start">
-        <AdminChangeEmailClient
-          currentEmail={user.email}
-        />
+        <AdminChangeEmailClient currentEmail={user.email} />
 
         <div className="[&>div>header]:hidden [&>div]:space-y-0">
           <AdminChangePasswordClient />

@@ -4,7 +4,10 @@ import { handleApiError } from "@/lib/errors/handleApiError";
 import { renderKotAndInvoiceHtml } from "@/lib/invoices/receipt-html";
 import { markInvoicePrinted } from "@/services/pos-order.service";
 
-export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
   try {
     const actor = await requirePermission("pos.use");
     const { id } = await context.params;

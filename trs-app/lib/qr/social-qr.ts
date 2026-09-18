@@ -1,9 +1,6 @@
 import { toBuffer as renderQrPng, toString as renderQrSvg } from "qrcode";
 
-import {
-  SOCIAL_QR_ICONS,
-  type SocialQrIconName,
-} from "@/lib/qr/qr-icons";
+import { SOCIAL_QR_ICONS, type SocialQrIconName } from "@/lib/qr/qr-icons";
 
 interface GradientStop {
   readonly offset: string;
@@ -42,7 +39,9 @@ function readViewBox(svg: string): SvgViewBox {
   );
 
   if (!match) {
-    throw new Error("Generated social QR SVG does not contain a valid viewBox.");
+    throw new Error(
+      "Generated social QR SVG does not contain a valid viewBox.",
+    );
   }
 
   const [, minXValue, minYValue, widthValue, heightValue] = match;
@@ -71,8 +70,7 @@ function createGradientDefinition(
 ): string {
   const stopMarkup = stops
     .map(
-      ({ offset, color }) =>
-        `<stop offset="${offset}" stop-color="${color}"/>`,
+      ({ offset, color }) => `<stop offset="${offset}" stop-color="${color}"/>`,
     )
     .join("");
 
@@ -88,10 +86,9 @@ function createCenteredIcon(
   const icon = thermal
     ? {
         ...sourceIcon,
-        svg: sourceIcon.svg
-          .replace(/#[0-9A-Fa-f]{6}/g, (color) =>
-            color.toUpperCase() === "#FFFFFF" ? "#FFFFFF" : "#000000",
-          ),
+        svg: sourceIcon.svg.replace(/#[0-9A-Fa-f]{6}/g, (color) =>
+          color.toUpperCase() === "#FFFFFF" ? "#FFFFFF" : "#000000",
+        ),
       }
     : sourceIcon;
   const shortestSide = Math.min(viewBox.width, viewBox.height);

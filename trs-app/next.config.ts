@@ -26,9 +26,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/api/:path*",
-        headers: [
-          { key: "Cache-Control", value: "no-store" },
-        ],
+        headers: [{ key: "Cache-Control", value: "no-store" }],
       },
     ];
   },

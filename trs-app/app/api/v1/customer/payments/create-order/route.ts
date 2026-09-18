@@ -16,10 +16,7 @@ export async function POST(request: Request) {
       throw new AppError("Customer access required.", 403);
     }
 
-    const input = await validateRequestBody(
-      request,
-      createPaymentOrderSchema,
-    );
+    const input = await validateRequestBody(request, createPaymentOrderSchema);
     await connectToDatabase();
 
     const result = await createRazorpayPaymentOrder({

@@ -64,7 +64,9 @@ export function AuthBenefitsPanel() {
               </span>
               <div className="min-w-0">
                 <h3 className="text-sm font-black">{title}</h3>
-                <p className="mt-1 text-[11px] leading-5 text-[#5E5751]">{text}</p>
+                <p className="mt-1 text-[11px] leading-5 text-[#5E5751]">
+                  {text}
+                </p>
               </div>
             </article>
           ))}

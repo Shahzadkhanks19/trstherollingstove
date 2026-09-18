@@ -8,9 +8,7 @@ import { inventoryForecastRunSchema } from "@/validators/inventory-forecasting";
 export async function POST(request: Request) {
   try {
     const actor = await requirePermission("inventory.manage");
-    const input = inventoryForecastRunSchema.parse(
-      await request.json(),
-    );
+    const input = inventoryForecastRunSchema.parse(await request.json());
 
     await connectToDatabase();
 
@@ -20,11 +18,7 @@ export async function POST(request: Request) {
       requestedBy: actor.id,
     });
 
-    return successResponse(
-      result,
-      "Inventory forecast generated.",
-      201,
-    );
+    return successResponse(result, "Inventory forecast generated.", 201);
   } catch (error) {
     return handleApiError(error);
   }

@@ -65,9 +65,7 @@ export function AdminLoginClient() {
       // used to issue a second protected-page render right after login.
       router.replace(destination);
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Unable to sign in.",
-      );
+      setMessage(error instanceof Error ? error.message : "Unable to sign in.");
       setLoading(false);
     }
   }
@@ -88,8 +86,8 @@ export function AdminLoginClient() {
               Control every part of TRS.
             </h1>
             <p className="mt-6 max-w-sm text-sm leading-7 text-white/65">
-              Secure access for orders, kitchen, inventory, purchasing,
-              rewards, content and reporting.
+              Secure access for orders, kitchen, inventory, purchasing, rewards,
+              content and reporting.
             </p>
           </div>
           <p className="text-xs font-semibold text-white/40">

@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-const optionalObjectId = z.string().trim().regex(/^[a-f\d]{24}$/i).nullable().optional();
+const optionalObjectId = z
+  .string()
+  .trim()
+  .regex(/^[a-f\d]{24}$/i)
+  .nullable()
+  .optional();
 const money = z.number().min(0).max(1_000_000_000);
 
 export const expenseRangeSchema = z.object({
@@ -14,7 +19,10 @@ export const expenseRebuildSchema = z.object({
 
 const recurringExpenseSchema = z.object({
   enabled: z.boolean().default(false),
-  frequency: z.enum(["weekly", "monthly", "quarterly", "yearly"]).nullable().default(null),
+  frequency: z
+    .enum(["weekly", "monthly", "quarterly", "yearly"])
+    .nullable()
+    .default(null),
   nextDueDate: z.coerce.date().nullable().default(null),
   endDate: z.coerce.date().nullable().default(null),
 });
@@ -56,9 +64,20 @@ const expenseBaseSchema = z.object({
   discountAmount: money.default(0),
   paidAmount: money.default(0),
   paymentMethod: z
-    .enum(["cash", "card", "upi", "bank_transfer", "wallet", "cheque", "credit", "other"])
+    .enum([
+      "cash",
+      "card",
+      "upi",
+      "bank_transfer",
+      "wallet",
+      "cheque",
+      "credit",
+      "other",
+    ])
     .default("cash"),
-  approvalStatus: z.enum(["draft", "pending", "approved", "rejected", "void"]).default("draft"),
+  approvalStatus: z
+    .enum(["draft", "pending", "approved", "rejected", "void"])
+    .default("draft"),
   recurring: recurringExpenseSchema.default({
     enabled: false,
     frequency: null,
@@ -70,38 +89,42 @@ const expenseBaseSchema = z.object({
   notes: z.string().trim().max(2000).default(""),
 });
 
-export const expenseCreateSchema = expenseBaseSchema.superRefine((value, context) => {
-  const total = value.subtotal + value.taxAmount - value.discountAmount;
+export const expenseCreateSchema = expenseBaseSchema.superRefine(
+  (value, context) => {
+    const total = value.subtotal + value.taxAmount - value.discountAmount;
 
-  if (value.discountAmount > value.subtotal + value.taxAmount) {
-    context.addIssue({
-      code: "custom",
-      path: ["discountAmount"],
-      message: "Discount cannot exceed subtotal plus tax.",
-    });
-  }
+    if (value.discountAmount > value.subtotal + value.taxAmount) {
+      context.addIssue({
+        code: "custom",
+        path: ["discountAmount"],
+        message: "Discount cannot exceed subtotal plus tax.",
+      });
+    }
 
-  if (value.paidAmount > total) {
-    context.addIssue({
-      code: "custom",
-      path: ["paidAmount"],
-      message: "Paid amount cannot exceed total amount.",
-    });
-  }
+    if (value.paidAmount > total) {
+      context.addIssue({
+        code: "custom",
+        path: ["paidAmount"],
+        message: "Paid amount cannot exceed total amount.",
+      });
+    }
 
-  if (value.recurring.enabled && !value.recurring.frequency) {
-    context.addIssue({
-      code: "custom",
-      path: ["recurring", "frequency"],
-      message: "Frequency is required for recurring expenses.",
-    });
-  }
-});
+    if (value.recurring.enabled && !value.recurring.frequency) {
+      context.addIssue({
+        code: "custom",
+        path: ["recurring", "frequency"],
+        message: "Frequency is required for recurring expenses.",
+      });
+    }
+  },
+);
 
 export const expenseUpdateSchema = expenseBaseSchema
   .partial()
   .extend({
-    approvalStatus: z.enum(["draft", "pending", "approved", "rejected", "void"]).optional(),
+    approvalStatus: z
+      .enum(["draft", "pending", "approved", "rejected", "void"])
+      .optional(),
     rejectionReason: z.string().trim().max(500).optional(),
   })
   .superRefine((value, context) => {

@@ -90,32 +90,65 @@ const RunningOrderKotRevisionSchema = new Schema<RunningOrderKotRevision>(
   { _id: false },
 );
 
-const POSRunningOrderSchema = new Schema<POSRunningOrderDocument>({
-  ticketNumber: { type: String, required: true, unique: true, index: true },
-  kitchenToken: { type: String, required: true, index: true },
-  shiftId: { type: Schema.Types.ObjectId, ref: "POSShift", required: true, index: true },
-  registerId: { type: Schema.Types.ObjectId, ref: "POSRegister", required: true, index: true },
-  cashierId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-  tableId: { type: Schema.Types.ObjectId, ref: "POSTable", default: null, index: true },
-  tableName: { type: String, trim: true, maxlength: 40, default: "" },
-  guestCount: { type: Number, min: 1, max: 100, default: 1 },
-  status: { type: String, enum: ["open", "sent_to_kitchen", "partially_paid", "settled", "voided"], default: "open", index: true },
-  cart: { type: Schema.Types.Mixed, required: true },
-  kitchenSentAt: { type: Date, default: null },
-  kitchenRevision: { type: Number, min: 0, default: 0 },
-  lastKitchenCart: { type: Schema.Types.Mixed, default: null },
-  kotRevisions: {
-    type: [RunningOrderKotRevisionSchema],
-    default: [],
+const POSRunningOrderSchema = new Schema<POSRunningOrderDocument>(
+  {
+    ticketNumber: { type: String, required: true, unique: true, index: true },
+    kitchenToken: { type: String, required: true, index: true },
+    shiftId: {
+      type: Schema.Types.ObjectId,
+      ref: "POSShift",
+      required: true,
+      index: true,
+    },
+    registerId: {
+      type: Schema.Types.ObjectId,
+      ref: "POSRegister",
+      required: true,
+      index: true,
+    },
+    cashierId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    tableId: {
+      type: Schema.Types.ObjectId,
+      ref: "POSTable",
+      default: null,
+      index: true,
+    },
+    tableName: { type: String, trim: true, maxlength: 40, default: "" },
+    guestCount: { type: Number, min: 1, max: 100, default: 1 },
+    status: {
+      type: String,
+      enum: ["open", "sent_to_kitchen", "partially_paid", "settled", "voided"],
+      default: "open",
+      index: true,
+    },
+    cart: { type: Schema.Types.Mixed, required: true },
+    kitchenSentAt: { type: Date, default: null },
+    kitchenRevision: { type: Number, min: 0, default: 0 },
+    lastKitchenCart: { type: Schema.Types.Mixed, default: null },
+    kotRevisions: {
+      type: [RunningOrderKotRevisionSchema],
+      default: [],
+    },
+    settledOrderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+    },
+    openedAt: { type: Date, default: Date.now, index: true },
+    settledAt: { type: Date, default: null },
+    voidReason: { type: String, trim: true, maxlength: 500, default: "" },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
-  settledOrderId: { type: Schema.Types.ObjectId, ref: "Order", default: null },
-  openedAt: { type: Date, default: Date.now, index: true },
-  settledAt: { type: Date, default: null },
-  voidReason: { type: String, trim: true, maxlength: 500, default: "" },
-  createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  updatedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-}, { timestamps: true, versionKey: false });
+  { timestamps: true, versionKey: false },
+);
 
 POSRunningOrderSchema.index({ tableId: 1, status: 1 });
 export const POSRunningOrder: Model<POSRunningOrderDocument> =
-  (models.POSRunningOrder as Model<POSRunningOrderDocument>) || model<POSRunningOrderDocument>("POSRunningOrder", POSRunningOrderSchema);
+  (models.POSRunningOrder as Model<POSRunningOrderDocument>) ||
+  model<POSRunningOrderDocument>("POSRunningOrder", POSRunningOrderSchema);

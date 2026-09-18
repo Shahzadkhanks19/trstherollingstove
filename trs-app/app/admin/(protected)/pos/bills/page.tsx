@@ -1,11 +1,17 @@
 import { createAdminMetadata } from "@/lib/admin/metadata";
 import { requirePermission } from "@/lib/auth/session";
 import { connectToDatabase } from "@/lib/db/mongoose";
-import { PosBillsClient, type PosBillListItem } from "@/components/admin/pos/PosBillsClient";
+import {
+  PosBillsClient,
+  type PosBillListItem,
+} from "@/components/admin/pos/PosBillsClient";
 import { Invoice } from "@/models/Invoice";
 import { Order } from "@/models/Order";
 
-export const metadata = createAdminMetadata("POS Bills", "Search and reprint permanent POS bills.");
+export const metadata = createAdminMetadata(
+  "POS Bills",
+  "Search and reprint permanent POS bills.",
+);
 export const dynamic = "force-dynamic";
 
 /**
@@ -19,7 +25,9 @@ async function getInitialBills(): Promise<PosBillListItem[]> {
   const invoices = await Invoice.find({})
     .sort({ issuedAt: -1 })
     .limit(100)
-    .select("invoiceNumber orderId orderNumber issuedAt customerSnapshot paymentMethod grandTotal printCount")
+    .select(
+      "invoiceNumber orderId orderNumber issuedAt customerSnapshot paymentMethod grandTotal printCount",
+    )
     .lean();
 
   const orders = await Order.find({

@@ -38,11 +38,7 @@ export async function POST(request: Request) {
       updatedBy: actor.id,
     });
 
-    return successResponse(
-      station,
-      "Kitchen station created.",
-      201,
-    );
+    return successResponse(station, "Kitchen station created.", 201);
   } catch (error) {
     return handleApiError(error);
   }

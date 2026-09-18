@@ -1,4 +1,10 @@
-import { Schema, model, models, type InferSchemaType, type Model } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
 const CouponSchema = new Schema(
   {
@@ -81,14 +87,25 @@ const CouponSchema = new Schema(
     firstOrderOnly: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true, index: true },
     deletedAt: { type: Date, default: null, index: true },
-    deletedCodeSnapshot: { type: String, trim: true, maxlength: 30, default: null },
+    deletedCodeSnapshot: {
+      type: String,
+      trim: true,
+      maxlength: 30,
+      default: null,
+    },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true, versionKey: false },
 );
 
-CouponSchema.index({ couponChannel: 1, publicOfferPlacement: 1, isActive: 1, startsAt: 1, expiresAt: 1 });
+CouponSchema.index({
+  couponChannel: 1,
+  publicOfferPlacement: 1,
+  isActive: 1,
+  startsAt: 1,
+  expiresAt: 1,
+});
 
 export function buildArchivedCouponCode(couponId: string): string {
   return `D_${couponId.slice(-24).toUpperCase()}`;

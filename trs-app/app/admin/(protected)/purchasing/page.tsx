@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { AdminPurchasingClient } from "@/components/admin/purchasing/AdminPurchasingClient";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 
-export const metadata = createAdminMetadata("Vendors & Purchasing", "Manage vendors, purchase requests, receipts and supplier payments.");
+export const metadata = createAdminMetadata(
+  "Vendors & Purchasing",
+  "Manage vendors, purchase requests, receipts and supplier payments.",
+);
 
 export const dynamic = "force-dynamic";
 

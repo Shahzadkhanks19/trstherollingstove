@@ -34,8 +34,9 @@ export type RunningOrderKotRevision = {
 };
 
 function modifierLabel(line: PosCartLine) {
-  return line.modifiers.map((modifier) =>
-    `${modifier.groupName}: ${modifier.optionName}${modifier.quantity > 1 ? ` ×${modifier.quantity}` : ""}`,
+  return line.modifiers.map(
+    (modifier) =>
+      `${modifier.groupName}: ${modifier.optionName}${modifier.quantity > 1 ? ` ×${modifier.quantity}` : ""}`,
   );
 }
 
@@ -102,7 +103,9 @@ export function createChangedKotRevision(
   revision: number,
   actorId: string,
 ): RunningOrderKotRevision | null {
-  const previousByLine = new Map(previousCart.lines.map((line) => [line.lineId, line]));
+  const previousByLine = new Map(
+    previousCart.lines.map((line) => [line.lineId, line]),
+  );
   const nextByLine = new Map(nextCart.lines.map((line) => [line.lineId, line]));
   const items: RunningOrderKotItem[] = [];
 
@@ -111,31 +114,47 @@ export function createChangedKotRevision(
 
     if (!previousLine) {
       items.push(
-        kotItem(nextLine, "addition", nextLine.quantity, ["New item added"], 0, nextLine.quantity),
+        kotItem(
+          nextLine,
+          "addition",
+          nextLine.quantity,
+          ["New item added"],
+          0,
+          nextLine.quantity,
+        ),
       );
       continue;
     }
 
-    const contentChanged = lineFingerprint(previousLine) !== lineFingerprint(nextLine);
+    const contentChanged =
+      lineFingerprint(previousLine) !== lineFingerprint(nextLine);
 
     if (contentChanged) {
       const changes: string[] = [];
       if (previousLine.variantName !== nextLine.variantName) {
-        changes.push(`Variant: ${previousLine.variantName || "None"} → ${nextLine.variantName || "None"}`);
+        changes.push(
+          `Variant: ${previousLine.variantName || "None"} → ${nextLine.variantName || "None"}`,
+        );
       }
       const oldModifiers = modifierLabel(previousLine).join(", ") || "None";
       const newModifiers = modifierLabel(nextLine).join(", ") || "None";
-      if (oldModifiers !== newModifiers) changes.push(`Options: ${oldModifiers} → ${newModifiers}`);
+      if (oldModifiers !== newModifiers)
+        changes.push(`Options: ${oldModifiers} → ${newModifiers}`);
       if (previousLine.note.trim() !== nextLine.note.trim()) {
-        changes.push(`Instruction: ${previousLine.note.trim() || "None"} → ${nextLine.note.trim() || "None"}`);
+        changes.push(
+          `Instruction: ${previousLine.note.trim() || "None"} → ${nextLine.note.trim() || "None"}`,
+        );
       }
       if (previousLine.quantity !== nextLine.quantity) {
-        changes.push(`Quantity: ${previousLine.quantity} → ${nextLine.quantity}`);
+        changes.push(
+          `Quantity: ${previousLine.quantity} → ${nextLine.quantity}`,
+        );
       }
       items.push(
         kotItem(
           nextLine,
-          previousLine.note.trim() !== nextLine.note.trim() && changes.length === 1
+          previousLine.note.trim() !== nextLine.note.trim() &&
+            changes.length === 1
             ? "instruction_update"
             : "modification",
           nextLine.quantity,
@@ -150,12 +169,32 @@ export function createChangedKotRevision(
     if (nextLine.quantity > previousLine.quantity) {
       const added = nextLine.quantity - previousLine.quantity;
       items.push(
-        kotItem(nextLine, "addition", added, [`Add ${added} more`, `Quantity: ${previousLine.quantity} → ${nextLine.quantity}`], previousLine.quantity, nextLine.quantity),
+        kotItem(
+          nextLine,
+          "addition",
+          added,
+          [
+            `Add ${added} more`,
+            `Quantity: ${previousLine.quantity} → ${nextLine.quantity}`,
+          ],
+          previousLine.quantity,
+          nextLine.quantity,
+        ),
       );
     } else if (nextLine.quantity < previousLine.quantity) {
       const cancelled = previousLine.quantity - nextLine.quantity;
       items.push(
-        kotItem(previousLine, "cancellation", cancelled, [`Cancel ${cancelled}`, `Quantity: ${previousLine.quantity} → ${nextLine.quantity}`], previousLine.quantity, nextLine.quantity),
+        kotItem(
+          previousLine,
+          "cancellation",
+          cancelled,
+          [
+            `Cancel ${cancelled}`,
+            `Quantity: ${previousLine.quantity} → ${nextLine.quantity}`,
+          ],
+          previousLine.quantity,
+          nextLine.quantity,
+        ),
       );
     }
   }
@@ -163,7 +202,14 @@ export function createChangedKotRevision(
   for (const previousLine of previousCart.lines) {
     if (nextByLine.has(previousLine.lineId)) continue;
     items.push(
-      kotItem(previousLine, "cancellation", previousLine.quantity, ["Item removed from order"], previousLine.quantity, 0),
+      kotItem(
+        previousLine,
+        "cancellation",
+        previousLine.quantity,
+        ["Item removed from order"],
+        previousLine.quantity,
+        0,
+      ),
     );
   }
 
@@ -174,10 +220,19 @@ export function createChangedKotRevision(
   if (!items.length && !noteChanged) return null;
 
   let type: RunningOrderKotAction = "modification";
-  if (items.length && items.every((item) => item.action === "addition")) type = "addition";
-  else if (items.length && items.every((item) => item.action === "cancellation")) type = "cancellation";
+  if (items.length && items.every((item) => item.action === "addition"))
+    type = "addition";
+  else if (
+    items.length &&
+    items.every((item) => item.action === "cancellation")
+  )
+    type = "cancellation";
   else if (!items.length && noteChanged) type = "instruction_update";
-  else if (items.length && items.every((item) => item.action === "instruction_update")) type = "instruction_update";
+  else if (
+    items.length &&
+    items.every((item) => item.action === "instruction_update")
+  )
+    type = "instruction_update";
 
   return {
     revision,

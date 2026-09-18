@@ -26,8 +26,7 @@ export function AdminSidebar({ open, onClose, permissions }: Props) {
 
   const activeHref = visibleItems
     .filter(
-      (item) =>
-        pathname === item.href || pathname.startsWith(`${item.href}/`),
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
     )
     .sort((first, second) => second.href.length - first.href.length)[0]?.href;
 
@@ -83,7 +82,9 @@ export function AdminSidebar({ open, onClose, permissions }: Props) {
 
         <nav className="flex-1 overflow-y-auto px-4 py-5 [scrollbar-width:thin]">
           {adminNavigation.map((group) => {
-            const items = group.items.filter((item) => allowed(item.permission));
+            const items = group.items.filter((item) =>
+              allowed(item.permission),
+            );
             if (!items.length) return null;
 
             return (

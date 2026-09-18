@@ -1,7 +1,9 @@
 export type ReportDatasetKey = "orders" | "internal_consumption";
 export type ReportColumnType = "string" | "number" | "date" | "boolean";
-export type ReportFilterOperator = "eq" | "neq" | "contains" | "gte" | "lte" | "in";
-export type ReportAggregation = "none" | "sum" | "avg" | "min" | "max" | "count";
+export type ReportFilterOperator =
+  "eq" | "neq" | "contains" | "gte" | "lte" | "in";
+export type ReportAggregation =
+  "none" | "sum" | "avg" | "min" | "max" | "count";
 export type ReportVisualization = "table" | "bar" | "line" | "pie" | "kpi";
 export type ReportDateInterval = "none" | "day" | "week" | "month" | "year";
 

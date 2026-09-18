@@ -49,7 +49,11 @@ export type AdminOrder = {
   statusHistory: AdminOrderHistoryItem[];
   paymentStatus: AdminPaymentStatus;
   paymentMethod: AdminPaymentMethod;
-  paymentBreakdown?: Array<{ method: "cash" | "upi" | "card" | "online"; amount: number; reference?: string }>;
+  paymentBreakdown?: Array<{
+    method: "cash" | "upi" | "card" | "online";
+    amount: number;
+    reference?: string;
+  }>;
   waivedAmount?: number;
   waivedReason?: string;
   tipAmount?: number;

@@ -14,18 +14,34 @@ export async function PATCH(request: Request, context: Context) {
     const input = await validateRequestBody(request, updatePosItemSchema);
     const { id } = await context.params;
     await connectToDatabase();
-    const item = await POSItem.findByIdAndUpdate(id, { ...input, ...(input.sku ? { sku: input.sku.toUpperCase() } : {}), updatedBy: actor.id }, { returnDocument: "after", runValidators: true });
+    const item = await POSItem.findByIdAndUpdate(
+      id,
+      {
+        ...input,
+        ...(input.sku ? { sku: input.sku.toUpperCase() } : {}),
+        updatedBy: actor.id,
+      },
+      { returnDocument: "after", runValidators: true },
+    );
     if (!item) throw new AppError("POS item not found.", 404);
     return successResponse(item, "POS item updated.");
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }
 export async function DELETE(_request: Request, context: Context) {
   try {
     const actor = await requirePermission("pos.manage");
     const { id } = await context.params;
     await connectToDatabase();
-    const item = await POSItem.findByIdAndUpdate(id, { isActive: false, updatedBy: actor.id }, { returnDocument: "after" });
+    const item = await POSItem.findByIdAndUpdate(
+      id,
+      { isActive: false, updatedBy: actor.id },
+      { returnDocument: "after" },
+    );
     if (!item) throw new AppError("POS item not found.", 404);
     return successResponse(item, "POS item disabled.");
-  } catch (error) { return handleApiError(error); }
+  } catch (error) {
+    return handleApiError(error);
+  }
 }

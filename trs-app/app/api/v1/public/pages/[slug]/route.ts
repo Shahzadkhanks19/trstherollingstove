@@ -1,9 +1,7 @@
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { handleApiError } from "@/lib/errors/handleApiError";
 import { successResponse } from "@/lib/http/apiResponse";
-import {
-  getPublicPage,
-} from "@/services/publicWebsite.service";
+import { getPublicPage } from "@/services/publicWebsite.service";
 
 type RouteContext = {
   params: Promise<{
@@ -11,18 +9,13 @@ type RouteContext = {
   }>;
 };
 
-export async function GET(
-  _request: Request,
-  context: RouteContext,
-) {
+export async function GET(_request: Request, context: RouteContext) {
   try {
     await connectToDatabase();
 
-    const { slug } =
-      await context.params;
+    const { slug } = await context.params;
 
-    const page =
-      await getPublicPage(slug);
+    const page = await getPublicPage(slug);
 
     if (!page) {
       return Response.json(

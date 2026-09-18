@@ -7,21 +7,11 @@ import {
   createInventoryReportPdf,
   createInventoryReportWorkbook,
 } from "@/services/inventory-report-export.service";
-import {
-  recordInventoryAudit,
-} from "@/services/inventory-enterprise-events.service";
+import { recordInventoryAudit } from "@/services/inventory-enterprise-events.service";
 
-const ALERT_STATUSES = [
-  "open",
-  "acknowledged",
-  "resolved",
-] as const;
+const ALERT_STATUSES = ["open", "acknowledged", "resolved"] as const;
 
-const ALERT_SEVERITIES = [
-  "info",
-  "warning",
-  "critical",
-] as const;
+const ALERT_SEVERITIES = ["info", "warning", "critical"] as const;
 
 type AlertStatus = (typeof ALERT_STATUSES)[number];
 type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
@@ -50,18 +40,10 @@ export async function GET(request: Request) {
   try {
     const actor = await requirePermission("inventory.read");
     const url = new URL(request.url);
-    const format =
-      url.searchParams.get("format") === "pdf"
-        ? "pdf"
-        : "xlsx";
-    const status = parseAlertStatus(
-      url.searchParams.get("status"),
-    );
-    const severity = parseAlertSeverity(
-      url.searchParams.get("severity"),
-    );
-    const type =
-      url.searchParams.get("type")?.trim() || undefined;
+    const format = url.searchParams.get("format") === "pdf" ? "pdf" : "xlsx";
+    const status = parseAlertStatus(url.searchParams.get("status"));
+    const severity = parseAlertSeverity(url.searchParams.get("severity"));
+    const type = url.searchParams.get("type")?.trim() || undefined;
 
     await connectToDatabase();
 

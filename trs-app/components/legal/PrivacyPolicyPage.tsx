@@ -232,9 +232,9 @@ export function PrivacyPolicyPage() {
             </h1>
 
             <p className="mt-6 max-w-[620px] text-base leading-8 text-[#4F4943] sm:text-lg">
-              This policy explains how The Rolling Stove collects, uses,
-              stores and protects information across its website, ordering,
-              rewards and customer-support services.
+              This policy explains how The Rolling Stove collects, uses, stores
+              and protects information across its website, ordering, rewards and
+              customer-support services.
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3 text-[9px] font-black uppercase">
@@ -279,7 +279,9 @@ export function PrivacyPolicyPage() {
 
                   <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[9px] font-semibold text-[#655E57]">
                     <span>
-                      <strong className="text-[#172536]">Effective date:</strong>{" "}
+                      <strong className="text-[#172536]">
+                        Effective date:
+                      </strong>{" "}
                       {effectiveDate}
                     </span>
                     <span>
@@ -359,7 +361,10 @@ export function PrivacyPolicyPage() {
 
               <div className="mt-6 grid gap-5">
                 {highlights.map(({ icon, title, text }) => (
-                  <article key={title} className="flex min-w-0 items-start gap-3">
+                  <article
+                    key={title}
+                    className="flex min-w-0 items-start gap-3"
+                  >
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#E8D8C9] bg-[#FFF7EE] text-[#D99219]">
                       <FontAwesomeIcon icon={icon} className="h-4" />
                     </span>
@@ -421,11 +426,11 @@ export function PrivacyPolicyPage() {
               </p>
 
               <div className="mt-5 grid gap-3 text-[10px]">
-                <a
-                  href="tel:+919166694786"
-                  className="flex items-center gap-3"
-                >
-                  <FontAwesomeIcon icon={faPhone} className="h-4 text-[#F5C84B]" />
+                <a href="tel:+919166694786" className="flex items-center gap-3">
+                  <FontAwesomeIcon
+                    icon={faPhone}
+                    className="h-4 text-[#F5C84B]"
+                  />
                   +91 91666 94786
                 </a>
                 <a

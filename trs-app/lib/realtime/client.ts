@@ -21,9 +21,7 @@ type SocketUser = {
   permissions: string[];
 };
 
-type AckResult =
-  | { ok: true }
-  | { ok: false; error: string };
+type AckResult = { ok: true } | { ok: false; error: string };
 
 type RealtimeTokenResponse = {
   success: boolean;
@@ -46,10 +44,7 @@ type ServerToClientEvents = {
     online: boolean;
     connections: number;
   }) => void;
-  "server:error": (payload: {
-    code: string;
-    message: string;
-  }) => void;
+  "server:error": (payload: { code: string; message: string }) => void;
 };
 
 type ClientToServerEvents = {
@@ -62,17 +57,11 @@ type ClientToServerEvents = {
     ack?: (result: AckResult) => void,
   ) => void;
   "presence:ping": (
-    ack?: (result: {
-      ok: true;
-      serverTime: string;
-    }) => void,
+    ack?: (result: { ok: true; serverTime: string }) => void,
   ) => void;
 };
 
-export type RealtimeSocket = Socket<
-  ServerToClientEvents,
-  ClientToServerEvents
->;
+export type RealtimeSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 let sharedSocket: RealtimeSocket | null = null;
 let consumerCount = 0;
@@ -136,8 +125,7 @@ export async function connectRealtimeSocket(
 }
 
 export function acquireRealtimeSocket(): RealtimeSocket | null {
-  const serverUrl =
-    process.env.NEXT_PUBLIC_REALTIME_SERVER_URL?.trim();
+  const serverUrl = process.env.NEXT_PUBLIC_REALTIME_SERVER_URL?.trim();
 
   if (!serverUrl) {
     return null;

@@ -46,8 +46,9 @@ const endpoints = [
 ] as const;
 
 export default function InventoryOperationsClient() {
-  const [active, setActive] =
-    useState<(typeof endpoints)[number]>(endpoints[0]);
+  const [active, setActive] = useState<(typeof endpoints)[number]>(
+    endpoints[0],
+  );
 
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,9 +72,7 @@ export default function InventoryOperationsClient() {
       setRows(payload.data ?? []);
     } catch (caught) {
       setError(
-        caught instanceof Error
-          ? caught.message
-          : "Unable to load records."
+        caught instanceof Error ? caught.message : "Unable to load records.",
       );
     } finally {
       setLoading(false);
@@ -96,8 +95,7 @@ export default function InventoryOperationsClient() {
         </h1>
 
         <p className="mt-1 text-sm text-slate-600">
-          Purchase returns, warehouse transfers, physical counts and
-          wastage.
+          Purchase returns, warehouse transfers, physical counts and wastage.
         </p>
       </div>
 
@@ -120,17 +118,11 @@ export default function InventoryOperationsClient() {
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         {loading ? (
-          <div className="p-8 text-sm text-slate-500">
-            Loading…
-          </div>
+          <div className="p-8 text-sm text-slate-500">Loading…</div>
         ) : error ? (
-          <div className="p-8 text-sm text-red-600">
-            {error}
-          </div>
+          <div className="p-8 text-sm text-red-600">{error}</div>
         ) : rows.length === 0 ? (
-          <div className="p-8 text-sm text-slate-500">
-            No records found.
-          </div>
+          <div className="p-8 text-sm text-slate-500">No records found.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -170,9 +162,7 @@ export default function InventoryOperationsClient() {
                       </td>
 
                       <td className="px-5 py-4 text-slate-600">
-                        {timestamp
-                          ? new Date(timestamp).toLocaleString()
-                          : "—"}
+                        {timestamp ? new Date(timestamp).toLocaleString() : "—"}
                       </td>
                     </tr>
                   );

@@ -8,13 +8,18 @@ import { getCustomerPaymentStatus } from "@/services/payment.service";
 export async function GET(request: Request) {
   try {
     const actor = await requireAuthenticatedUser();
-    if (actor.roleKey !== "customer") throw new AppError("Customer access required.", 403);
+    if (actor.roleKey !== "customer")
+      throw new AppError("Customer access required.", 403);
 
     const orderId = new URL(request.url).searchParams.get("orderId") ?? "";
-    if (!/^[a-f\d]{24}$/i.test(orderId)) throw new AppError("Invalid order identifier.", 400);
+    if (!/^[a-f\d]{24}$/i.test(orderId))
+      throw new AppError("Invalid order identifier.", 400);
 
     await connectToDatabase();
-    const result = await getCustomerPaymentStatus({ orderId, customerId: actor.id });
+    const result = await getCustomerPaymentStatus({
+      orderId,
+      customerId: actor.id,
+    });
     return successResponse(result, "Payment status loaded.");
   } catch (error) {
     return handleApiError(error);

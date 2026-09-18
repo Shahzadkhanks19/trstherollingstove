@@ -15,10 +15,7 @@ type Context = {
   params: Promise<{ id: string }>;
 };
 
-export async function PATCH(
-  request: Request,
-  context: Context,
-) {
+export async function PATCH(request: Request, context: Context) {
   try {
     const actor = await requirePermission("kds.manage");
     const { id } = await context.params;
@@ -56,10 +53,7 @@ export async function PATCH(
     });
     publishKdsQueueUpdated("ticket.priority_updated");
 
-    return successResponse(
-      ticket,
-      "Kitchen ticket priority updated.",
-    );
+    return successResponse(ticket, "Kitchen ticket priority updated.");
   } catch (error) {
     return handleApiError(error);
   }

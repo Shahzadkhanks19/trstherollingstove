@@ -14,7 +14,8 @@ export async function GET(request: Request) {
     }
 
     const url = new URL(request.url);
-    const orderNumber = url.searchParams.get("order")?.trim().toUpperCase() ?? "";
+    const orderNumber =
+      url.searchParams.get("order")?.trim().toUpperCase() ?? "";
     if (!orderNumber) {
       throw new AppError("Order number is required.", 400);
     }

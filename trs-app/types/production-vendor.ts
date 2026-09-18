@@ -1,16 +1,8 @@
 export type ProductionOrderStatus =
-  | "draft"
-  | "approved"
-  | "in_progress"
-  | "completed"
-  | "cancelled";
+  "draft" | "approved" | "in_progress" | "completed" | "cancelled";
 
 export type ProductionBatchStatus =
-  | "planned"
-  | "in_progress"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  "planned" | "in_progress" | "completed" | "failed" | "cancelled";
 
 export type VendorQuoteStatus =
   | "draft"
@@ -21,11 +13,7 @@ export type VendorQuoteStatus =
   | "withdrawn";
 
 export type VendorInvoiceStatus =
-  | "submitted"
-  | "under_review"
-  | "approved"
-  | "rejected"
-  | "paid";
+  "submitted" | "under_review" | "approved" | "rejected" | "paid";
 
 export type ProductionInputLine = {
   inventoryItemId: string;

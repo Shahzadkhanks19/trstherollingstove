@@ -7,18 +7,12 @@ export const strongPassword = z
   .regex(/[A-Z]/, "Password must contain an uppercase letter.")
   .regex(/[a-z]/, "Password must contain a lowercase letter.")
   .regex(/\d/, "Password must contain a number.")
-  .regex(
-    /[^A-Za-z0-9]/,
-    "Password must contain a special character.",
-  );
+  .regex(/[^A-Za-z0-9]/, "Password must contain a special character.");
 
 const phoneSchema = z
   .string()
   .trim()
-  .regex(
-    /^[6-9]\d{9}$/,
-    "Enter a valid 10-digit Indian mobile number.",
-  );
+  .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number.");
 
 export const registerSchema = z.object({
   name: z
@@ -43,10 +37,7 @@ export const registerSchema = z.object({
     .string()
     .trim()
     .toUpperCase()
-    .regex(
-      /^[A-Z0-9]{6,20}$/,
-      "Referral code is invalid.",
-    )
+    .regex(/^[A-Z0-9]{6,20}$/, "Referral code is invalid.")
     .optional(),
 });
 
@@ -66,10 +57,7 @@ export const loginSchema = z.object({
       error: "Email address or phone number is required.",
     })
     .trim()
-    .min(
-      5,
-      "Enter your registered email address or phone number.",
-    ),
+    .min(5, "Enter your registered email address or phone number."),
 
   password: z
     .string({
@@ -82,15 +70,11 @@ export const loginSchema = z.object({
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z
-      .string()
-      .min(1, "Current password is required."),
+    currentPassword: z.string().min(1, "Current password is required."),
 
     newPassword: strongPassword,
 
-    confirmPassword: z
-      .string()
-      .min(1, "Confirm your new password."),
+    confirmPassword: z.string().min(1, "Confirm your new password."),
   })
   .superRefine((input, context) => {
     if (input.currentPassword === input.newPassword) {
@@ -118,10 +102,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
-    token: z
-      .string()
-      .trim()
-      .min(32, "Reset token is invalid."),
+    token: z.string().trim().min(32, "Reset token is invalid."),
 
     newPassword: strongPassword.optional(),
 
@@ -130,8 +111,7 @@ export const resetPasswordSchema = z
     confirmPassword: z.string().optional(),
   })
   .superRefine((input, context) => {
-    const resolvedPassword =
-      input.newPassword ?? input.password;
+    const resolvedPassword = input.newPassword ?? input.password;
 
     if (!resolvedPassword) {
       context.addIssue({
@@ -156,15 +136,11 @@ export const resetPasswordSchema = z
   })
   .transform((input) => ({
     token: input.token,
-    newPassword:
-      input.newPassword ?? input.password!,
+    newPassword: input.newPassword ?? input.password!,
   }));
 
 export const verifyEmailSchema = z.object({
-  token: z
-    .string()
-    .trim()
-    .min(32, "Verification token is invalid."),
+  token: z.string().trim().min(32, "Verification token is invalid."),
 });
 
 export const resendVerificationSchema = z.object({
@@ -178,7 +154,5 @@ export const changeEmailSchema = z.object({
     .email("Enter a valid email address.")
     .transform((value) => value.trim().toLowerCase()),
 
-  currentPassword: z
-    .string()
-    .min(1, "Current password is required."),
+  currentPassword: z.string().min(1, "Current password is required."),
 });

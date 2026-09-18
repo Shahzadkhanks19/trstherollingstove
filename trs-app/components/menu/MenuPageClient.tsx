@@ -22,13 +22,12 @@ import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 
 type SortMode = "popular" | "low" | "high" | "name";
 
-export function MenuPageClient({
-  items,
-}: {
-  items: MenuItemSummary[];
-}) {
+export function MenuPageClient({ items }: { items: MenuItemSummary[] }) {
   const router = useRouter();
-  useRealtimeRefresh({ events: ["menu.updated", "menu.availability_changed"], onEvent: () => router.refresh() });
+  useRealtimeRefresh({
+    events: ["menu.updated", "menu.availability_changed"],
+    onEvent: () => router.refresh(),
+  });
 
   const categories = useMemo(() => {
     const map = new Map<string, { name: string; slug: string }>();
@@ -54,8 +53,7 @@ export function MenuPageClient({
 
     let list = items.filter(
       (item) =>
-        activeCategory === "all" ||
-        item.category.slug === activeCategory,
+        activeCategory === "all" || item.category.slug === activeCategory,
     );
 
     if (query) {
@@ -89,17 +87,9 @@ export function MenuPageClient({
 
     return [...list].sort(
       (a, b) =>
-        Number(Boolean(b.isBestseller)) -
-        Number(Boolean(a.isBestseller)),
+        Number(Boolean(b.isBestseller)) - Number(Boolean(a.isBestseller)),
     );
-  }, [
-    activeCategory,
-    items,
-    search,
-    showBestsellers,
-    showNew,
-    sortBy,
-  ]);
+  }, [activeCategory, items, search, showBestsellers, showNew, sortBy]);
 
   const activeCategoryName =
     categories.find((category) => category.slug === activeCategory)?.name ??
@@ -122,8 +112,8 @@ export function MenuPageClient({
             </h1>
 
             <p className="mt-5 max-w-xl text-base font-semibold italic leading-7 text-[#493F37]">
-              Browse the live menu managed through the TRS admin dashboard.
-              Open an item to choose its size, portion and available add-ons.
+              Browse the live menu managed through the TRS admin dashboard. Open
+              an item to choose its size, portion and available add-ons.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -132,17 +122,20 @@ export function MenuPageClient({
                 100% vegetarian
               </div>
               <div className="inline-flex items-center gap-2 rounded-xl border border-[#EADFD3] bg-white px-4 py-3 text-xs font-black shadow-sm">
-                <FontAwesomeIcon icon={faClock} className="h-4 text-[#C8102E]" />
+                <FontAwesomeIcon
+                  icon={faClock}
+                  className="h-4 text-[#C8102E]"
+                />
                 Open 5:30 PM–11:30 PM
               </div>
             </div>
           </div>
 
           <CmsHeroMedia
-              pageKey="menu"
-              label="Menu hero food image"
-              className="min-h-[330px] rounded-[2rem] shadow-[0_24px_70px_rgba(77,45,18,.12)] lg:min-h-[420px]"
-            />
+            pageKey="menu"
+            label="Menu hero food image"
+            className="min-h-[330px] rounded-[2rem] shadow-[0_24px_70px_rgba(77,45,18,.12)] lg:min-h-[420px]"
+          />
         </div>
       </section>
 
@@ -245,9 +238,7 @@ export function MenuPageClient({
                 <input
                   type="checkbox"
                   checked={showBestsellers}
-                  onChange={(event) =>
-                    setShowBestsellers(event.target.checked)
-                  }
+                  onChange={(event) => setShowBestsellers(event.target.checked)}
                   className="h-4 w-4 accent-[#C8102E]"
                 />
                 Bestsellers
@@ -308,9 +299,7 @@ export function MenuPageClient({
 
             <select
               value={sortBy}
-              onChange={(event) =>
-                setSortBy(event.target.value as SortMode)
-              }
+              onChange={(event) => setSortBy(event.target.value as SortMode)}
               className="h-12 min-w-[190px] rounded-xl bg-[#FFFAF5] px-4 text-xs font-black outline-none"
             >
               <option value="popular">Sort by: Popularity</option>
@@ -349,9 +338,7 @@ export function MenuPageClient({
                 icon={faMagnifyingGlass}
                 className="h-6 text-[#C8102E]"
               />
-              <h3 className="mt-4 text-lg font-black">
-                No menu items found
-              </h3>
+              <h3 className="mt-4 text-lg font-black">No menu items found</h3>
               <p className="mt-2 text-sm text-[#756A61]">
                 Add and publish menu items from the admin dashboard, or clear
                 the current filters.

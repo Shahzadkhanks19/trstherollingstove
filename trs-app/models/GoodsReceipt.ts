@@ -128,12 +128,8 @@ GoodsReceiptSchema.index({
   receivedAt: -1,
 });
 
-export type GoodsReceiptDocument =
-  InferSchemaType<typeof GoodsReceiptSchema>;
+export type GoodsReceiptDocument = InferSchemaType<typeof GoodsReceiptSchema>;
 
 export const GoodsReceipt: Model<GoodsReceiptDocument> =
   (models.GoodsReceipt as Model<GoodsReceiptDocument>) ||
-  model<GoodsReceiptDocument>(
-    "GoodsReceipt",
-    GoodsReceiptSchema,
-  );
+  model<GoodsReceiptDocument>("GoodsReceipt", GoodsReceiptSchema);

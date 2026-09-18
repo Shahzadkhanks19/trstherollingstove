@@ -10,10 +10,7 @@ export async function GET() {
     await requirePermission("purchases.read");
     await connectToDatabase();
 
-    const [
-      orderSummary,
-      supplierSummary,
-    ] = await Promise.all([
+    const [orderSummary, supplierSummary] = await Promise.all([
       PurchaseOrder.aggregate([
         {
           $match: {
@@ -39,11 +36,7 @@ export async function GET() {
                   {
                     $in: [
                       "$status",
-                      [
-                        "draft",
-                        "approved",
-                        "partially_received",
-                      ],
+                      ["draft", "approved", "partially_received"],
                     ],
                   },
                   1,
@@ -73,20 +66,13 @@ export async function GET() {
     ]);
 
     return successResponse({
-      totalOrders:
-        orderSummary[0]?.totalOrders ?? 0,
-      openOrders:
-        orderSummary[0]?.openOrders ?? 0,
-      totalPurchaseValue:
-        orderSummary[0]?.totalPurchaseValue ?? 0,
-      totalPaid:
-        orderSummary[0]?.totalPaid ?? 0,
-      totalOutstanding:
-        orderSummary[0]?.totalOutstanding ?? 0,
-      activeSuppliers:
-        supplierSummary[0]?.activeSuppliers ?? 0,
-      supplierOutstanding:
-        supplierSummary[0]?.supplierOutstanding ?? 0,
+      totalOrders: orderSummary[0]?.totalOrders ?? 0,
+      openOrders: orderSummary[0]?.openOrders ?? 0,
+      totalPurchaseValue: orderSummary[0]?.totalPurchaseValue ?? 0,
+      totalPaid: orderSummary[0]?.totalPaid ?? 0,
+      totalOutstanding: orderSummary[0]?.totalOutstanding ?? 0,
+      activeSuppliers: supplierSummary[0]?.activeSuppliers ?? 0,
+      supplierOutstanding: supplierSummary[0]?.supplierOutstanding ?? 0,
     });
   } catch (error) {
     return handleApiError(error);

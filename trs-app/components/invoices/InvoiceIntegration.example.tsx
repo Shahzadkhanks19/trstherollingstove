@@ -16,15 +16,6 @@ import { InvoiceActions } from "@/components/invoices/InvoiceActions";
  * />
  */
 
-export function InvoiceIntegrationExample({
-  orderId,
-}: {
-  orderId: string;
-}) {
-  return (
-    <InvoiceActions
-      orderId={orderId}
-      audience="customer"
-    />
-  );
+export function InvoiceIntegrationExample({ orderId }: { orderId: string }) {
+  return <InvoiceActions orderId={orderId} audience="customer" />;
 }

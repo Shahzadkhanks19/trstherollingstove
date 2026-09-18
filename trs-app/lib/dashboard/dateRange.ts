@@ -21,7 +21,10 @@ function endOfIndiaDay(value: string) {
   return new Date(`${value}T23:59:59.999${INDIA_OFFSET}`);
 }
 
-function normalizeDateInput(value: string | Date | undefined, fallback: string) {
+function normalizeDateInput(
+  value: string | Date | undefined,
+  fallback: string,
+) {
   if (!value) return fallback;
   if (typeof value === "string") return value;
   if (Number.isNaN(value.getTime())) {
@@ -37,11 +40,16 @@ export function resolveDashboardDateRange(
   const today = indiaDateString();
   const toDate = normalizeDateInput(to, today);
   const resolvedTo = endOfIndiaDay(toDate);
-  const defaultFrom = indiaDateString(new Date(resolvedTo.getTime() - 29 * DAY_MS));
+  const defaultFrom = indiaDateString(
+    new Date(resolvedTo.getTime() - 29 * DAY_MS),
+  );
   const fromDate = normalizeDateInput(from, defaultFrom);
   const resolvedFrom = startOfIndiaDay(fromDate);
 
-  if (Number.isNaN(resolvedFrom.getTime()) || Number.isNaN(resolvedTo.getTime())) {
+  if (
+    Number.isNaN(resolvedFrom.getTime()) ||
+    Number.isNaN(resolvedTo.getTime())
+  ) {
     throw new AppError("Invalid dashboard date range.", 400);
   }
 
@@ -56,7 +64,9 @@ export function resolveDashboardDateRange(
   return { from: resolvedFrom, to: resolvedTo };
 }
 
-export function previousDateRange(range: DashboardDateRange): DashboardDateRange {
+export function previousDateRange(
+  range: DashboardDateRange,
+): DashboardDateRange {
   const duration = range.to.getTime() - range.from.getTime();
   const previousTo = new Date(range.from.getTime() - 1);
   return {

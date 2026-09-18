@@ -82,15 +82,14 @@ const InventoryForecastRunSchema = new Schema(
 
 InventoryForecastRunSchema.index({ createdAt: -1 });
 
-export type InventoryForecastRunDocument =
-  InferSchemaType<typeof InventoryForecastRunSchema>;
+export type InventoryForecastRunDocument = InferSchemaType<
+  typeof InventoryForecastRunSchema
+>;
 
-export const InventoryForecastRun:
-  Model<InventoryForecastRunDocument> =
-    (models.InventoryForecastRun as
-      | Model<InventoryForecastRunDocument>
-      | undefined) ??
-    model<InventoryForecastRunDocument>(
-      "InventoryForecastRun",
-      InventoryForecastRunSchema,
-    );
+export const InventoryForecastRun: Model<InventoryForecastRunDocument> =
+  (models.InventoryForecastRun as
+    Model<InventoryForecastRunDocument> | undefined) ??
+  model<InventoryForecastRunDocument>(
+    "InventoryForecastRun",
+    InventoryForecastRunSchema,
+  );

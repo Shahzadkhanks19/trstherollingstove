@@ -6,9 +6,10 @@ export const paymentManagementRangeSchema = z.object({
   days: z.coerce.number().int().min(1).max(3650).default(30),
 });
 
-export const paymentManagementRebuildSchema = paymentManagementRangeSchema.extend({
-  source: z.enum(["manual", "scheduled", "system"]).default("manual"),
-});
+export const paymentManagementRebuildSchema =
+  paymentManagementRangeSchema.extend({
+    source: z.enum(["manual", "scheduled", "system"]).default("manual"),
+  });
 
 export const paymentRefundSchema = z.object({
   amount: z.coerce.number().positive(),

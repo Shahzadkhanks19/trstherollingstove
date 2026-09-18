@@ -15,18 +15,37 @@ export async function GET() {
         .populate("categoryId", "name")
         .sort({ sortOrder: 1, name: 1 })
         .lean(),
-      POSItem.find({ isActive: true }).sort({ category: 1, sortOrder: 1, name: 1 }).lean(),
+      POSItem.find({ isActive: true })
+        .sort({ category: 1, sortOrder: 1, name: 1 })
+        .lean(),
     ]);
     return successResponse({
       menuItems: menuItems.map((item) => ({
-        id: String(item._id), sourceType: "menu", name: item.name, imageUrl: item.imageUrl,
-        category: String((item.categoryId as unknown as { name?: string } | null)?.name ?? "Menu"),
+        id: String(item._id),
+        sourceType: "menu",
+        name: item.name,
+        imageUrl: item.imageUrl,
+        category: String(
+          (item.categoryId as unknown as { name?: string } | null)?.name ??
+            "Menu",
+        ),
         price: item.basePrice,
-        variants: item.variants.filter((variant) => variant.isActive).map((variant) => ({ id: String(variant._id), name: variant.name, price: variant.price })),
+        variants: item.variants
+          .filter((variant) => variant.isActive)
+          .map((variant) => ({
+            id: String(variant._id),
+            name: variant.name,
+            price: variant.price,
+          })),
       })),
       posItems: posItems.map((item) => ({
-        id: String(item._id), sourceType: "pos", name: item.name, imageUrl: item.imageUrl,
-        category: item.category, price: item.sellingPrice, allowCustomPrice: item.allowCustomPrice,
+        id: String(item._id),
+        sourceType: "pos",
+        name: item.name,
+        imageUrl: item.imageUrl,
+        category: item.category,
+        price: item.sellingPrice,
+        allowCustomPrice: item.allowCustomPrice,
       })),
     });
   } catch (error) {

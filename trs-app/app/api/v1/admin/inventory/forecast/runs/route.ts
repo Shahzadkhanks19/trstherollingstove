@@ -9,10 +9,7 @@ export async function GET(request: Request) {
     await requirePermission("inventory.read");
     const url = new URL(request.url);
     const limit = Math.min(
-      Math.max(
-        Number(url.searchParams.get("limit") ?? 20),
-        1,
-      ),
+      Math.max(Number(url.searchParams.get("limit") ?? 20), 1),
       100,
     );
 

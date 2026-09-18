@@ -18,7 +18,10 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const page = Math.max(Number(url.searchParams.get("page") ?? 1), 1);
-    const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 25), 1), 100);
+    const limit = Math.min(
+      Math.max(Number(url.searchParams.get("limit") ?? 25), 1),
+      100,
+    );
     const search = url.searchParams.get("search")?.trim();
     const active = url.searchParams.get("active");
     const channel = url.searchParams.get("channel");
@@ -52,7 +55,10 @@ export async function GET(request: Request) {
     ]);
 
     return successResponse(
-      { coupons, pagination: { page, limit, total, pages: Math.ceil(total / limit) } },
+      {
+        coupons,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      },
       "Coupons loaded.",
     );
   } catch (error) {
@@ -82,9 +88,12 @@ export async function POST(request: Request) {
         },
         {
           $set: {
-            code: buildArchivedCouponCode(String(deletedCouponWithSameCode._id)),
+            code: buildArchivedCouponCode(
+              String(deletedCouponWithSameCode._id),
+            ),
             deletedCodeSnapshot:
-              deletedCouponWithSameCode.deletedCodeSnapshot ?? deletedCouponWithSameCode.code,
+              deletedCouponWithSameCode.deletedCodeSnapshot ??
+              deletedCouponWithSameCode.code,
           },
         },
       );

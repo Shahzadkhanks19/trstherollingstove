@@ -44,7 +44,14 @@ export async function GET(request: Request) {
         type: row.orderMode,
         items: row.itemCount,
         payment: row.paymentBreakdown?.length
-          ? [...new Set(row.paymentBreakdown.map((part: { method: string; amount: number }) => part.method.toUpperCase()))].join(" + ")
+          ? [
+              ...new Set(
+                row.paymentBreakdown.map(
+                  (part: { method: string; amount: number }) =>
+                    part.method.toUpperCase(),
+                ),
+              ),
+            ].join(" + ")
           : row.paymentMethod.toUpperCase(),
         gross: row.gross,
         discount: row.discount,
@@ -64,7 +71,8 @@ export async function GET(request: Request) {
 
     return new Response(buffer as ArrayBuffer, {
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "private, no-store",
       },
