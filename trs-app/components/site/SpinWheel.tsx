@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -48,6 +48,7 @@ const segmentColors = [
 ];
 
 export function SpinWheel() {
+  const router = useRouter();
   const pathname = usePathname();
   const [campaign, setCampaign] =
     useState<PublicCampaignPayload["campaign"]>(null);
@@ -141,9 +142,7 @@ export function SpinWheel() {
   }, [prizes]);
 
   function signInToSpin() {
-    window.location.assign(
-      `/login?returnTo=${encodeURIComponent(pathname || "/rewards")}`,
-    );
+    router.push(`/login?returnTo=${encodeURIComponent(pathname || "/rewards")}`);
   }
 
   async function spin() {
