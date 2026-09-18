@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -128,6 +129,7 @@ function initialiseOptions(groups: MenuOptionGroup[]): SelectedOptionState {
 }
 
 export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
+  const router = useRouter();
   const configuredGroups = useMemo(
     () => getCustomerVisibleOptionGroups(item),
     [item],
@@ -444,7 +446,7 @@ export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
       }
 
       setFeedback("Item added to cart.");
-      if (orderNow) window.location.assign("/cart");
+      if (orderNow) router.push("/cart");
     } catch (error) {
       setFeedback(
         error instanceof Error ? error.message : "Unable to add item to cart.",
