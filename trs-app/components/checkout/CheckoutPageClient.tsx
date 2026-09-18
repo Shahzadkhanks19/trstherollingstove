@@ -32,67 +32,15 @@ import {
 } from "@/lib/checkout/timeSlots";
 import { MediaPlaceholder } from "@/components/site/MediaPlaceholder";
 
-type ApiEnvelope<T> = { success: boolean; message: string; data: T };
-type OrderMode = "takeaway" | "dine_in";
-
-type CheckoutItem = {
-  id: string;
-  name: string;
-  imageUrl?: string;
-  variant: string;
-  modifiers: string[];
-  quantity: number;
-  unitPrice: number;
-  isCombo: boolean;
-  isDiscountedItem: boolean;
-};
-
-type CartData = {
-  items: Array<{
-    _id?: string;
-    name: string;
-    imageUrl?: string;
-    variantName?: string;
-    modifiers?: Array<{ optionName?: string }>;
-    quantity: number;
-    lineUnitPrice: number;
-    isCombo?: boolean;
-    isDiscountedItem?: boolean;
-  }>;
-  taxTotal: number;
-};
-
-type CheckoutOrder = {
-  _id?: string;
-  id?: string;
-  orderNumber: string;
-};
-
-function money(value: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function normaliseCart(cart: CartData | null): CheckoutItem[] {
-  if (!cart?.items.length) return [];
-  return cart.items.map((item, index) => ({
-    id: item._id ?? `cart-${index}`,
-    name: item.name,
-    imageUrl: item.imageUrl,
-    variant: item.variantName || "Regular",
-    modifiers:
-      item.modifiers
-        ?.map((modifier) => modifier.optionName)
-        .filter((value): value is string => Boolean(value)) ?? [],
-    quantity: item.quantity,
-    unitPrice: item.lineUnitPrice,
-    isCombo: item.isCombo ?? false,
-    isDiscountedItem: item.isDiscountedItem ?? false,
-  }));
-}
+import {
+  money,
+  normaliseCart,
+  type ApiEnvelope,
+  type CartData,
+  type CheckoutItem,
+  type CheckoutOrder,
+  type OrderMode,
+} from "@/components/checkout/checkout-utils";
 
 export function CheckoutPageClient() {
   const router = useRouter();
