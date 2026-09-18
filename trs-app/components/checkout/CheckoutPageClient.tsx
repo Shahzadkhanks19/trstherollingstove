@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRight,
@@ -94,6 +95,7 @@ function normaliseCart(cart: CartData | null): CheckoutItem[] {
 }
 
 export function CheckoutPageClient() {
+  const router = useRouter();
   const [settings, setSettings] = useState<PublicOrderingSettings>(
     DEFAULT_PUBLIC_ORDERING_SETTINGS,
   );
@@ -113,7 +115,7 @@ export function CheckoutPageClient() {
     async function load() {
       const authenticated = await getCurrentCustomer();
       if (!authenticated) {
-        window.location.assign("/login?returnTo=%2Fcheckout");
+        router.replace("/login?returnTo=%2Fcheckout");
         return;
       }
       const [settingsResponse, cartResponse] = await Promise.allSettled([
@@ -274,9 +276,7 @@ export function CheckoutPageClient() {
       if (!applicationOrderId) throw new Error("Order ID was not returned.");
 
       sessionStorage.setItem("trs.pendingPaymentOrderId", applicationOrderId);
-      window.location.assign(
-        `/payment?orderId=${encodeURIComponent(applicationOrderId)}`,
-      );
+      router.push(`/payment?orderId=${encodeURIComponent(applicationOrderId)}`);
     } catch (error) {
       setLoading(false);
       setMessage(
