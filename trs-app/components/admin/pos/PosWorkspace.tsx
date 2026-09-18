@@ -183,7 +183,7 @@ export function PosWorkspace({
       }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [runningOrder]);
 
   useEffect(() => {
     if (!mobileCartOpen) return;
