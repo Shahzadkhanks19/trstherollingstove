@@ -37,7 +37,6 @@ import {
   normaliseCart,
   type ApiEnvelope,
   type CartData,
-  type CheckoutItem,
   type CheckoutOrder,
   type OrderMode,
 } from "@/components/checkout/checkout-utils";
