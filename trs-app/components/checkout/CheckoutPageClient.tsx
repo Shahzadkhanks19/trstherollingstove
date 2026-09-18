@@ -142,7 +142,7 @@ export function CheckoutPageClient() {
       }
     }
     void load();
-  }, []);
+  }, [router]);
 
   const slots = useMemo(() => generateSameDayOrderSlots(settings), [settings]);
   const items = useMemo(() => normaliseCart(cart), [cart]);
