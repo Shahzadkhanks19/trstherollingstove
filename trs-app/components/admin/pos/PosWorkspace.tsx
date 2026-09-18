@@ -5,8 +5,6 @@ import {
   useEffect,
   useMemo,
   useState,
-  type Dispatch,
-  type SetStateAction,
 } from "react";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,9 +22,6 @@ import {
   faPause,
   faFolderOpen,
   faXmark,
-  faUser,
-  faUserPlus,
-  faPhone,
   faPlus,
   faUtensils,
   faTableColumns,
@@ -55,7 +50,6 @@ import type {
   PosCatalogItem,
   PosCategory,
   PosOrderType,
-  PosSaleType,
   PosInternalConsumption,
   PosCustomer,
 } from "@/types/pos";
