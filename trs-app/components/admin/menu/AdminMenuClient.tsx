@@ -15,10 +15,6 @@ import { CustomActionModal } from "@/components/admin/CustomActionModal";
 import { localDateTimeInputValue } from "@/lib/validation/dateTime";
 
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
-import {
-  isAllowedNaanModifierGroup,
-  isThinCrustExcludedPizza,
-} from "@/lib/menu-special-config";
 
 import {
   emptyForm,
@@ -29,7 +25,8 @@ import {
   type ModifierGroup,
   type VariantForm,
 } from "@/components/admin/menu/admin-menu.types";
-import { createNaanPortionVariants, createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
+import { createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
+import { changeMenuCategory, changeVariant, createMenuItemForm, menuItemToForm } from "@/components/admin/menu/admin-menu-editor.utils";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
@@ -254,178 +251,29 @@ export function AdminMenuClient({
   }, [loadCategories, loadComboCatalogItems]);
 
   async function openCreate() {
-    setEditingId(null);
-    setFormError("");
-    setItemDiscountType("percentage");
-    setItemDiscountValue("");
-
+    setEditingId(null); setFormError(""); setItemDiscountType("percentage"); setItemDiscountValue("");
     try {
-      const [availableCategories] = await Promise.all([
-        categories.length > 0 ? Promise.resolve(categories) : loadCategories(),
-        loadComboCatalogItems(),
-      ]);
-      const defaultCategory = availableCategories.find(
-        (category) => category.isActive,
-      );
-      const defaultIsPizza =
-        `${defaultCategory?.name ?? ""} ${defaultCategory?.slug ?? ""}`
-          .toLowerCase()
-          .includes("pizza");
-      setForm({
-        ...emptyForm,
-        categoryId: defaultCategory?._id ?? "",
-        variants: defaultIsPizza
-          ? createPizzaVariants()
-          : defaultCategory &&
-              `${defaultCategory.name} ${defaultCategory.slug}`
-                .toLowerCase()
-                .includes("chur")
-            ? createNaanPortionVariants()
-            : [],
-        pizzaConfiguration: {
-          thinCrustAvailable: true,
-          thinCrustPriceAdjustment: "0",
-        },
-      });
+      const [availableCategories] = await Promise.all([categories.length ? Promise.resolve(categories) : loadCategories(), loadComboCatalogItems()]);
+      setForm(createMenuItemForm(availableCategories));
       setEditorOpen(true);
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to load menu categories.",
-      );
+      setError(requestError instanceof Error ? requestError.message : "Unable to load menu categories.");
     }
   }
 
   async function openEdit(itemId: string) {
-    setActing(true);
-    setFormError("");
-    setItemDiscountType("percentage");
-    setItemDiscountValue("");
+    setActing(true); setFormError(""); setItemDiscountType("percentage"); setItemDiscountValue("");
     try {
       await loadComboCatalogItems();
-      const response = await fetch(`/api/v1/admin/menu/items/${itemId}`, {
-        cache: "no-store",
-      });
+      const response = await fetch(`/api/v1/admin/menu/items/${itemId}`, { cache: "no-store" });
       const payload = (await response.json()) as ApiResponse<MenuItem>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to load menu item.");
-      const item = payload.data;
-      const itemCategoryId =
-        typeof item.categoryId === "string"
-          ? item.categoryId
-          : item.categoryId._id;
-      const itemCategory = categories.find(
-        (category) => category._id === itemCategoryId,
-      );
-      const itemIdentity =
-        `${itemCategory?.name ?? ""} ${itemCategory?.slug ?? ""}`.toLowerCase();
-      const itemIsPizza = itemIdentity.includes("pizza");
-      const itemIsNaan =
-        itemIdentity.includes("chur") && itemIdentity.includes("naan");
-      setEditingId(item._id);
-      setForm({
-        name: item.name,
-        slug: item.slug,
-        categoryId: itemCategoryId,
-        shortDescription: item.shortDescription ?? "",
-        description: item.description ?? "",
-        imageUrl: item.imageUrl ?? "",
-        basePrice: String(item.basePrice),
-        compareAtPrice:
-          item.compareAtPrice == null ? "" : String(item.compareAtPrice),
-        variants:
-          (itemIsPizza || itemIsNaan) && (item.variants ?? []).length === 0
-            ? itemIsPizza
-              ? createPizzaVariants()
-              : createNaanPortionVariants()
-            : (item.variants ?? []).map((variant, index) => ({
-                name: variant.name,
-                sku: variant.sku ?? "",
-                price: String(variant.price),
-                compareAtPrice:
-                  variant.compareAtPrice == null
-                    ? ""
-                    : String(variant.compareAtPrice),
-                isDefault: variant.isDefault ?? index === 0,
-                isActive: variant.isActive ?? true,
-                sortOrder: String(variant.sortOrder ?? index),
-              })),
-        modifierGroupIds: (item.modifierGroupIds ?? []).map((group) =>
-          typeof group === "string" ? group : group._id,
-        ),
-        frequentlyOrderedWithIds: (item.frequentlyOrderedWithIds ?? []).flatMap(
-          (related) => {
-            if (!related) return [];
-            if (typeof related === "string") return [related];
-            return related.isActive !== false ? [related._id] : [];
-          },
-        ),
-        combinationPricing: {
-          enabled: item.combinationPricing?.enabled ?? false,
-          modifierGroupId: item.combinationPricing?.modifierGroupId ?? "",
-          entries: (item.combinationPricing?.entries ?? []).map((entry) => ({
-            ...entry,
-            price: String(entry.price),
-          })),
-        },
-        pizzaConfiguration: {
-          thinCrustAvailable:
-            item.pizzaConfiguration?.thinCrustAvailable ??
-            !isThinCrustExcludedPizza(item.name),
-          thinCrustPriceAdjustment: String(
-            item.pizzaConfiguration?.thinCrustPriceAdjustment ?? 0,
-          ),
-        },
-        spiceLevel: item.spiceLevel,
-        preparationTimeMinutes: String(item.preparationTimeMinutes),
-        tags: item.tags.join(", "),
-        allergens: item.allergens.join(", "),
-        availableForDineIn: item.availableForDineIn,
-        availableForTakeaway: item.availableForTakeaway,
-        isAvailable: item.isAvailable,
-        isActive: item.isActive,
-        isFeatured: item.isFeatured,
-        isBestseller: item.isBestseller,
-        isCombo: item.isCombo ?? false,
-        comboComponents: (item.comboComponents ?? []).map((entry) => ({
-          menuItemId:
-            typeof entry.menuItemId === "string"
-              ? entry.menuItemId
-              : entry.menuItemId._id,
-          variantId: entry.variantId ?? "",
-          quantity: String(entry.quantity),
-        })),
-        comboOfferType: item.comboOfferType ?? "permanent",
-        comboOfferStartsAt: item.comboOfferStartsAt
-          ? localDateTimeInputValue(new Date(item.comboOfferStartsAt))
-          : "",
-        comboOfferExpiresAt: item.comboOfferExpiresAt
-          ? localDateTimeInputValue(new Date(item.comboOfferExpiresAt))
-          : "",
-        publishComboOnMenuPage: item.publishComboOnMenuPage ?? true,
-        publishComboOnOffersPage: item.publishComboOnOffersPage ?? false,
-        comboOffersPageSection: item.comboOffersPageSection ?? "permanent",
-        eligibleTierKeys: item.eligibleTierKeys?.length
-          ? item.eligibleTierKeys
-          : ["bronze", "silver", "gold", "platinum"],
-        isTodaysSpecialOffer: item.isTodaysSpecialOffer ?? false,
-        todaysSpecialOfferStartsAt: item.todaysSpecialOfferStartsAt
-          ? localDateTimeInputValue(new Date(item.todaysSpecialOfferStartsAt))
-          : "",
-        trackInventory: item.trackInventory,
-        sortOrder: String(item.sortOrder),
-      });
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to load menu item.");
+      setEditingId(payload.data._id);
+      setForm(menuItemToForm(payload.data, categories));
       setEditorOpen(true);
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to load menu item.",
-      );
-    } finally {
-      setActing(false);
-    }
+      setError(requestError instanceof Error ? requestError.message : "Unable to load menu item.");
+    } finally { setActing(false); }
   }
 
   async function uploadItemImage(file: File) {
@@ -455,47 +303,7 @@ export function AdminMenuClient({
   }
 
   function handleCategoryChange(value: string) {
-    const pizzaSelected = categoryIsPizza(categories, value);
-    const naanSelected = categoryIsNaan(categories, value);
-    const comboSelected = categoryIsCombo(categories, value);
-    setForm((current) => ({
-      ...current,
-      categoryId: value,
-      basePrice: pizzaSelected || naanSelected ? "" : current.basePrice,
-      isCombo: comboSelected,
-      comboComponents: comboSelected
-        ? current.comboComponents.length >= 2
-          ? current.comboComponents
-          : [
-              { menuItemId: "", variantId: "", quantity: "1" },
-              { menuItemId: "", variantId: "", quantity: "1" },
-            ]
-        : [],
-      variants: pizzaSelected
-        ? current.variants.length > 0
-          ? current.variants
-          : createPizzaVariants()
-        : naanSelected
-          ? current.variants.length > 0
-            ? current.variants
-            : createNaanPortionVariants()
-          : [],
-      combinationPricing: naanSelected
-        ? current.combinationPricing
-        : { enabled: false, modifierGroupId: "", entries: [] },
-      modifierGroupIds: naanSelected
-        ? current.modifierGroupIds.filter((groupId) => {
-            const group = modifierGroups.find((entry) => entry._id === groupId);
-            return Boolean(
-              group &&
-              isAllowedNaanModifierGroup(group.name, group.internalName),
-            );
-          })
-        : current.modifierGroupIds,
-      pizzaConfiguration: pizzaSelected
-        ? current.pizzaConfiguration
-        : { thinCrustAvailable: false, thinCrustPriceAdjustment: "0" },
-    }));
+    setForm((current) => changeMenuCategory(current, value, categories, modifierGroups));
   }
 
   function applyPizzaVariantPreset() {
@@ -507,29 +315,7 @@ export function AdminMenuClient({
   }
 
   function updateVariant(index: number, updates: Partial<VariantForm>) {
-    setForm((current) => {
-      const previousName = current.variants[index]?.name ?? "";
-      const nextVariants = current.variants.map((variant, variantIndex) => {
-        if (variantIndex !== index) {
-          if (updates.isDefault) return { ...variant, isDefault: false };
-          return variant;
-        }
-        return { ...variant, ...updates };
-      });
-      const nextName = nextVariants[index]?.name ?? previousName;
-      return {
-        ...current,
-        variants: nextVariants,
-        combinationPricing: {
-          ...current.combinationPricing,
-          entries: current.combinationPricing.entries.map((entry) =>
-            entry.variantLabel === previousName
-              ? { ...entry, variantLabel: nextName }
-              : entry,
-          ),
-        },
-      };
-    });
+    setForm((current) => changeVariant(current, index, updates));
   }
 
   const isPizzaCategory = categoryIsPizza(categories, form.categoryId);
