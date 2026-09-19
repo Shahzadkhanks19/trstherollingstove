@@ -7,18 +7,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
-import {
-  acquireRealtimeSocket,
-  connectRealtimeSocket,
-  releaseRealtimeSocket,
-  type RealtimeEventEnvelope,
-} from "@/lib/realtime/client";
-
 import type { FilterKey, GroupedItem, KitchenTicket, RealtimeStatus, TicketStatus } from "@/components/admin/kds/kds.types";
 import { buildDetails, getNotificationAudioContext, isNewStatus, playNotificationTone, unlockNotificationAudio } from "@/components/admin/kds/kds.utils";
 import { KdsControls, KdsHeader } from "@/components/admin/kds/KdsToolbar";
 import { KdsQueue } from "@/components/admin/kds/KdsQueue";
 import { extendKitchenPreparation, fetchKitchenTickets, patchKitchenTicketStatus } from "@/components/admin/kds/kds.api";
+import { useKdsRealtime } from "@/components/admin/kds/useKdsRealtime";
 
 export function KitchenDisplayClient({ userName }: { userName: string }) {
   const [tickets, setTickets] = useState<KitchenTicket[]>([]);
@@ -151,76 +145,21 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
     };
   }, [loadTickets]);
 
-  useEffect(() => {
-    const socket = acquireRealtimeSocket();
-
-    if (!socket) {
-      const unavailableTimer = window.setTimeout(
-        () => setRealtimeStatus("unavailable"),
-        0,
-      );
-      return () => window.clearTimeout(unavailableTimer);
-    }
-
-    let refreshTimer: number | null = null;
-
-    const scheduleRefresh = () => {
-      if (refreshTimer !== null) window.clearTimeout(refreshTimer);
-      refreshTimer = window.setTimeout(() => {
-        refreshTimer = null;
-        void loadTickets(true);
-      }, 150);
-    };
-
-    const handleDomainEvent = (event: RealtimeEventEnvelope) => {
-      if (
-        event.event.startsWith("kds.") ||
-        event.event === "order.created" ||
-        event.event === "order.updated" ||
-        event.event === "order.status_changed" ||
-        event.event === "order.cancelled"
-      ) {
-        scheduleRefresh();
-      }
-    };
-
-    const handleConnect = () => setRealtimeStatus("connecting");
-    const handleReady = () => {
-      setRealtimeStatus("connected");
-      socket.emit("room:subscribe", { room: "domain:kds" }, (result) => {
-        if (!result.ok) setActionError(result.error);
-      });
-      scheduleRefresh();
-    };
-    const handleDisconnect = () => setRealtimeStatus("reconnecting");
-    const handleConnectError = () => setRealtimeStatus("offline");
-    const handleServerError = ({ message }: { message: string }) => {
-      setRealtimeStatus("offline");
-      setActionError(message);
-    };
-
-    socket.on("connect", handleConnect);
-    socket.on("connection:ready", handleReady);
-    socket.on("domain:event", handleDomainEvent);
-    socket.on("disconnect", handleDisconnect);
-    socket.on("connect_error", handleConnectError);
-    socket.on("server:error", handleServerError);
-
-    void connectRealtimeSocket(socket).then((connected) => {
-      if (!connected) setRealtimeStatus("offline");
-    });
-
-    return () => {
-      if (refreshTimer !== null) window.clearTimeout(refreshTimer);
-      socket.off("connect", handleConnect);
-      socket.off("connection:ready", handleReady);
-      socket.off("domain:event", handleDomainEvent);
-      socket.off("disconnect", handleDisconnect);
-      socket.off("connect_error", handleConnectError);
-      socket.off("server:error", handleServerError);
-      releaseRealtimeSocket();
-    };
+  const handleRealtimeRefresh = useCallback(() => {
+    void loadTickets(true);
   }, [loadTickets]);
+  const handleRealtimeStatus = useCallback((status: RealtimeStatus) => {
+    setRealtimeStatus(status);
+  }, []);
+  const handleRealtimeError = useCallback((message: string) => {
+    setActionError(message);
+  }, []);
+
+  useKdsRealtime({
+    onRefresh: handleRealtimeRefresh,
+    onStatus: handleRealtimeStatus,
+    onError: handleRealtimeError,
+  });
 
   useEffect(() => {
     function handleFullscreenChange() {
