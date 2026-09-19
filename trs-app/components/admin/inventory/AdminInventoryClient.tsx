@@ -15,6 +15,7 @@ import { units, movementTypes, emptyItem, emptyMovement, money, type Unit, type 
 import { todayInputValue } from "@/lib/validation/dateTime";
 
 import { fetchInventoryData, saveInventoryItem, archiveInventoryItem, restoreInventoryItem, permanentlyDeleteInventoryItem, saveInventoryMovement } from "@/components/admin/inventory/admin-inventory.api";
+import { ItemDrawer } from "@/components/admin/inventory/ItemDrawer";
 export function AdminInventoryClient({ canManage }: { canManage: boolean }) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
@@ -978,141 +979,6 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
-function ItemDrawer({
-  editor,
-  saving,
-  onChange,
-  onClose,
-  onSave,
-}: {
-  editor: { item: InventoryItem | null; form: ItemForm };
-  saving: boolean;
-  onChange: (form: ItemForm) => void;
-  onClose: () => void;
-  onSave: () => void;
-}) {
-  const { form } = editor;
-  const set = <K extends keyof ItemForm>(key: K, value: ItemForm[K]) =>
-    onChange({ ...form, [key]: value });
-  return (
-    <Drawer
-      title={editor.item ? "Edit inventory item" : "Create inventory item"}
-      onClose={onClose}
-      footer={
-        <>
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-[#ded3ca] px-5 py-3 text-xs font-black"
-          >
-            Cancel
-          </button>
-          <button
-            disabled={saving}
-            onClick={onSave}
-            className="rounded-xl bg-[#C8102E] px-5 py-3 text-xs font-black text-white disabled:opacity-50"
-          >
-            {saving ? "Saving…" : "Save item"}
-          </button>
-        </>
-      }
-    >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Item name *">
-          <input
-            value={form.name}
-            onChange={(e) => set("name", e.target.value)}
-          />
-        </Field>
-        <Field label="SKU *">
-          <input
-            value={form.sku}
-            onChange={(e) => set("sku", e.target.value.toUpperCase())}
-          />
-        </Field>
-        <Field label="Category *">
-          <input
-            value={form.category}
-            onChange={(e) => set("category", e.target.value)}
-            placeholder="Cheese, vegetables, packaging…"
-          />
-        </Field>
-        <Field label="Stock unit">
-          <select
-            value={form.unit}
-            onChange={(e) => set("unit", e.target.value as Unit)}
-          >
-            {units.map((unit) => (
-              <option key={unit}>{unit}</option>
-            ))}
-          </select>
-        </Field>
-        {!editor.item && (
-          <Field label="Opening stock">
-            <input
-              type="number"
-              min="0"
-              step="any"
-              value={form.currentStock}
-              onChange={(e) => set("currentStock", e.target.value)}
-            />
-          </Field>
-        )}
-        <Field label="Reorder level">
-          <input
-            type="number"
-            min="0"
-            step="any"
-            value={form.reorderLevel}
-            onChange={(e) => set("reorderLevel", e.target.value)}
-          />
-        </Field>
-        <Field label="Ideal stock level">
-          <input
-            type="number"
-            min="0"
-            step="any"
-            value={form.idealStockLevel}
-            onChange={(e) => set("idealStockLevel", e.target.value)}
-          />
-        </Field>
-        <Field label="Average cost per unit">
-          <input
-            type="number"
-            min="0"
-            step="any"
-            value={form.averageUnitCost}
-            onChange={(e) => set("averageUnitCost", e.target.value)}
-          />
-        </Field>
-        <label className="flex items-center gap-3 rounded-xl border border-[#e4dad2] p-4 text-xs font-bold text-[#173044]">
-          <input
-            type="checkbox"
-            checked={form.expiryTrackingEnabled}
-            onChange={(e) => set("expiryTrackingEnabled", e.target.checked)}
-          />{" "}
-          Track batch expiry
-        </label>
-        <label className="flex items-center gap-3 rounded-xl border border-[#e4dad2] p-4 text-xs font-bold text-[#173044]">
-          <input
-            type="checkbox"
-            checked={form.isActive}
-            onChange={(e) => set("isActive", e.target.checked)}
-          />{" "}
-          Active inventory item
-        </label>
-        <div className="sm:col-span-2">
-          <Field label="Internal notes">
-            <textarea
-              rows={4}
-              value={form.notes}
-              onChange={(e) => set("notes", e.target.value)}
-            />
-          </Field>
-        </div>
-      </div>
-    </Drawer>
-  );
-}
 function MovementDrawer({
   form,
   items,
