@@ -14,7 +14,6 @@ import {
   faIndianRupeeSign,
   faPercent,
   faPlus,
-  faTrash,
   faUpload,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -31,7 +30,6 @@ import {
 
 import {
   emptyForm,
-  money,
   type ApiResponse,
   type Category,
   type ItemForm,
