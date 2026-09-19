@@ -29,3 +29,20 @@ export function changeVariant(current:ItemForm,index:number,updates:Partial<Vari
  const previous=current.variants[index]?.name??"";const variants=current.variants.map((v,i)=>i===index?{...v,...updates}:updates.isDefault?{...v,isDefault:false}:v);const next=variants[index]?.name??previous;
  return {...current,variants,combinationPricing:{...current.combinationPricing,entries:current.combinationPricing.entries.map(e=>e.variantLabel===previous?{...e,variantLabel:next}:e)}};
 }
+
+
+export function selectCombinationPricingGroup(current:ItemForm,groupId:string,groups:ModifierGroup[]):ItemForm {
+ const group=groups.find(entry=>entry._id===groupId);
+ const entries=group?current.variants.flatMap(variant=>group.options.filter(option=>option._id&&option.isActive&&option.isAvailable!==false).map(option=>current.combinationPricing.entries.find(entry=>entry.variantLabel===variant.name&&entry.optionId===option._id)??{variantLabel:variant.name,optionId:option._id as string,optionName:option.name,price:""})):[];
+ return {...current,modifierGroupIds:groupId&&!current.modifierGroupIds.includes(groupId)?[...current.modifierGroupIds,groupId]:current.modifierGroupIds,combinationPricing:{enabled:Boolean(groupId),modifierGroupId:groupId,entries}};
+}
+
+export function changeCombinationPrice(current:ItemForm,variantLabel:string,optionId:string,price:string):ItemForm {
+ return {...current,combinationPricing:{...current.combinationPricing,entries:current.combinationPricing.entries.map(entry=>entry.variantLabel===variantLabel&&entry.optionId===optionId?{...entry,price}:entry)}};
+}
+
+export function calculateComboPricing(form:ItemForm,items:MenuItem[]){
+ const originalPrice=form.comboComponents.reduce((sum,entry)=>{const item=items.find(candidate=>candidate._id===entry.menuItemId);if(!item)return sum;const variant=item.variants.find(candidate=>candidate._id===entry.variantId);return sum+(variant?.price??item.basePrice)*Math.max(0,Number(entry.quantity)||0)},0);
+ const sellingPrice=Number(form.basePrice)||0;const savings=Math.max(0,originalPrice-sellingPrice);
+ return {originalPrice,savings,discount:originalPrice>0?(savings/originalPrice)*100:0};
+}
