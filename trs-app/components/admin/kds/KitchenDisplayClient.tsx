@@ -18,7 +18,7 @@ import {
 } from "@/lib/realtime/client";
 
 import type { ApiResponse, FilterKey, GroupedItem, KitchenTicket, RealtimeStatus, TicketStatus } from "@/components/admin/kds/kds.types";
-import { buildDetails, FILTERS, getNotificationAudioContext, isNewStatus, playNotificationTone, unlockNotificationAudio } from "@/components/admin/kds/kds.utils";
+import { buildDetails, getNotificationAudioContext, isNewStatus, playNotificationTone, unlockNotificationAudio } from "@/components/admin/kds/kds.utils";
 import { TicketCard } from "@/components/admin/kds/KdsTicketCard";
 import { KdsControls, KdsHeader } from "@/components/admin/kds/KdsToolbar";
 
