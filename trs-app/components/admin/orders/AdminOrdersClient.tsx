@@ -28,7 +28,6 @@ import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import { buildOrderInvoicePrintUrl } from "@/lib/pos/print-links";
 import type {
   AdminOrder,
-  AdminOrderListPayload,
   AdminOrderStatus,
   AdminPaymentMethod,
   AdminPaymentStatus,
@@ -150,13 +149,8 @@ export function AdminOrdersClient({
     setDetailLoading(true);
     setActionError("");
     try {
-      const response = await fetch(`/api/v1/admin/orders/${orderId}`, {
-        cache: "no-store",
-      });
-      const payload = (await response.json()) as ApiResponse<AdminOrder>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to load order.");
-      setSelectedOrder(payload.data);
+      const order = await fetchAdminOrder(orderId);
+      setSelectedOrder(order);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -173,18 +167,8 @@ export function AdminOrdersClient({
     setActing(true);
     setActionError("");
     try {
-      const response = await fetch(
-        `/api/v1/admin/orders/${selectedOrder._id}/status`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: statusValue, note }),
-        },
-      );
-      const payload = (await response.json()) as ApiResponse<AdminOrder>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to update status.");
-      setSelectedOrder(payload.data);
+      const order = await patchAdminOrderStatus(selectedOrder._id, statusValue, note);
+      setSelectedOrder(order);
       await loadOrders();
     } catch (requestError) {
       setActionError(
@@ -205,21 +189,8 @@ export function AdminOrdersClient({
     setActing(true);
     setActionError("");
     try {
-      const response = await fetch(
-        `/api/v1/admin/orders/${selectedOrder._id}/payment`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            paymentStatus: paymentStatusValue,
-            paymentMethod: paymentMethodValue,
-          }),
-        },
-      );
-      const payload = (await response.json()) as ApiResponse<AdminOrder>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to update payment.");
-      setSelectedOrder(payload.data);
+      const order = await patchAdminOrderPayment(selectedOrder._id, paymentStatusValue, paymentMethodValue, "");
+      setSelectedOrder(order);
       await loadOrders();
     } catch (requestError) {
       setActionError(
