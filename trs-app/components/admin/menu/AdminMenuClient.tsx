@@ -26,6 +26,7 @@ import {
 import { createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
 import { changeMenuCategory, changeVariant, createMenuItemForm, menuItemToForm } from "@/components/admin/menu/admin-menu-editor.utils";
 import { buildMenuItemPayload, validateMenuItemForm } from "@/components/admin/menu/admin-menu-save.utils";
+import { applyDiscountToForm, removeDiscountFromForm, validateDiscount } from "@/components/admin/menu/admin-menu-discount.utils";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
@@ -465,14 +466,8 @@ export function AdminMenuClient({
 
     const numericValue = Number(bulkDiscountValue);
     if (action === "apply_discount") {
-      if (!Number.isFinite(numericValue) || numericValue <= 0) {
-        setBulkDiscountError("Enter a discount greater than zero.");
-        return;
-      }
-      if (bulkDiscountType === "percentage" && numericValue >= 100) {
-        setBulkDiscountError("Percentage discount must be less than 100%.");
-        return;
-      }
+      const validationError = validateDiscount(bulkDiscountType, bulkDiscountValue);
+      if (validationError) { setBulkDiscountError(validationError); return; }
     }
 
     setActing(true);
@@ -510,77 +505,14 @@ export function AdminMenuClient({
   }
 
   function applyDiscountToCurrentItem() {
-    const discountValue = Number(itemDiscountValue);
-    if (!Number.isFinite(discountValue) || discountValue <= 0) {
-      setFormError("Enter a discount greater than zero.");
-      return;
-    }
-    if (itemDiscountType === "percentage" && discountValue >= 100) {
-      setFormError("Percentage discount must be less than 100%.");
-      return;
-    }
-
-    const discountedPrice = (originalPrice: number) => {
-      const result =
-        itemDiscountType === "percentage"
-          ? originalPrice * (1 - discountValue / 100)
-          : originalPrice - discountValue;
-      return Math.round((result + Number.EPSILON) * 100) / 100;
-    };
-
-    setForm((current) => {
-      if (current.variants.length > 0) {
-        const variants = current.variants.map((variant) => {
-          const originalPrice = Number(variant.compareAtPrice || variant.price);
-          const nextPrice = discountedPrice(originalPrice);
-          if (nextPrice <= 0 || nextPrice >= originalPrice) return variant;
-          return {
-            ...variant,
-            price: String(nextPrice),
-            compareAtPrice: String(originalPrice),
-          };
-        });
-        const defaultVariant =
-          variants.find((variant) => variant.isDefault) ?? variants[0];
-        return {
-          ...current,
-          variants,
-          basePrice: defaultVariant?.price ?? current.basePrice,
-          compareAtPrice:
-            defaultVariant?.compareAtPrice ?? current.compareAtPrice,
-        };
-      }
-
-      const originalPrice = Number(current.compareAtPrice || current.basePrice);
-      const nextPrice = discountedPrice(originalPrice);
-      if (nextPrice <= 0 || nextPrice >= originalPrice) return current;
-      return {
-        ...current,
-        basePrice: String(nextPrice),
-        compareAtPrice: String(originalPrice),
-      };
-    });
+    const validationError = validateDiscount(itemDiscountType, itemDiscountValue);
+    if (validationError) { setFormError(validationError); return; }
+    setForm((current) => applyDiscountToForm(current, itemDiscountType, itemDiscountValue));
     setFormError("");
   }
 
   function removeDiscountFromCurrentItem() {
-    setForm((current) => {
-      const variants = current.variants.map((variant) => ({
-        ...variant,
-        price: variant.compareAtPrice || variant.price,
-        compareAtPrice: "",
-      }));
-      const defaultVariant =
-        variants.find((variant) => variant.isDefault) ?? variants[0];
-      return {
-        ...current,
-        variants,
-        basePrice:
-          defaultVariant?.price ??
-          (current.compareAtPrice || current.basePrice),
-        compareAtPrice: "",
-      };
-    });
+    setForm(removeDiscountFromForm);
     setItemDiscountValue("");
     setFormError("");
   }
