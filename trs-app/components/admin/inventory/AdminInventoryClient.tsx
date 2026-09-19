@@ -11,7 +11,7 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { units, movementTypes, emptyItem, emptyMovement, money, type Unit, type MovementType, type InventoryItem, type InventoryMovement, type Summary, type ApiEnvelope, type ItemForm, type MovementForm, type InventoryActionDialog } from "@/components/admin/inventory/admin-inventory.types";
+import { units, movementTypes, emptyItem, emptyMovement, money, type Unit, type MovementType, type InventoryItem, type InventoryMovement, type Summary, type ItemForm, type MovementForm, type InventoryActionDialog } from "@/components/admin/inventory/admin-inventory.types";
 import { todayInputValue } from "@/lib/validation/dateTime";
 
 import { fetchInventoryData, saveInventoryItem, archiveInventoryItem, restoreInventoryItem, permanentlyDeleteInventoryItem, saveInventoryMovement } from "@/components/admin/inventory/admin-inventory.api";
