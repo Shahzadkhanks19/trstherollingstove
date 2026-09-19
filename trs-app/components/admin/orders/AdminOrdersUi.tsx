@@ -1,3 +1,4 @@
+import type React from "react";
 "use client";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -93,7 +94,7 @@ export function StatePanel({
   message,
   action,
 }: {
-  icon: typeof faReceipt;
+  icon: React.ComponentProps<typeof FontAwesomeIcon>["icon"];
   title: string;
   message: string;
   action: () => void;
