@@ -1,0 +1,14 @@
+import { Types } from "mongoose";
+import { AppError } from "@/lib/errors/AppError";
+import { InventoryItem } from "@/models/InventoryItem";
+import { InventoryMovement } from "@/models/InventoryMovement";
+import { MenuItemRecipe } from "@/models/MenuItemRecipe";
+import { POSItemRecipe } from "@/models/POSItemRecipe";
+import type { ResolvedPosLine } from "@/services/pos-order.types";
+import { money } from "@/services/pos-order.utils";
+
+async function inventoryRequirements(lines:ResolvedPosLine[]){const menuIds=lines.filter(line=>line.menuItemId).map(line=>line.menuItemId);const posIds=lines.filter(line=>line.posItemId).map(line=>line.posItemId);const[menuRecipes,posRecipes]=await Promise.all([MenuItemRecipe.find({menuItemId:{$in:menuIds},isActive:true}).lean(),POSItemRecipe.find({posItemId:{$in:posIds},isActive:true}).lean()]);const menuRecipeMap=new Map(menuRecipes.map(recipe=>[String(recipe.menuItemId),recipe]));const posRecipeMap=new Map(posRecipes.map(recipe=>[String(recipe.posItemId),recipe]));const requirements=new Map<string,number>();for(const line of lines){const recipe=line.sourceType==="menu"?menuRecipeMap.get(String(line.menuItemId)):posRecipeMap.get(String(line.posItemId));if(!recipe)continue;for(const ingredient of recipe.ingredients){const quantity=(Number(ingredient.quantity)*line.quantity)/Number(recipe.yieldQuantity||1);const key=String(ingredient.inventoryItemId);requirements.set(key,(requirements.get(key)??0)+quantity)}}return requirements}
+
+export async function assertPosInventoryAvailable(lines:ResolvedPosLine[]){const requirements=await inventoryRequirements(lines);if(!requirements.size)return;const stocks=await InventoryItem.find({_id:{$in:[...requirements.keys()].map(id=>new Types.ObjectId(id))}}).select("name currentStock").lean();const stockMap=new Map(stocks.map(item=>[String(item._id),item]));for(const[id,quantity]of requirements){const stock=stockMap.get(id);if(!stock||stock.currentStock<quantity)throw new AppError(`Insufficient inventory for ${stock?.name??"an ingredient"}.`,409)}}
+
+export async function deductPosInventory(lines:ResolvedPosLine[],orderId:Types.ObjectId,actorId:string){const requirements=await inventoryRequirements(lines);for(const[inventoryItemId,quantity]of requirements){const stockItem=await InventoryItem.findOneAndUpdate({_id:inventoryItemId,currentStock:{$gte:quantity}},{$inc:{currentStock:-quantity}},{returnDocument:"before"});if(!stockItem)throw new AppError("Inventory changed while the sale was being completed. Please retry.",409);await InventoryMovement.create({inventoryItemId:stockItem._id,type:"sale",quantity,stockBefore:stockItem.currentStock,stockAfter:stockItem.currentStock-quantity,unitCost:stockItem.averageUnitCost,totalCost:money(stockItem.averageUnitCost*quantity),referenceType:"order",referenceId:orderId,reason:"POS sale inventory deduction",performedBy:new Types.ObjectId(actorId)})}}
