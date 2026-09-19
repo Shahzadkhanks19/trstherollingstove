@@ -44,6 +44,7 @@ import { Field, Toggle } from "@/components/admin/menu/AdminMenuUi";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
+import { AdminMenuEditorRelations } from "@/components/admin/menu/AdminMenuEditorRelations";
 import { AdminMenuCatalogList } from "@/components/admin/menu/AdminMenuCatalogList";
 
 export function AdminMenuClient({
@@ -1342,136 +1343,15 @@ export function AdminMenuClient({
                     onUpdateCombinationPrice={updateCombinationPrice}
                   />
 
-                  <section className="rounded-[22px] border border-[#eadfd5] bg-white p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-black text-[#122b3c]">
-                          Customisation & add-ons
-                        </p>
-                        <p className="mt-1 text-xs leading-5 text-[#786b62]">
-                          {isNaanCategory
-                            ? "Only the platter choice and Extra Naan groups are available for Chur-Chur Naan."
-                            : "Attach reusable groups such as Extra Cheese, Toppings, Dips and other item add-ons."}
-                        </p>
-                      </div>
-                      <Link
-                        href="/admin/menu/modifier-groups"
-                        className="shrink-0 rounded-xl border border-[#e5d9cf] px-3 py-2 text-[10px] font-black text-[#122b3c]"
-                      >
-                        Manage groups
-                      </Link>
-                    </div>
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      {modifierGroups
-                        .filter(
-                          (group) =>
-                            group.isActive &&
-                            (!isNaanCategory ||
-                              isAllowedNaanModifierGroup(
-                                group.name,
-                                group.internalName,
-                              )),
-                        )
-                        .map((group) => {
-                          const checked = form.modifierGroupIds.includes(
-                            group._id,
-                          );
-                          return (
-                            <label
-                              key={group._id}
-                              className={`rounded-2xl border p-3 text-xs font-bold ${checked ? "border-[#C8102E] bg-[#fff5f5]" : "border-[#eadfd5] bg-[#fffaf6]"}`}
-                            >
-                              <span className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={(event) =>
-                                    setForm((current) => ({
-                                      ...current,
-                                      modifierGroupIds: event.target.checked
-                                        ? [
-                                            ...current.modifierGroupIds,
-                                            group._id,
-                                          ]
-                                        : current.modifierGroupIds.filter(
-                                            (id) => id !== group._id,
-                                          ),
-                                    }))
-                                  }
-                                  className="accent-[#C8102E]"
-                                />
-                                {group.name}
-                              </span>
-                              <span className="mt-1 block text-[10px] font-medium text-[#81746b]">
-                                {group.isRequired ? "Required" : "Optional"} ·{" "}
-                                {group.selectionType} · {group.options.length}{" "}
-                                options
-                              </span>
-                            </label>
-                          );
-                        })}
-                    </div>
-                  </section>
-                  <section className="rounded-[22px] border border-[#eadfd5] bg-white p-4">
-                    <p className="text-sm font-black text-[#122b3c]">
-                      Mostly bought together
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-[#786b62]">
-                      Select complementary menu items shown beneath this
-                      product. Customers open each recommendation separately to
-                      customise and add it.
-                    </p>
-                    <div className="mt-4 grid max-h-56 gap-2 overflow-y-auto sm:grid-cols-2">
-                      {items
-                        .filter((candidate) => candidate._id !== editingId)
-                        .map((candidate) => {
-                          const checked =
-                            form.frequentlyOrderedWithIds.includes(
-                              candidate._id,
-                            );
-                          return (
-                            <label
-                              key={candidate._id}
-                              className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${checked ? "border-[#C8102E] bg-[#fff5f5]" : "border-[#eadfd5]"}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={(event) =>
-                                  setForm((current) => ({
-                                    ...current,
-                                    frequentlyOrderedWithIds: event.target
-                                      .checked
-                                      ? [
-                                          ...current.frequentlyOrderedWithIds,
-                                          candidate._id,
-                                        ]
-                                      : current.frequentlyOrderedWithIds.filter(
-                                          (id) => id !== candidate._id,
-                                        ),
-                                  }))
-                                }
-                                className="accent-[#C8102E]"
-                              />
-                              <span className="truncate">{candidate.name}</span>
-                            </label>
-                          );
-                        })}
-                    </div>
-                  </section>
-                  <Field label="Allergens">
-                    <input
-                      value={form.allergens}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          allergens: event.target.value,
-                        }))
-                      }
-                      placeholder="gluten, dairy, nuts"
-                      className="field"
-                    />
-                  </Field>
+                  <AdminMenuEditorRelations
+                    form={form}
+                    setForm={setForm}
+                    modifierGroups={modifierGroups}
+                    items={items}
+                    editingId={editingId}
+                    isNaanCategory={isNaanCategory}
+                  />
+
                   {isComboCategory && (
                     <section className="rounded-[22px] border border-[#eadfd5] bg-[#fff8f2] p-4">
                       <div>
