@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,
   faFolderTree,
   faPlus,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { PageHeader } from "@/components/admin/AdminPrimitives";
