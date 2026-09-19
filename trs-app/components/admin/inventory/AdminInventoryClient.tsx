@@ -12,6 +12,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 
 import { units, movementTypes, emptyItem, emptyMovement, money, type Unit, type MovementType, type InventoryItem, type InventoryMovement, type Summary, type ApiEnvelope, type ItemForm, type MovementForm, type InventoryActionDialog } from "@/components/admin/inventory/admin-inventory.types";
+import { todayInputValue } from "@/lib/validation/dateTime";
 
 function unwrap<T>(payload: ApiEnvelope<T> | T): T {
   return typeof payload === "object" && payload !== null && "data" in payload
