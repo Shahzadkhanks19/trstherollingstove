@@ -34,61 +34,7 @@ import type {
   AdminPaymentStatus,
 } from "@/types/adminOrders";
 
-type ApiResponse<T> = { success: boolean; message: string; data: T };
-type SortField =
-  "createdAt" | "grandTotal" | "orderNumber" | "status" | "paymentStatus";
-type SortOrder = "asc" | "desc";
-
-const money = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 2,
-});
-const dateTime = new Intl.DateTimeFormat("en-IN", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
-const statusLabels: Record<AdminOrderStatus, string> = {
-  placed: "Pending",
-  accepted: "Confirmed",
-  preparing: "Preparing",
-  ready: "Ready",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  rejected: "Rejected",
-};
-
-const statusTone: Record<AdminOrderStatus, string> = {
-  placed: "bg-orange-50 text-orange-700 ring-orange-200",
-  accepted: "bg-sky-50 text-sky-700 ring-sky-200",
-  preparing: "bg-amber-50 text-amber-700 ring-amber-200",
-  ready: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-  completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  cancelled: "bg-red-50 text-red-700 ring-red-200",
-  rejected: "bg-rose-50 text-rose-700 ring-rose-200",
-};
-
-const nextStatuses: Record<AdminOrderStatus, AdminOrderStatus[]> = {
-  placed: ["accepted", "cancelled", "rejected"],
-  accepted: ["preparing", "cancelled"],
-  preparing: ["ready", "cancelled"],
-  ready: ["completed"],
-  completed: [],
-  cancelled: [],
-  rejected: [],
-};
-
-const tabs: Array<{ value: "all" | AdminOrderStatus; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "placed", label: "Pending" },
-  { value: "accepted", label: "Confirmed" },
-  { value: "preparing", label: "Preparing" },
-  { value: "ready", label: "Ready" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
+import { dateTime, fetchAdminOrder, fetchAdminOrders, money, nextStatuses, patchAdminOrderPayment, patchAdminOrderStatus, statusLabels, statusTone, tabs, type SortField, type SortOrder } from "@/components/admin/orders/admin-orders.api";
 export function AdminOrdersClient({
   canManage,
   canManagePayments,
@@ -157,16 +103,10 @@ export function AdminOrdersClient({
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/v1/admin/orders?${query}`, {
-        cache: "no-store",
-      });
-      const payload =
-        (await response.json()) as ApiResponse<AdminOrderListPayload>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to load orders.");
-      setOrders(payload.data.orders);
-      setPagination(payload.data.pagination);
-      setStatusCounts(payload.data.statusCounts);
+      const data = await fetchAdminOrders(query);
+      setOrders(data.orders);
+      setPagination(data.pagination);
+      setStatusCounts(data.statusCounts);
     } catch (requestError) {
       setError(
         requestError instanceof Error
