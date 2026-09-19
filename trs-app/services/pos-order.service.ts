@@ -3,7 +3,6 @@ import { Types } from "mongoose";
 import { AppError } from "@/lib/errors/AppError";
 import { nextOrderNumber } from "@/lib/orders/order-number";
 import { verifyPassword } from "@/lib/auth/password";
-import { resolveVariantModifierPrice } from "@/lib/menu-pricing";
 import {
   MIXED_NAAN_GROUP_ID,
   MIXED_NAAN_GROUP_NAME,
@@ -39,33 +38,9 @@ import {
   publishOrderCreated,
 } from "@/services/realtimeEvents.service";
 import { publishRealtimeEventSafely } from "@/services/realtimePublisher.service";
+import type { ModifierGroupRecord, ResolvedModifier } from "@/services/pos-order.types";
+import { money, wholeRupee, normalizeAdjustments, resolveModifiers, validateRequiredGroups } from "@/services/pos-order.utils";
 
-function money(value: number) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
-}
-
-function wholeRupee(value: number) {
-  return Math.round(value + Number.EPSILON);
-}
-
-type ModifierInput = {
-  groupId: string;
-  groupName?: string;
-  optionId: string;
-  optionName?: string;
-  quantity: number;
-};
-type AdjustmentsInput = {
-  discountType: "none" | "fixed" | "percentage";
-  discountValue: number;
-  discountReason: string;
-  packingCharge: number;
-  serviceCharge: number;
-  additionalCharge: number;
-  additionalChargeLabel: string;
-  taxRate: number;
-  taxMode: "exclusive" | "inclusive";
-};
 type CreatePosOrderInput = {
   shiftId: string;
   orderMode: "dine_in" | "takeaway";
@@ -117,14 +92,6 @@ type CreatePosOrderInput = {
   }>;
 };
 
-type ResolvedModifier = {
-  groupId: Types.ObjectId;
-  groupName: string;
-  optionId: Types.ObjectId;
-  optionName: string;
-  unitPrice: number;
-  quantity: number;
-};
 type ResolvedPosLine = {
   sourceType: "menu" | "pos";
   menuItemId: Types.ObjectId | null;
@@ -142,31 +109,6 @@ type ResolvedPosLine = {
   lineTotal: number;
   sendToKds: boolean;
   stationId: Types.ObjectId | null;
-};
-
-type ModifierVariantPriceRecord = {
-  variantLabel: string;
-  price: number;
-};
-
-type ModifierOptionRecord = {
-  _id: Types.ObjectId;
-  name: string;
-  price?: number;
-  maxQuantity?: number;
-  isActive: boolean;
-  isAvailable: boolean;
-  variantPrices?: ModifierVariantPriceRecord[];
-};
-
-type ModifierGroupRecord = {
-  _id: Types.ObjectId;
-  name: string;
-  minSelections?: number;
-  maxSelections?: number;
-  selectionType?: string;
-  isRequired?: boolean;
-  options: ModifierOptionRecord[];
 };
 
 type KitchenOrderItemRecord = {
@@ -984,149 +926,6 @@ export async function createPosOrder(
       },
     );
     throw error;
-  }
-}
-
-function normalizeAdjustments(
-  input: AdjustmentsInput,
-  subtotal: number,
-): AdjustmentsInput {
-  const discountType = input.discountType;
-  const discountValue =
-    discountType === "percentage"
-      ? Math.min(100, money(input.discountValue))
-      : Math.min(subtotal, money(input.discountValue));
-  if (discountType !== "none" && !input.discountReason.trim())
-    throw new AppError("Discount reason is required.", 422);
-  return {
-    discountType,
-    discountValue,
-    discountReason: input.discountReason.trim(),
-    packingCharge: money(input.packingCharge),
-    serviceCharge: money(input.serviceCharge),
-    additionalCharge: money(input.additionalCharge),
-    additionalChargeLabel:
-      input.additionalChargeLabel.trim() || "Additional charge",
-    taxRate: Math.min(100, money(input.taxRate)),
-    taxMode: input.taxMode,
-  };
-}
-
-function normalizeMenuLabel(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function resolveModifiers(
-  selections: ModifierInput[],
-  allowedGroups: Set<string>,
-  groupMap: Map<string, ModifierGroupRecord>,
-  variantName: string,
-): ResolvedModifier[] {
-  const grouped = new Map<string, ModifierInput[]>();
-  for (const selection of selections) {
-    if (!allowedGroups.has(selection.groupId))
-      throw new AppError(
-        "A selected modifier group is not allowed for this item.",
-        409,
-      );
-    const values = grouped.get(selection.groupId) ?? [];
-    values.push(selection);
-    grouped.set(selection.groupId, values);
-  }
-
-  const resolved: ResolvedModifier[] = [];
-  for (const [groupId, groupSelections] of grouped) {
-    const group = groupMap.get(groupId);
-    if (!group)
-      throw new AppError(
-        "A selected modifier group is no longer available.",
-        409,
-      );
-    const selectionCount = groupSelections.reduce(
-      (sum, selection) => sum + selection.quantity,
-      0,
-    );
-    if (
-      selectionCount < Number(group.minSelections ?? 0) ||
-      selectionCount > Number(group.maxSelections ?? 1)
-    ) {
-      throw new AppError(
-        `Invalid number of selections for ${group.name}.`,
-        422,
-      );
-    }
-    if (group.selectionType === "single" && selectionCount !== 1)
-      throw new AppError(`${group.name} requires one selection.`, 422);
-
-    for (const selection of groupSelections) {
-      const option =
-        group.options.find(
-          (entry: ModifierOptionRecord) =>
-            String(entry._id) === selection.optionId &&
-            entry.isActive &&
-            entry.isAvailable,
-        ) ??
-        (selection.optionName
-          ? group.options.find(
-              (entry: ModifierOptionRecord) =>
-                normalizeMenuLabel(entry.name) ===
-                  normalizeMenuLabel(selection.optionName ?? "") &&
-                entry.isActive &&
-                entry.isAvailable,
-            )
-          : undefined);
-      if (!option)
-        throw new AppError(
-          `The selected ${group.name} option is no longer available. Reconfigure this item and try again.`,
-          409,
-        );
-      if (selection.quantity > Number(option.maxQuantity ?? 1))
-        throw new AppError(
-          `Selected quantity for ${option.name} is too high.`,
-          422,
-        );
-      const modifierPrice = resolveVariantModifierPrice(
-        Number(option.price ?? 0),
-        option.variantPrices,
-        variantName,
-      );
-      resolved.push({
-        groupId: group._id,
-        groupName: group.name,
-        optionId: option._id,
-        optionName: option.name,
-        unitPrice: money(modifierPrice),
-        quantity: selection.quantity,
-      });
-    }
-  }
-  return resolved;
-}
-
-function validateRequiredGroups(
-  groupIds: string[],
-  resolved: ResolvedModifier[],
-  groupMap: Map<string, ModifierGroupRecord>,
-) {
-  const countByGroup = new Map<string, number>();
-  for (const modifier of resolved)
-    countByGroup.set(
-      String(modifier.groupId),
-      (countByGroup.get(String(modifier.groupId)) ?? 0) + modifier.quantity,
-    );
-  for (const groupId of groupIds) {
-    const group = groupMap.get(groupId);
-    if (!group || !group.isRequired) continue;
-    if (
-      (countByGroup.get(groupId) ?? 0) <
-      Math.max(1, Number(group.minSelections ?? 1))
-    ) {
-      throw new AppError(`${group.name} requires a selection.`, 422);
-    }
   }
 }
 
