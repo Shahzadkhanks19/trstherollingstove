@@ -4,12 +4,7 @@ import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
-  faArrowRight,
-  faCartPlus,
-  faCircleInfo,
   faFire,
-  faMinus,
-  faPlus,
   faStar,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
@@ -46,6 +41,7 @@ import {
 } from "@/components/menu-item/menu-item-utils";
 import { MenuItemMediaDetails } from "@/components/menu-item/MenuItemMediaDetails";
 import { MenuItemConfiguration } from "@/components/menu-item/MenuItemConfiguration";
+import { MenuItemOrderActions } from "@/components/menu-item/MenuItemOrderActions";
 
 export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
   const router = useRouter();
@@ -479,110 +475,19 @@ export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
                 onMixedNaanChange={setMixedSecondNaanId}
               />
 
-              {item.customerNotice && (
-                <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#F0D79D] bg-[#FFF7E6] p-4">
-                  <FontAwesomeIcon
-                    icon={faCircleInfo}
-                    className="mt-0.5 h-4 shrink-0 text-[#D99219]"
-                  />
-                  <p className="text-[9px] leading-5 text-[#66552E]">
-                    {item.customerNotice}
-                  </p>
-                </div>
-              )}
-
-              <label className="mt-6 block text-[10px] font-black uppercase">
-                Special Instructions
-                <textarea
-                  value={specialInstructions}
-                  onChange={(event) =>
-                    setSpecialInstructions(event.target.value.slice(0, 250))
-                  }
-                  placeholder={
-                    hasExtraToppingSelected
-                      ? "Mention your preferred topping here, e.g. jalapeño, olives or paneer. You may also add other preparation notes."
-                      : "Optional preparation note. Do not use this for allergy emergencies."
-                  }
-                  className="mt-2 min-h-[90px] w-full resize-none rounded-xl border border-[#E5D9CD] bg-[#FFFDF9] p-3 text-sm font-medium normal-case outline-none focus:border-[#C8102E]"
-                />
-                <span className="mt-1 block text-right text-[8px] font-medium normal-case text-[#8A8179]">
-                  {specialInstructions.length}/250
-                </span>
-              </label>
-
-              <div className="mt-6 rounded-2xl border border-[#EDE3D8] bg-[#FFFDF9] p-4">
-                <div className="flex justify-between gap-4 text-[10px]">
-                  <span>Item price</span>
-                  <strong>{formatPrice(basePrice)}</strong>
-                </div>
-                <div className="mt-2 flex justify-between gap-4 text-[10px]">
-                  <span>Add-ons</span>
-                  <strong>{formatPrice(optionTotal)}</strong>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between border-t border-[#EDE3D8] pt-4">
-                  <div>
-                    <span className="block text-[9px] uppercase text-[#655E57]">
-                      Total
-                    </span>
-                    <strong className="text-2xl text-[#C8102E]">
-                      {formatPrice(total)}
-                    </strong>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setQuantity((value) => Math.max(1, value - 1))
-                      }
-                      className="grid h-9 w-9 place-items-center rounded-lg border border-[#E5D9CD]"
-                    >
-                      <FontAwesomeIcon icon={faMinus} className="h-3" />
-                    </button>
-                    <span className="w-7 text-center text-sm font-black">
-                      {quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setQuantity((value) => Math.min(20, value + 1))
-                      }
-                      className="grid h-9 w-9 place-items-center rounded-lg border border-[#E5D9CD]"
-                    >
-                      <FontAwesomeIcon icon={faPlus} className="h-3" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {feedback && (
-                <div
-                  role="status"
-                  className="mt-4 rounded-xl border border-[#E8D8C9] bg-[#FFF7EA] px-4 py-3 text-[10px] font-semibold"
-                >
-                  {feedback}
-                </div>
-              )}
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => void addToCart(false)}
-                  className="flex h-12 items-center justify-center gap-3 rounded-xl border border-[#C8102E] bg-white px-4 text-[9px] font-black uppercase text-[#C8102E]"
-                >
-                  <FontAwesomeIcon icon={faCartPlus} className="h-4" />
-                  Add to Cart
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void addToCart(true)}
-                  className="flex h-12 items-center justify-center gap-3 rounded-xl bg-[#C8102E] px-4 text-[9px] font-black uppercase text-white"
-                >
-                  Add &amp; Order Now
-                  <FontAwesomeIcon icon={faArrowRight} className="h-3" />
-                </button>
-              </div>
+              <MenuItemOrderActions
+                item={item}
+                specialInstructions={specialInstructions}
+                hasExtraToppingSelected={hasExtraToppingSelected}
+                basePrice={basePrice}
+                optionTotal={optionTotal}
+                total={total}
+                quantity={quantity}
+                feedback={feedback}
+                onInstructionsChange={setSpecialInstructions}
+                onQuantityChange={setQuantity}
+                onAddToCart={(orderNow) => void addToCart(orderNow)}
+              />
             </section>
 
             <section className="mt-4 rounded-2xl border border-[#F0DFC8] bg-[#FFF7EA] p-5">
