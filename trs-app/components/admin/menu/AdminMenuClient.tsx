@@ -7,19 +7,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowRotateRight,
   faCheck,
-  faChevronLeft,
-  faChevronRight,
-  faDownload,
-  faFilter,
   faFloppyDisk,
   faFolderTree,
   faImage,
   faIndianRupeeSign,
   faPercent,
   faPlus,
-  faSearch,
   faTrash,
   faUpload,
   faXmark,
