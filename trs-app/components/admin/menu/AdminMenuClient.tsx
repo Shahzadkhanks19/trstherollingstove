@@ -13,7 +13,6 @@ import {
 import { PageHeader } from "@/components/admin/AdminPrimitives";
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
-import { isAllowedNaanModifierGroup, isThinCrustExcludedPizza } from "@/lib/menu-special-config";
 
 import {
   emptyForm,
@@ -26,6 +25,7 @@ import {
 } from "@/components/admin/menu/admin-menu.types";
 import { createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
 import { changeMenuCategory, changeVariant, createMenuItemForm, menuItemToForm } from "@/components/admin/menu/admin-menu-editor.utils";
+import { buildMenuItemPayload, validateMenuItemForm } from "@/components/admin/menu/admin-menu-save.utils";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
@@ -387,274 +387,24 @@ export function AdminMenuClient({
   async function saveItem(event: React.FormEvent) {
     event.preventDefault();
     setFormError("");
-    const activeVariants = hasRequiredVariants
-      ? form.variants.filter((variant) => variant.name.trim())
-      : [];
-    const invalidVariant = activeVariants.some(
-      (variant) => variant.price === "" || Number(variant.price) < 0,
-    );
-    if (!form.name.trim() || !form.categoryId) {
-      setFormError("Item name and category are required.");
-      return;
-    }
-    if (isPizzaCategory && (activeVariants.length !== 3 || invalidVariant)) {
-      setFormError(
-        "Enter a valid price for Small 7 inch, Medium 9 inch and Large 12 inch.",
-      );
-      return;
-    }
-    if (isNaanCategory && activeVariants.length !== 2) {
-      setFormError(
-        "Half Plate and Full Plate portions are required for this naan.",
-      );
-      return;
-    }
-    if (isNaanCategory) {
-      const expectedEntries =
-        activeVariants.length *
-        (combinationGroup?.options.filter(
-          (option) =>
-            option._id && option.isActive && option.isAvailable !== false,
-        ).length ?? 0);
-      const validEntries = form.combinationPricing.entries.filter(
-        (entry) => entry.price !== "" && Number(entry.price) >= 0,
-      );
-      if (
-        !form.combinationPricing.enabled ||
-        !combinationGroup ||
-        expectedEntries === 0 ||
-        validEntries.length !== expectedEntries
-      ) {
-        setFormError(
-          "Select the second-sabji group and enter every Half/Full combination price.",
-        );
-        return;
-      }
-    }
-    if (
-      !hasRequiredVariants &&
-      (form.basePrice === "" || Number(form.basePrice) < 0)
-    ) {
-      setFormError("Selling price is required.");
-      return;
-    }
-    if (
-      !isComboCategory &&
-      !hasRequiredVariants &&
-      form.compareAtPrice !== "" &&
-      Number(form.compareAtPrice) <= Number(form.basePrice)
-    ) {
-      setFormError(
-        "Original price must be greater than the discounted selling price.",
-      );
-      return;
-    }
-    if (
-      !isComboCategory &&
-      hasRequiredVariants &&
-      activeVariants.some(
-        (variant) =>
-          variant.compareAtPrice !== "" &&
-          Number(variant.compareAtPrice) <= Number(variant.price),
-      )
-    ) {
-      setFormError(
-        "Each variant original price must be greater than its discounted selling price.",
-      );
-      return;
-    }
-    if (
-      form.isCombo &&
-      form.comboOfferType === "limited" &&
-      (!form.comboOfferStartsAt || !form.comboOfferExpiresAt)
-    ) {
-      setFormError("Limited-time combos require start and expiry dates.");
-      return;
-    }
-    if (
-      form.isCombo &&
-      form.publishComboOnOffersPage &&
-      form.comboOffersPageSection === "todays" &&
-      !form.comboOfferStartsAt
-    ) {
-      setFormError("Select when the 24-hour Today’s Hot Offer should start.");
-      return;
-    }
-    if (form.isTodaysSpecialOffer && !form.todaysSpecialOfferStartsAt) {
-      setFormError("Select when the 24-hour special offer should start.");
-      return;
-    }
+    const context = { form, items, modifierGroups, editingId, isPizzaCategory, isNaanCategory, isComboCategory, hasRequiredVariants, combinationGroup };
+    const validationError = validateMenuItemForm(context);
+    if (validationError) { setFormError(validationError); return; }
     setActing(true);
     try {
-      const normalizedVariants = activeVariants.map((variant, index) => {
-        const variantName = variant.name.trim();
-        const combinationPrices = isNaanCategory
-          ? form.combinationPricing.entries
-              .filter(
-                (entry) =>
-                  entry.variantLabel === variant.name &&
-                  entry.price !== "" &&
-                  Number(entry.price) >= 0,
-              )
-              .map((entry) => Number(entry.price))
-          : [];
-        const derivedNaanFallbackPrice = combinationPrices.length
-          ? Math.min(...combinationPrices)
-          : 0;
-
-        return {
-          name: variantName,
-          sku: variant.sku.trim(),
-          price: isNaanCategory
-            ? derivedNaanFallbackPrice
-            : Number(variant.price),
-          compareAtPrice:
-            variant.compareAtPrice === ""
-              ? null
-              : Number(variant.compareAtPrice),
-          isDefault:
-            variant.isDefault ||
-            (!activeVariants.some((item) => item.isDefault) && index === 0),
-          isActive: variant.isActive,
-          sortOrder: Number(variant.sortOrder || index),
-        };
+      const response = await fetch(editingId ? `/api/v1/admin/menu/items/${editingId}` : "/api/v1/admin/menu/items", {
+        method: editingId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildMenuItemPayload(context)),
       });
-      const defaultVariant =
-        normalizedVariants.find((variant) => variant.isDefault) ??
-        normalizedVariants[0];
-      const body = {
-        name: form.name.trim(),
-        slug: form.slug.trim() || undefined,
-        categoryId: form.categoryId,
-        shortDescription: form.shortDescription.trim(),
-        description: form.description.trim(),
-        imageUrl: form.imageUrl.trim(),
-        basePrice:
-          hasRequiredVariants && defaultVariant
-            ? defaultVariant.price
-            : Number(form.basePrice),
-        compareAtPrice:
-          isComboCategory || hasRequiredVariants || form.compareAtPrice === ""
-            ? null
-            : Number(form.compareAtPrice),
-        spiceLevel: form.spiceLevel,
-        preparationTimeMinutes: Number(form.preparationTimeMinutes || 15),
-        tags: form.tags
-          .split(",")
-          .map((value) => value.trim())
-          .filter(Boolean),
-        allergens: form.allergens
-          .split(",")
-          .map((value) => value.trim())
-          .filter(Boolean),
-        availableForDineIn: form.availableForDineIn,
-        availableForTakeaway: form.availableForTakeaway,
-        isAvailable: form.isAvailable,
-        isActive: form.isActive,
-        isFeatured: form.isFeatured,
-        isBestseller: form.isBestseller,
-        isCombo: isComboCategory,
-        comboComponents: isComboCategory
-          ? form.comboComponents.map((entry) => ({
-              menuItemId: entry.menuItemId,
-              variantId: entry.variantId || null,
-              quantity: Number(entry.quantity),
-            }))
-          : [],
-        comboOfferType: form.comboOfferType,
-        comboOfferStartsAt:
-          form.isCombo && form.comboOfferStartsAt
-            ? new Date(form.comboOfferStartsAt).toISOString()
-            : null,
-        comboOfferExpiresAt:
-          form.isCombo &&
-          form.comboOfferType === "limited" &&
-          form.comboOfferExpiresAt
-            ? new Date(form.comboOfferExpiresAt).toISOString()
-            : null,
-        publishComboOnMenuPage: form.isCombo
-          ? form.publishComboOnMenuPage
-          : true,
-        publishComboOnOffersPage: form.isCombo
-          ? form.publishComboOnOffersPage
-          : false,
-        comboOffersPageSection: form.comboOffersPageSection,
-        eligibleTierKeys: form.eligibleTierKeys,
-        isTodaysSpecialOffer: form.isTodaysSpecialOffer,
-        todaysSpecialOfferStartsAt:
-          form.isTodaysSpecialOffer && form.todaysSpecialOfferStartsAt
-            ? new Date(form.todaysSpecialOfferStartsAt).toISOString()
-            : null,
-        trackInventory: form.trackInventory,
-        sortOrder: Number(form.sortOrder || 0),
-        galleryUrls: [],
-        variants: normalizedVariants,
-        combinationPricing: isNaanCategory
-          ? {
-              enabled: true,
-              modifierGroupId: form.combinationPricing.modifierGroupId,
-              entries: form.combinationPricing.entries.map((entry) => ({
-                ...entry,
-                price: Number(entry.price),
-              })),
-            }
-          : { enabled: false, modifierGroupId: null, entries: [] },
-        pizzaConfiguration: isPizzaCategory
-          ? {
-              thinCrustAvailable:
-                !isThinCrustExcludedPizza(form.name) &&
-                form.pizzaConfiguration.thinCrustAvailable,
-              thinCrustPriceAdjustment: 0,
-            }
-          : { thinCrustAvailable: false, thinCrustPriceAdjustment: 0 },
-        modifierGroupIds: isNaanCategory
-          ? form.modifierGroupIds.filter((groupId) => {
-              const group = modifierGroups.find(
-                (entry) => entry._id === groupId,
-              );
-              return Boolean(
-                group &&
-                isAllowedNaanModifierGroup(group.name, group.internalName),
-              );
-            })
-          : form.modifierGroupIds,
-        frequentlyOrderedWithIds: form.frequentlyOrderedWithIds.filter(
-          (id) =>
-            id !== editingId &&
-            items.some(
-              (candidate) => candidate._id === id && candidate.isActive,
-            ),
-        ),
-        taxClassId: null,
-        calories: null,
-        availabilityWindows: [],
-      };
-
-      const response = await fetch(
-        editingId
-          ? `/api/v1/admin/menu/items/${editingId}`
-          : "/api/v1/admin/menu/items",
-        {
-          method: editingId ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
       const payload = (await response.json()) as ApiResponse<MenuItem>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to save menu item.");
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to save menu item.");
       setEditorOpen(false);
       setNotice(editingId ? "Menu item updated." : "Menu item created.");
       await loadItems();
     } catch (requestError) {
-      setFormError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to save menu item.",
-      );
-    } finally {
-      setActing(false);
-    }
+      setFormError(requestError instanceof Error ? requestError.message : "Unable to save menu item.");
+    } finally { setActing(false); }
   }
 
   async function patchItem(item: MenuItem, updates: Partial<MenuItem>) {
