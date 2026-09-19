@@ -1,0 +1,14 @@
+export const units=["kg","g","l","ml","piece","packet","box","bottle"] as const;
+export const movementTypes=["opening","purchase","adjustment_in","adjustment_out","wastage","return_in","return_out"] as const;
+export type Unit=(typeof units)[number];
+export type MovementType=(typeof movementTypes)[number];
+export type InventoryItem={_id:string;name:string;sku:string;category:string;unit:Unit;currentStock:number;reorderLevel:number;idealStockLevel:number;averageUnitCost:number;expiryTrackingEnabled:boolean;isActive:boolean;notes:string;updatedAt:string;archivedAt?:string|null};
+export type InventoryMovement={_id:string;inventoryItemId:{_id:string;name:string;sku:string;unit:Unit}|string;type:string;quantity:number;stockBefore:number;stockAfter:number;unitCost:number;totalCost:number;reason:string;batchNumber:string;expiryDate:string|null;performedBy?:{name?:string;email?:string};createdAt:string};
+export type Summary={totalItems:number;totalStockValue:number;lowStockItems:number;outOfStockItems:number};
+export type ApiEnvelope<T>={data:T;message?:string};
+export type ItemForm={name:string;sku:string;category:string;unit:Unit;currentStock:string;reorderLevel:string;idealStockLevel:string;averageUnitCost:string;expiryTrackingEnabled:boolean;isActive:boolean;notes:string};
+export type MovementForm={inventoryItemId:string;type:MovementType;quantity:string;unitCost:string;reason:string;batchNumber:string;expiryDate:string};
+export type InventoryActionDialog={type:"archive"|"permanent-delete";item:InventoryItem;confirmationText:string};
+export const emptyItem:ItemForm={name:"",sku:"",category:"",unit:"kg",currentStock:"0",reorderLevel:"0",idealStockLevel:"0",averageUnitCost:"0",expiryTrackingEnabled:false,isActive:true,notes:""};
+export const emptyMovement:MovementForm={inventoryItemId:"",type:"purchase",quantity:"",unitCost:"0",reason:"",batchNumber:"",expiryDate:""};
+export const money=new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2});
