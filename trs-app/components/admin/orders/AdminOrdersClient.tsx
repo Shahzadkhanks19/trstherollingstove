@@ -1,17 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleExclamation,
   faClockRotateLeft,
   faDownload,
-  faFilter,
   faPrint,
   faReceipt,
-  faRotate,
-  faSearch,
   faUtensils,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -24,9 +21,10 @@ import type {
   AdminPaymentStatus,
 } from "@/types/adminOrders";
 
-import { dateTime, fetchAdminOrder, fetchAdminOrders, patchAdminOrderPayment, patchAdminOrderStatus, statusLabels, tabs, type SortField, type SortOrder } from "@/components/admin/orders/admin-orders.api";
+import { dateTime, fetchAdminOrder, fetchAdminOrders, patchAdminOrderPayment, patchAdminOrderStatus, statusLabels, type SortField, type SortOrder } from "@/components/admin/orders/admin-orders.api";
 import { OrderDrawer } from "@/components/admin/orders/OrderDrawer";
-import { DateField, FilterSelect, OrdersSkeleton, StatePanel } from "@/components/admin/orders/AdminOrdersUi";
+import { OrdersSkeleton, StatePanel } from "@/components/admin/orders/AdminOrdersUi";
+import { AdminOrdersControls } from "@/components/admin/orders/AdminOrdersControls";
 import { AdminOrdersList } from "@/components/admin/orders/AdminOrdersList";
 export function AdminOrdersClient({
   canManage,
@@ -316,95 +314,27 @@ export function AdminOrdersClient({
       </div>
 
       <section className="mt-5 overflow-hidden rounded-[24px] border border-[#e8ddd3] bg-[#fffdf9] shadow-[0_10px_32px_rgba(30,35,40,.05)] print:shadow-none">
-        <div className="border-b border-[#eee4dc] p-4 sm:p-5">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="relative min-w-0 flex-1 xl:max-w-xl">
-              <FontAwesomeIcon
-                icon={faSearch}
-                className="absolute left-4 top-1/2 h-4 -translate-y-1/2 text-[#9b8e84]"
-              />
-              <input
-                value={searchInput}
-                onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Search order ID, customer, phone or email"
-                className="h-12 w-full rounded-2xl border border-[#ded2c8] bg-white pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[#C8102E] focus:ring-4 focus:ring-[#C8102E]/10"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setShowFilters((current) => !current)}
-                className="inline-flex h-12 items-center gap-2 rounded-2xl border border-[#ded2c8] bg-white px-4 text-xs font-black text-[#183043]"
-              >
-                <FontAwesomeIcon icon={faFilter} /> Filters
-              </button>
-              <button
-                onClick={() => void loadOrders()}
-                className="inline-flex h-12 items-center gap-2 rounded-2xl bg-[#17384d] px-4 text-xs font-black text-white"
-              >
-                <FontAwesomeIcon icon={faRotate} /> Refresh
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => {
-                  setStatus(tab.value);
-                  setPagination((current) => ({ ...current, page: 1 }));
-                }}
-                className={`shrink-0 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-wider transition ${status === tab.value ? "bg-[#C8102E] text-white" : "bg-[#f4ece6] text-[#776b63] hover:text-[#C8102E]"}`}
-              >
-                {tab.label}{" "}
-                <span className="ml-1 opacity-75">
-                  {statusCounts[tab.value] ?? 0}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence initial={false}>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="mt-4 grid gap-3 border-t border-[#eee4dc] pt-4 sm:grid-cols-2 xl:grid-cols-6">
-                  <FilterSelect
-                    label="Order mode"
-                    value={orderMode}
-                    onChange={setOrderMode}
-                    options={["all", "dine_in", "takeaway"]}
-                  />
-                  <FilterSelect
-                    label="Payment status"
-                    value={paymentStatus}
-                    onChange={setPaymentStatus}
-                    options={["all", "pending", "paid", "failed", "refunded"]}
-                  />
-                  <FilterSelect
-                    label="Payment method"
-                    value={paymentMethod}
-                    onChange={setPaymentMethod}
-                    options={["all", "cash", "upi", "card", "online"]}
-                  />
-                  <DateField label="From" value={from} onChange={setFrom} />
-                  <DateField label="To" value={to} onChange={setTo} />
-                  <button
-                    onClick={resetFilters}
-                    className="mt-auto h-11 rounded-xl border border-[#ded2c8] bg-white text-xs font-black text-[#C8102E]"
-                  >
-                    Reset filters
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
+        <AdminOrdersControls
+          searchInput={searchInput}
+          onSearchInput={setSearchInput}
+          status={status}
+          statusCounts={statusCounts}
+          onStatus={(value) => { setStatus(value); setPagination((current) => ({ ...current, page: 1 })); }}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters((current) => !current)}
+          onRefresh={() => void loadOrders()}
+          orderMode={orderMode}
+          onOrderMode={setOrderMode}
+          paymentStatus={paymentStatus}
+          onPaymentStatus={setPaymentStatus}
+          paymentMethod={paymentMethod}
+          onPaymentMethod={setPaymentMethod}
+          from={from}
+          onFrom={setFrom}
+          to={to}
+          onTo={setTo}
+          onReset={resetFilters}
+        />
         {error ? (
           <StatePanel
             icon={faCircleExclamation}
