@@ -26,8 +26,8 @@ import {
   type RealtimeEventEnvelope,
 } from "@/lib/realtime/client";
 
-import type { ApiResponse, FilterKey, GroupedItem, KitchenTicket, RealtimeStatus, TicketPriority, TicketStatus } from "@/components/admin/kds/kds.types";
-import { buildDetails, FILTERS, getTicketStart, isNewStatus, playNotificationTone, unlockNotificationAudio } from "@/components/admin/kds/kds.utils";
+import type { ApiResponse, FilterKey, GroupedItem, KitchenTicket, RealtimeStatus, TicketStatus } from "@/components/admin/kds/kds.types";
+import { buildDetails, FILTERS, getNotificationAudioContext, isNewStatus, playNotificationTone, unlockNotificationAudio } from "@/components/admin/kds/kds.utils";
 import { TicketCard } from "@/components/admin/kds/KdsTicketCard";
 
 export function KitchenDisplayClient({ userName }: { userName: string }) {
