@@ -1,3 +1,4 @@
+import type React from "react";
 "use client";
 
 import { useState } from "react";
@@ -434,7 +435,7 @@ function MiniCard({
 }: {
   label: string;
   value: string;
-  icon: typeof faReceipt;
+  icon: React.ComponentProps<typeof FontAwesomeIcon>["icon"];
 }) {
   return (
     <div className="rounded-2xl border border-[#e8ddd3] bg-[#fffdf9] p-4">
