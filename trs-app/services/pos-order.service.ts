@@ -2,7 +2,6 @@ import { Types } from "mongoose";
 
 import { AppError } from "@/lib/errors/AppError";
 import { nextOrderNumber } from "@/lib/orders/order-number";
-import { verifyPassword } from "@/lib/auth/password";
 import {
   MIXED_NAAN_GROUP_ID,
   MIXED_NAAN_GROUP_NAME,
@@ -23,10 +22,8 @@ import { Order } from "@/models/Order";
 import { POSCashMovement } from "@/models/POSCashMovement";
 import { POSItem } from "@/models/POSItem";
 import { POSShift } from "@/models/POSShift";
-import { StaffProfile } from "@/models/StaffProfile";
 import { User } from "@/models/User";
 import { getOrCreateInvoice } from "@/services/invoice.service";
-import { getRoleWithPermissions } from "@/services/rbac.service";
 import {
   publishDashboardRefresh,
   publishOrderCreated,
@@ -36,6 +33,7 @@ import type { AdjustmentsInput, ModifierInput, ResolvedPosLine } from "@/service
 import { money, wholeRupee, normalizeAdjustments, normalizeMenuLabel, resolveModifiers, validateRequiredGroups } from "@/services/pos-order.utils";
 import { assertPosInventoryAvailable, deductPosInventory } from "@/services/pos-order-inventory.service";
 import { createPosKitchenOutput } from "@/services/pos-order-kitchen.service";
+import { validatePosInternalConsumption } from "@/services/pos-order-internal-consumption.service";
 
 type CreatePosOrderInput = {
   shiftId: string;
@@ -100,145 +98,17 @@ export async function createPosOrder(
   if (!shift)
     throw new AppError("Open POS shift not found for this cashier.", 409);
 
-  const isInternalOrder = input.internalConsumption.saleType !== "customer";
-  if (isInternalOrder && !input.internalConsumption.personName.trim()) {
-    throw new AppError(
-      "Select or enter the person/name for this internal order.",
-      422,
-    );
-  }
-  if (isInternalOrder && !input.internalConsumption.reason.trim()) {
-    throw new AppError("Reason is required for internal consumption.", 422);
-  }
-  let approvalStatus: "not_required" | "required" | "approved" = "not_required";
-  let approvalReason = "";
-  let approvedBy: Types.ObjectId | null = null;
-  let approvedAt: Date | null = null;
-  let dailyUsageBefore = 0;
-  let monthlyUsageBefore = 0;
-  let dailyLimit = 0;
-  let monthlyLimit = 0;
-
-  if (input.internalConsumption.saleType === "staff_meal") {
-    if (!input.internalConsumption.referenceId)
-      throw new AppError("Select a staff member.", 422);
-    const staffUser = await User.findOne({
-      _id: input.internalConsumption.referenceId,
-      deletedAt: null,
-      isActive: true,
-    })
-      .select("_id name")
-      .lean();
-    if (!staffUser)
-      throw new AppError("Selected staff member is no longer active.", 409);
-    if (staffUser.name !== input.internalConsumption.personName.trim())
-      input.internalConsumption.personName = staffUser.name;
-
-    const profile = await StaffProfile.findOne({
-      userId: staffUser._id,
-    }).lean();
-    if (!profile || profile.mealEligible === false)
-      throw new AppError(
-        "This staff member is not eligible for staff meals.",
-        409,
-      );
-    if (
-      profile.mealSuspendedUntil &&
-      new Date(profile.mealSuspendedUntil) > new Date()
-    ) {
-      throw new AppError(
-        `Staff meal access is suspended until ${new Date(profile.mealSuspendedUntil).toLocaleDateString("en-IN")}. ${profile.mealSuspensionReason || ""}`.trim(),
-        409,
-      );
-    }
-    dailyLimit = profile.dailyMealLimit ?? 2;
-    monthlyLimit = profile.monthlyMealLimit ?? 60;
-    const weeklyLimit = profile.weeklyMealLimit ?? 14;
-    const yearlyLimit = profile.yearlyMealLimit ?? 720;
-    const now = new Date();
-    const dayStart = new Date(now);
-    dayStart.setHours(0, 0, 0, 0);
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    weekStart.setHours(0, 0, 0, 0);
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const yearStart = new Date(now.getFullYear(), 0, 1);
-    const [dailyCount, weeklyCount, monthlyCount, yearlyCount] =
-      await Promise.all([
-        Order.countDocuments({
-          saleType: "staff_meal",
-          "internalConsumption.referenceId": staffUser._id,
-          status: { $nin: ["cancelled", "rejected"] },
-          createdAt: { $gte: dayStart },
-        }),
-        Order.countDocuments({
-          saleType: "staff_meal",
-          "internalConsumption.referenceId": staffUser._id,
-          status: { $nin: ["cancelled", "rejected"] },
-          createdAt: { $gte: weekStart },
-        }),
-        Order.countDocuments({
-          saleType: "staff_meal",
-          "internalConsumption.referenceId": staffUser._id,
-          status: { $nin: ["cancelled", "rejected"] },
-          createdAt: { $gte: monthStart },
-        }),
-        Order.countDocuments({
-          saleType: "staff_meal",
-          "internalConsumption.referenceId": staffUser._id,
-          status: { $nin: ["cancelled", "rejected"] },
-          createdAt: { $gte: yearStart },
-        }),
-      ]);
-    dailyUsageBefore = dailyCount;
-    monthlyUsageBefore = monthlyCount;
-    const limitExceeded =
-      profile.unlimitedMeals !== true &&
-      (dailyCount >= dailyLimit ||
-        weeklyCount >= weeklyLimit ||
-        monthlyCount >= monthlyLimit ||
-        yearlyCount >= yearlyLimit);
-    if (limitExceeded && profile.requireManagerApprovalOnLimit !== false) {
-      approvalStatus = "required";
-      const email = input.internalConsumption.managerApprovalEmail
-        .trim()
-        .toLowerCase();
-      const password = input.internalConsumption.managerApprovalPassword;
-      if (
-        !email ||
-        !password ||
-        input.internalConsumption.managerApprovalReason.trim().length < 3
-      ) {
-        throw new AppError(
-          `Manager approval is required. Daily ${dailyCount}/${dailyLimit}; weekly ${weeklyCount}/${weeklyLimit}; monthly ${monthlyCount}/${monthlyLimit}; yearly ${yearlyCount}/${yearlyLimit}.`,
-          409,
-          { code: "INTERNAL_MEAL_APPROVAL_REQUIRED" },
-        );
-      }
-      const manager = await User.findOne({
-        email,
-        isActive: true,
-        deletedAt: null,
-      }).select("+passwordHash name roleId");
-      if (!manager || !(await verifyPassword(password, manager.passwordHash)))
-        throw new AppError("Manager approval credentials are invalid.", 403);
-      const role = await getRoleWithPermissions(String(manager.roleId));
-      const canApprove = role?.permissionIds.some((permission) =>
-        ["settings.manage", "orders.update", "pos.manage"].includes(
-          permission.key,
-        ),
-      );
-      if (!canApprove)
-        throw new AppError(
-          "This account does not have permission to approve meal-limit overrides.",
-          403,
-        );
-      approvalStatus = "approved";
-      approvalReason = input.internalConsumption.managerApprovalReason.trim();
-      approvedBy = manager._id;
-      approvedAt = new Date();
-    }
-  }
+  const {
+    isInternalOrder,
+    approvalStatus,
+    approvalReason,
+    approvedBy,
+    approvedAt,
+    dailyUsageBefore,
+    monthlyUsageBefore,
+    dailyLimit,
+    monthlyLimit,
+  } = await validatePosInternalConsumption(input.internalConsumption);
 
   const customer =
     !isInternalOrder && input.customerId
