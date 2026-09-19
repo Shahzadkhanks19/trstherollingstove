@@ -27,7 +27,7 @@ import { createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory
 import { changeMenuCategory, changeVariant, createMenuItemForm, menuItemToForm } from "@/components/admin/menu/admin-menu-editor.utils";
 import { buildMenuItemPayload, validateMenuItemForm } from "@/components/admin/menu/admin-menu-save.utils";
 import { applyDiscountToForm, removeDiscountFromForm, validateDiscount } from "@/components/admin/menu/admin-menu-discount.utils";
-import { bulkDiscountMenuItems, bulkUpdateMenuItems, deleteMenuItem, patchMenuItem } from "@/components/admin/menu/admin-menu.api";
+import { bulkDiscountMenuItems, bulkUpdateMenuItems, deleteMenuItem, fetchComboCatalogItems, fetchMenuCategories, fetchMenuItem, fetchMenuItems, fetchModifierGroups, patchMenuItem, uploadMenuImage } from "@/components/admin/menu/admin-menu.api";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
@@ -102,45 +102,19 @@ export function AdminMenuClient({
     return params.toString();
   }, [page, limit, search, categoryId, status, featured, bestseller]);
 
-  const loadComboCatalogItems = useCallback(async () => {
-    const catalogItems: MenuItem[] = [];
-    let currentPage = 1;
-    let catalogTotalPages = 1;
-
-    do {
-      const params = new URLSearchParams({
-        page: String(currentPage),
-        limit: "100",
-        isActive: "true",
-      });
-      const response = await fetch(
-        `/api/v1/admin/menu/items?${params.toString()}`,
-        { cache: "no-store" },
-      );
-      const payload = (await response.json()) as ApiResponse<MenuItem[]>;
-      if (!response.ok || !payload.success) {
-        throw new Error(payload.message || "Unable to load combo menu items.");
-      }
-
-      catalogItems.push(...payload.data.filter((item) => !item.isCombo));
-      catalogTotalPages = Math.max(1, payload.meta?.totalPages ?? 1);
-      currentPage += 1;
-    } while (currentPage <= catalogTotalPages);
-
+  const loadComboCatalogItems = useCallback(async (force = false) => {
+    if (!force && comboCatalogItems.length) return comboCatalogItems;
+    const catalogItems = await fetchComboCatalogItems();
     setComboCatalogItems(catalogItems);
     return catalogItems;
-  }, []);
+  }, [comboCatalogItems]);
+
 
   const loadItems = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/v1/admin/menu/items?${query}`, {
-        cache: "no-store",
-      });
-      const payload = (await response.json()) as ApiResponse<MenuItem[]>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to load menu items.");
+      const payload = await fetchMenuItems(query);
       setItems(payload.data);
       setTotal(payload.meta?.total ?? payload.data.length);
       setTotalPages(Math.max(1, payload.meta?.totalPages ?? 1));
@@ -174,72 +148,18 @@ export function AdminMenuClient({
   }, [searchInput]);
 
   const loadCategories = useCallback(async () => {
-    const response = await fetch(
-      "/api/v1/admin/menu/categories?includeInactive=true",
-      { cache: "no-store" },
-    );
-    const payload = (await response.json()) as ApiResponse<Category[]>;
-    if (!response.ok || !payload.success) {
-      throw new Error(payload.message || "Unable to load menu categories.");
-    }
-
-    let loadedCategories = payload.data;
-
-    const activeComboCategoryExists = loadedCategories.some(
-      (category) =>
-        category.isActive &&
-        (category.slug === "combos" ||
-          category.name.trim().toLowerCase() === "combos"),
-    );
-
-    if (!activeComboCategoryExists && canCreate) {
-      const seedResponse = await fetch("/api/v1/admin/menu/categories/seed", {
-        method: "POST",
-      });
-      const seedPayload = (await seedResponse.json()) as ApiResponse<unknown>;
-      if (!seedResponse.ok || !seedPayload.success) {
-        throw new Error(
-          seedPayload.message ||
-            "Unable to install the default TRS categories.",
-        );
-      }
-
-      const reloadResponse = await fetch(
-        "/api/v1/admin/menu/categories?includeInactive=true",
-        { cache: "no-store" },
-      );
-      const reloadPayload = (await reloadResponse.json()) as ApiResponse<
-        Category[]
-      >;
-      if (!reloadResponse.ok || !reloadPayload.success) {
-        throw new Error(
-          reloadPayload.message || "Unable to reload menu categories.",
-        );
-      }
-      loadedCategories = reloadPayload.data;
-    }
-
+    const loadedCategories = await fetchMenuCategories(canCreate);
     setCategories(loadedCategories);
     return loadedCategories;
   }, [canCreate]);
+
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void Promise.all([
         loadCategories(),
         loadComboCatalogItems(),
-        fetch("/api/v1/admin/menu/modifier-groups", { cache: "no-store" }).then(
-          async (response) => {
-            const payload = (await response.json()) as ApiResponse<
-              ModifierGroup[]
-            >;
-            if (!response.ok || !payload.success)
-              throw new Error(
-                payload.message || "Unable to load add-on groups.",
-              );
-            setModifierGroups(payload.data);
-          },
-        ),
+        fetchModifierGroups().then(setModifierGroups),
       ]).catch((requestError: unknown) => {
         setError(
           requestError instanceof Error
@@ -266,37 +186,20 @@ export function AdminMenuClient({
     setActing(true); setFormError(""); setItemDiscountType("percentage"); setItemDiscountValue("");
     try {
       await loadComboCatalogItems();
-      const response = await fetch(`/api/v1/admin/menu/items/${itemId}`, { cache: "no-store" });
-      const payload = (await response.json()) as ApiResponse<MenuItem>;
-      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to load menu item.");
-      setEditingId(payload.data._id);
-      setForm(menuItemToForm(payload.data, categories));
-      setEditorOpen(true);
+      const item = await fetchMenuItem(itemId);
+      setEditingId(item._id); setForm(menuItemToForm(item, categories)); setEditorOpen(true);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Unable to load menu item.");
     } finally { setActing(false); }
   }
 
   async function uploadItemImage(file: File) {
-    setUploadingImage(true);
-    setFormError("");
+    setUploadingImage(true); setFormError("");
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const response = await fetch("/api/v1/admin/uploads/menu", {
-        method: "POST",
-        body,
-      });
-      const payload = (await response.json()) as ApiResponse<{ url: string }>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Image upload failed.");
-      setForm((current) => ({ ...current, imageUrl: payload.data.url }));
+      const url = await uploadMenuImage(file);
+      setForm((current) => ({ ...current, imageUrl: url }));
     } catch (requestError) {
-      setFormError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Image upload failed.",
-      );
+      setFormError(requestError instanceof Error ? requestError.message : "Image upload failed.");
     } finally {
       setUploadingImage(false);
       if (imageInputRef.current) imageInputRef.current.value = "";
