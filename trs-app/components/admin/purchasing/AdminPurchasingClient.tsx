@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRotateRight,
@@ -13,7 +13,6 @@ import {
   faSearch,
   faTruckRampBox,
   faUserPlus,
-  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { PageHeader } from "@/components/admin/AdminPrimitives";
