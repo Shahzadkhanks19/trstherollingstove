@@ -1,5 +1,6 @@
-import type React from "react";
 "use client";
+
+import type React from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons";
