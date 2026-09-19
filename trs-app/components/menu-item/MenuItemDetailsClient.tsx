@@ -2,11 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowLeft,
-  faFire,
-  faStar,
-} from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -20,7 +16,6 @@ import type {
   MenuOptionGroup,
 } from "@/types/menu";
 import {
-  getCategoryGuidance,
   getCustomerVisibleOptionGroups,
 } from "@/lib/menu-option-rules";
 import {
@@ -31,17 +26,16 @@ import {
 
 import {
   canonicalVariantLabel,
-  formatPrice,
   getChoicePrice,
   initialiseOptions,
   isMongoObjectId,
-  trustItems,
   type SelectedOptionState,
   type Tab,
 } from "@/components/menu-item/menu-item-utils";
 import { MenuItemMediaDetails } from "@/components/menu-item/MenuItemMediaDetails";
 import { MenuItemConfiguration } from "@/components/menu-item/MenuItemConfiguration";
 import { MenuItemOrderActions } from "@/components/menu-item/MenuItemOrderActions";
+import { MenuItemCategoryGuidance, MenuItemSummary, MenuItemTrustStrip } from "@/components/menu-item/MenuItemSupportingUi";
 
 export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
   const router = useRouter();
@@ -397,65 +391,11 @@ export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
 
           <aside className="min-w-0 lg:sticky lg:top-[100px] lg:self-start">
             <section className="rounded-[2rem] border border-[#EDE3D8] bg-white p-5 shadow-[0_24px_60px_rgba(50,30,15,.09)] sm:p-7">
-              <div className="flex flex-wrap items-center gap-2">
-                {item.isBestseller && (
-                  <span className="rounded-full bg-[#FFF1E5] px-3 py-1.5 text-[8px] font-black uppercase text-[#C8102E]">
-                    Bestseller
-                  </span>
-                )}
-                {item.isNew && (
-                  <span className="rounded-full bg-[#F1FBF3] px-3 py-1.5 text-[8px] font-black uppercase text-[#287238]">
-                    New
-                  </span>
-                )}
-              </div>
-
-              <h1 className="mt-4 text-3xl font-black tracking-[-0.045em] sm:text-4xl">
-                {item.name}
-              </h1>
-
-              <p className="mt-3 text-sm leading-6 text-[#655E57]">
-                {item.shortDescription ?? item.description}
-              </p>
-
-              {item.reviewSummary && (
-                <div className="mt-4 flex items-center gap-3 text-[10px]">
-                  <span className="flex items-center gap-1 font-black">
-                    <FontAwesomeIcon
-                      icon={faStar}
-                      className="h-3 text-[#E8A53A]"
-                    />
-                    {item.reviewSummary.averageRating}
-                  </span>
-                  <span className="text-[#8A8179]">
-                    {item.reviewSummary.totalReviews} reviews
-                  </span>
-                </div>
-              )}
-
-              <div className="mt-5 flex items-end gap-3">
-                <strong className="text-3xl font-black text-[#C8102E]">
-                  {formatPrice(basePrice)}
-                </strong>
-                {selectedPriceOption?.compareAtPrice &&
-                  selectedPriceOption.compareAtPrice > basePrice && (
-                    <>
-                      <span className="pb-1 text-sm text-[#8A8179] line-through">
-                        {formatPrice(selectedPriceOption.compareAtPrice)}
-                      </span>
-                      <span className="mb-1 rounded-full bg-[#173044] px-2.5 py-1 text-[9px] font-black uppercase text-white">
-                        {Math.round(
-                          ((selectedPriceOption.compareAtPrice - basePrice) /
-                            selectedPriceOption.compareAtPrice) *
-                            100,
-                        )}
-                        % off
-                      </span>
-                    </>
-                  )}
-              </div>
-
-              <div className="my-6 h-px bg-[#EDE3D8]" />
+              <MenuItemSummary
+                item={item}
+                basePrice={basePrice}
+                compareAtPrice={selectedPriceOption?.compareAtPrice}
+              />
 
               <MenuItemConfiguration
                 item={item}
@@ -490,49 +430,12 @@ export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
               />
             </section>
 
-            <section className="mt-4 rounded-2xl border border-[#F0DFC8] bg-[#FFF7EA] p-5">
-              <h2 className="text-[10px] font-black uppercase text-[#C8102E]">
-                Category Configuration
-              </h2>
-              <div className="mt-3 grid gap-2">
-                {getCategoryGuidance(item.category.slug).map((guidance) => (
-                  <p
-                    key={guidance}
-                    className="flex gap-2 text-[9px] leading-4 text-[#655E57]"
-                  >
-                    <FontAwesomeIcon
-                      icon={faFire}
-                      className="mt-0.5 h-3 shrink-0 text-[#D99219]"
-                    />
-                    {guidance}
-                  </p>
-                ))}
-              </div>
-            </section>
+            <MenuItemCategoryGuidance categorySlug={item.category.slug} />
           </aside>
         </div>
       </section>
 
-      <section className="pb-14">
-        <div className="mx-auto grid w-[min(100%-2rem,1320px)] grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[#EDE3D8] bg-[#EDE3D8] lg:grid-cols-4">
-          {trustItems.map(({ icon, title, text }) => (
-            <article
-              key={title}
-              className="flex min-w-0 items-center gap-3 bg-white p-4"
-            >
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#FFF1E5] text-[#D99219]">
-                <FontAwesomeIcon icon={icon} className="h-4" />
-              </span>
-              <div className="min-w-0">
-                <h2 className="text-[8px] font-black uppercase">{title}</h2>
-                <p className="mt-1 text-[7px] leading-3 text-[#655E57]">
-                  {text}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      <MenuItemTrustStrip />
     </main>
   );
 }
