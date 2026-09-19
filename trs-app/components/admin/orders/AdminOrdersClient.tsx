@@ -18,6 +18,17 @@ import { OrdersSkeleton, StatePanel } from "@/components/admin/orders/AdminOrder
 import { AdminOrdersControls } from "@/components/admin/orders/AdminOrdersControls";
 import { AdminOrdersList } from "@/components/admin/orders/AdminOrdersList";
 import { AdminOrdersHeader } from "@/components/admin/orders/AdminOrdersHeader";
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function AdminOrdersClient({
   canManage,
   canManagePayments,
