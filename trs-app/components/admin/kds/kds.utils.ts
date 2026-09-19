@@ -86,7 +86,7 @@ function getNotificationAudioContext() {
   return notificationAudioContext;
 }
 
-async function unlockNotificationAudio() {
+export async function unlockNotificationAudio() {
   const context = getNotificationAudioContext();
   if (!context) return false;
 
@@ -118,7 +118,7 @@ function scheduleNotificationBeep(
   oscillator.stop(startAt + 0.25);
 }
 
-async function playNotificationTone() {
+export async function playNotificationTone() {
   const context = getNotificationAudioContext();
   if (!context) return false;
 
