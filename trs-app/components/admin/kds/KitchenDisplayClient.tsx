@@ -14,10 +14,11 @@ import {
   type RealtimeEventEnvelope,
 } from "@/lib/realtime/client";
 
-import type { ApiResponse, FilterKey, GroupedItem, KitchenTicket, RealtimeStatus, TicketStatus } from "@/components/admin/kds/kds.types";
+import type { FilterKey, GroupedItem, KitchenTicket, RealtimeStatus, TicketStatus } from "@/components/admin/kds/kds.types";
 import { buildDetails, getNotificationAudioContext, isNewStatus, playNotificationTone, unlockNotificationAudio } from "@/components/admin/kds/kds.utils";
 import { KdsControls, KdsHeader } from "@/components/admin/kds/KdsToolbar";
 import { KdsQueue } from "@/components/admin/kds/KdsQueue";
+import { extendKitchenPreparation, fetchKitchenTickets, patchKitchenTicketStatus } from "@/components/admin/kds/kds.api";
 
 export function KitchenDisplayClient({ userName }: { userName: string }) {
   const [tickets, setTickets] = useState<KitchenTicket[]>([]);
@@ -47,17 +48,10 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
     setError("");
 
     try {
-      const response = await fetch("/api/v1/kds/tickets", {
-        cache: "no-store",
-      });
-      const payload = (await response.json()) as ApiResponse<KitchenTicket[]>;
-      if (!response.ok || !payload.success) {
-        throw new Error(payload.message || "Unable to load kitchen tickets.");
-      }
-
-      const nextIds = new Set(payload.data.map((ticket) => ticket._id));
+      const data = await fetchKitchenTickets();
+      const nextIds = new Set(data.map((ticket) => ticket._id));
       if (knownTicketIds.current && soundEnabledRef.current) {
-        const hasNewTicket = payload.data.some(
+        const hasNewTicket = data.some(
           (ticket) =>
             !knownTicketIds.current?.has(ticket._id) &&
             isNewStatus(ticket.status),
@@ -74,7 +68,7 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
         }
       }
       knownTicketIds.current = nextIds;
-      setTickets(payload.data);
+      setTickets(data);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -241,27 +235,11 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
     if (actingTicketId) return;
     setActingTicketId(ticket._id);
     setActionError("");
-
     try {
-      const response = await fetch(`/api/v1/kds/tickets/${ticket._id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      const payload = (await response.json()) as ApiResponse<KitchenTicket>;
-      if (!response.ok || !payload.success) {
-        throw new Error(payload.message || "Unable to update kitchen ticket.");
-      }
-
-      setTickets((current) =>
-        current.map((item) => (item._id === ticket._id ? payload.data : item)),
-      );
+      const updated = await patchKitchenTicketStatus(ticket._id, status);
+      setTickets((current) => current.map((item) => item._id === ticket._id ? updated : item));
     } catch (requestError) {
-      setActionError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to update kitchen ticket.",
-      );
+      setActionError(requestError instanceof Error ? requestError.message : "Unable to update kitchen ticket.");
     } finally {
       setActingTicketId("");
     }
@@ -296,35 +274,10 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
   async function addPreparationTime(ticket: KitchenTicket, minutes: number) {
     setActingTicketId(ticket._id);
     try {
-      const base =
-        ticket.estimatedReadyAt &&
-        new Date(ticket.estimatedReadyAt).getTime() > Date.now()
-          ? new Date(ticket.estimatedReadyAt).getTime()
-          : Date.now();
-      const response = await fetch(
-        `/api/v1/admin/orders/${ticket.orderId}/status`,
-        {
-          method: "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            status: "preparing",
-            note: `Preparation time extended by ${minutes} minutes.`,
-            estimatedReadyAt: new Date(base + minutes * 60000).toISOString(),
-          }),
-        },
-      );
-      const payload = (await response.json()) as ApiResponse<unknown>;
-      if (!response.ok || !payload.success)
-        throw new Error(
-          payload.message || "Unable to update preparation time.",
-        );
+      await extendKitchenPreparation(ticket, minutes);
       await loadTickets(true);
     } catch (error) {
-      setActionError(
-        error instanceof Error
-          ? error.message
-          : "Unable to update preparation time.",
-      );
+      setActionError(error instanceof Error ? error.message : "Unable to update preparation time.");
     } finally {
       setActingTicketId("");
     }
