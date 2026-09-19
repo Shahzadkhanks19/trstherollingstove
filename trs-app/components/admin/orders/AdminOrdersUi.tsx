@@ -2,7 +2,7 @@
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDown, faArrowUp } from "@fortawesome/free-solid-svg-icons";
-import type { SortField, SortOrder } from "@/components/admin/orders/admin-orders.api";
+import { statusLabels, statusTone, type SortField, type SortOrder } from "@/components/admin/orders/admin-orders.api";
 
 export function FilterSelect({
   label,
@@ -34,7 +34,7 @@ export function FilterSelect({
     </label>
   );
 }
-function DateField({
+export function DateField({
   label,
   value,
   onChange,
@@ -57,7 +57,7 @@ function DateField({
     </label>
   );
 }
-function SortableHead({
+export function SortableHead({
   label,
   field,
   current,
@@ -87,7 +87,7 @@ function SortableHead({
     </th>
   );
 }
-function StatePanel({
+export function StatePanel({
   icon,
   title,
   message,
@@ -129,3 +129,7 @@ export function OrdersSkeleton({ compact = false }: { compact?: boolean }) {
     </div>
   );
 }
+
+export function StatusPill({status}:{status:import("@/types/adminOrders").AdminOrderStatus}){return <span className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ring-1 ring-inset ${statusTone[status]}`}>{statusLabels[status]}</span>}
+export function PaymentPill({status,method}:{status:import("@/types/adminOrders").AdminPaymentStatus;method:import("@/types/adminOrders").AdminPaymentMethod}){const tone=status==="paid"?"bg-emerald-50 text-emerald-700":status==="failed"?"bg-red-50 text-red-700":status==="refunded"?"bg-purple-50 text-purple-700":"bg-slate-100 text-slate-600";return <span className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${tone}`}>{status} · {method}</span>}
+export function Info({label,value}:{label:string;value:string}){return <div><p className="text-[9px] font-black uppercase tracking-wider text-[#958980]">{label}</p><p className="mt-1 break-words text-xs font-extrabold capitalize text-[#173044]">{value}</p></div>}
