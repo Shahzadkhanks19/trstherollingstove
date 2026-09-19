@@ -14,25 +14,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { units, movementTypes, emptyItem, emptyMovement, money, type Unit, type MovementType, type InventoryItem, type InventoryMovement, type Summary, type ApiEnvelope, type ItemForm, type MovementForm, type InventoryActionDialog } from "@/components/admin/inventory/admin-inventory.types";
 import { todayInputValue } from "@/lib/validation/dateTime";
 
-function unwrap<T>(payload: ApiEnvelope<T> | T): T {
-  return typeof payload === "object" && payload !== null && "data" in payload
-    ? (payload as ApiEnvelope<T>).data
-    : (payload as T);
-}
-
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-  });
-  const payload = (await response.json()) as ApiEnvelope<T> & {
-    error?: string;
-  };
-  if (!response.ok)
-    throw new Error(payload.message ?? payload.error ?? "Request failed.");
-  return unwrap(payload);
-}
-
+import { fetchInventoryData, saveInventoryItem, archiveInventoryItem, restoreInventoryItem, permanentlyDeleteInventoryItem, saveInventoryMovement } from "@/components/admin/inventory/admin-inventory.api";
 export function AdminInventoryClient({ canManage }: { canManage: boolean }) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
@@ -67,16 +49,10 @@ export function AdminInventoryClient({ canManage }: { canManage: boolean }) {
     setLoading(true);
     setError("");
     try {
-      const [itemData, movementData, summaryData] = await Promise.all([
-        request<InventoryItem[]>(
-          "/api/v1/admin/inventory/items?includeArchived=true",
-        ),
-        request<InventoryMovement[]>("/api/v1/admin/inventory/movements"),
-        request<Summary>("/api/v1/admin/inventory/summary"),
-      ]);
-      setItems(itemData);
-      setMovements(movementData);
-      setSummary(summaryData);
+      const data = await fetchInventoryData();
+      setItems(data.items);
+      setMovements(data.movements);
+      setSummary(data.summary);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Unable to load inventory.",
@@ -146,22 +122,7 @@ export function AdminInventoryClient({ canManage }: { canManage: boolean }) {
     setSaving(true);
     setError("");
     try {
-      const body = {
-        ...form,
-        currentStock: Number(form.currentStock),
-        reorderLevel: Number(form.reorderLevel),
-        idealStockLevel: Number(form.idealStockLevel),
-        averageUnitCost: Number(form.averageUnitCost),
-      };
-      await request(
-        item
-          ? `/api/v1/admin/inventory/items/${item._id}`
-          : "/api/v1/admin/inventory/items",
-        {
-          method: item ? "PATCH" : "POST",
-          body: JSON.stringify(body),
-        },
-      );
+      await saveInventoryItem(item, form);
       setItemEditor(null);
       setNotice(item ? "Inventory item updated." : "Inventory item created.");
       await loadData();
@@ -187,9 +148,7 @@ export function AdminInventoryClient({ canManage }: { canManage: boolean }) {
     setError("");
     setNotice("");
     try {
-      await request(`/api/v1/admin/inventory/items/${item._id}`, {
-        method: "DELETE",
-      });
+      await archiveInventoryItem(item._id);
       setActionDialog(null);
       setNotice(`${item.name} was archived.`);
       await loadData();
@@ -209,10 +168,7 @@ export function AdminInventoryClient({ canManage }: { canManage: boolean }) {
     setError("");
     setNotice("");
     try {
-      await request(`/api/v1/admin/inventory/items/${item._id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ isActive: true }),
-      });
+      await restoreInventoryItem(item._id);
       setNotice(`${item.name} was restored.`);
       await loadData();
     } catch (caught) {
@@ -239,10 +195,7 @@ export function AdminInventoryClient({ canManage }: { canManage: boolean }) {
     setError("");
     setNotice("");
     try {
-      await request(
-        `/api/v1/admin/inventory/items/${item._id}?permanent=true`,
-        { method: "DELETE" },
-      );
+      await permanentlyDeleteInventoryItem(item._id);
       setActionDialog(null);
       setNotice(`${item.name} was permanently deleted.`);
       await loadData();
@@ -283,18 +236,7 @@ export function AdminInventoryClient({ canManage }: { canManage: boolean }) {
     setSaving(true);
     setError("");
     try {
-      await request("/api/v1/admin/inventory/movements", {
-        method: "POST",
-        body: JSON.stringify({
-          ...movementEditor,
-          quantity: Number(movementEditor.quantity),
-          unitCost: Number(movementEditor.unitCost),
-          referenceType:
-            movementEditor.type === "opening" ? "opening" : "manual",
-          referenceId: null,
-          expiryDate: movementEditor.expiryDate || null,
-        }),
-      });
+      await saveInventoryMovement(movementEditor);
       setMovementEditor(null);
       setNotice("Stock movement recorded.");
       await loadData();
