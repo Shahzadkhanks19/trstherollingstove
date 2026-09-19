@@ -6,11 +6,8 @@ import {
   faArrowLeft,
   faArrowRight,
   faCartPlus,
-  faCheck,
   faCircleInfo,
   faFire,
-  faMinus,
-  faPlus,
   faStar,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
@@ -46,6 +43,7 @@ import {
   type Tab,
 } from "@/components/menu-item/menu-item-utils";
 import { MenuItemMediaDetails } from "@/components/menu-item/MenuItemMediaDetails";
+import { MenuItemConfiguration } from "@/components/menu-item/MenuItemConfiguration";
 
 export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
   const router = useRouter();
@@ -461,221 +459,23 @@ export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
 
               <div className="my-6 h-px bg-[#EDE3D8]" />
 
-              <h2 className="text-lg font-black uppercase text-[#C8102E]">
-                Customise Your Order
-              </h2>
-
-              {item.pricingOptions && item.pricingOptions.length > 0 && (
-                <div className="mt-6">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-[10px] font-black uppercase">
-                      Select Size / Portion
-                    </h3>
-                    <span className="text-[8px] text-[#8A8179]">Required</span>
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {item.pricingOptions
-                      .filter((option) => option.isAvailable !== false)
-                      .map((option) => {
-                        const selected = option.id === selectedPriceOptionId;
-
-                        return (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedPriceOptionId(option.id);
-                              if (!isFullPortion(option.label))
-                                setMixedSecondNaanId("");
-                            }}
-                            className={`relative rounded-xl border p-3 text-center transition ${
-                              selected
-                                ? "border-[#C8102E] bg-[#FFF3F3]"
-                                : "border-[#E5D9CD] bg-[#FFFDF9]"
-                            }`}
-                          >
-                            {selected && (
-                              <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-[#C8102E] text-white">
-                                <FontAwesomeIcon
-                                  icon={faCheck}
-                                  className="h-2"
-                                />
-                              </span>
-                            )}
-                            <span className="block text-[9px] font-black">
-                              {option.label}
-                            </span>
-                            {!item.combinationPricing?.enabled && (
-                              <span className="mt-1 block text-sm font-black">
-                                {formatPrice(option.price)}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 grid gap-6">
-                {visibleGroups.map((group) => (
-                  <div key={group.id}>
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-[10px] font-black uppercase">
-                        {group.name}
-                      </h3>
-                      <span className="text-[8px] text-[#8A8179]">
-                        {group.required ? "Required" : "Optional"}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 grid gap-2">
-                      {group.choices
-                        .filter((choice) => choice.isAvailable !== false)
-                        .map((choice) => {
-                          const selectedQuantity =
-                            selectedOptions[group.id]?.[choice.id] ?? 0;
-                          const selected = selectedQuantity > 0;
-
-                          return (
-                            <div
-                              key={choice.id}
-                              className={`flex min-w-0 items-center gap-3 rounded-xl border p-3 ${
-                                selected
-                                  ? "border-[#C8102E] bg-[#FFF8F8]"
-                                  : "border-[#E5D9CD] bg-[#FFFDF9]"
-                              }`}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => updateChoice(group, choice.id)}
-                                className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${
-                                  selected
-                                    ? "border-[#C8102E] bg-[#C8102E] text-white"
-                                    : "border-[#BFB6AD] bg-white text-transparent"
-                                }`}
-                                aria-label={`Select ${choice.name}`}
-                              >
-                                <FontAwesomeIcon
-                                  icon={faCheck}
-                                  className="h-2"
-                                />
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => updateChoice(group, choice.id)}
-                                className="min-w-0 flex-1 text-left"
-                              >
-                                <span className="block text-[10px] font-black">
-                                  {choice.name}
-                                </span>
-                                {choice.description && (
-                                  <span className="mt-1 block text-[8px] leading-4 text-[#7A726B]">
-                                    {choice.description}
-                                  </span>
-                                )}
-                              </button>
-
-                              {getChoicePrice(
-                                choice,
-                                selectedPriceOption?.label,
-                              ) > 0 && (
-                                <span className="shrink-0 text-[10px] font-black">
-                                  +
-                                  {formatPrice(
-                                    getChoicePrice(
-                                      choice,
-                                      selectedPriceOption?.label,
-                                    ),
-                                  )}
-                                </span>
-                              )}
-
-                              {group.selectionType === "quantity" && (
-                                <div className="flex shrink-0 items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      updateChoice(
-                                        group,
-                                        choice.id,
-                                        selectedQuantity - 1,
-                                      )
-                                    }
-                                    className="grid h-7 w-7 place-items-center rounded-lg border border-[#E5D9CD]"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faMinus}
-                                      className="h-2"
-                                    />
-                                  </button>
-                                  <span className="w-4 text-center text-[10px] font-black">
-                                    {selectedQuantity}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      updateChoice(
-                                        group,
-                                        choice.id,
-                                        selectedQuantity + 1,
-                                      )
-                                    }
-                                    className="grid h-7 w-7 place-items-center rounded-lg border border-[#E5D9CD]"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faPlus}
-                                      className="h-2"
-                                    />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {isFullPortion(selectedPriceOption?.label ?? "") &&
-                (item.mixedNaanOptions?.length ?? 0) > 0 && (
-                  <section className="rounded-[1.5rem] border border-[#E8D8C9] bg-white p-5">
-                    <h3 className="text-sm font-black text-[#172536]">
-                      Choose a different second naan
-                    </h3>
-                    <p className="mt-1 text-[10px] font-semibold leading-5 text-[#655E57]">
-                      Optional. A Full platter includes two naans. Keep the
-                      default for two {item.name}, or choose another naan below.
-                      The higher Full-platter price applies.
-                    </p>
-                    <select
-                      value={mixedSecondNaanId}
-                      onChange={(event) =>
-                        setMixedSecondNaanId(event.currentTarget.value)
-                      }
-                      className="mt-4 h-12 w-full rounded-xl border border-[#DCCEC1] bg-white px-4 text-sm font-bold outline-none focus:border-[#C8102E]"
-                    >
-                      <option value="">Two {item.name}</option>
-                      {item.mixedNaanOptions?.map((option) => (
-                        <option
-                          key={option.menuItemId}
-                          value={option.menuItemId}
-                        >
-                          1 {item.name} + 1 {option.name}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedMixedNaan && mixedNaanPrice != null ? (
-                      <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-900">
-                        Mixed Full platter price:{" "}
-                        {formatPrice(Math.max(basePrice, mixedNaanPrice))}
-                      </p>
-                    ) : null}
-                  </section>
-                )}
+              <MenuItemConfiguration
+                item={item}
+                visibleGroups={visibleGroups}
+                selectedPriceOptionId={selectedPriceOptionId}
+                selectedPriceOptionLabel={selectedPriceOption?.label}
+                selectedOptions={selectedOptions}
+                mixedSecondNaanId={mixedSecondNaanId}
+                selectedMixedNaanName={selectedMixedNaan?.name}
+                mixedNaanPrice={mixedNaanPrice}
+                basePrice={basePrice}
+                onPriceOptionChange={(id, label) => {
+                  setSelectedPriceOptionId(id);
+                  if (!isFullPortion(label)) setMixedSecondNaanId("");
+                }}
+                onChoiceChange={updateChoice}
+                onMixedNaanChange={setMixedSecondNaanId}
+              />
 
               {item.customerNotice && (
                 <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#F0D79D] bg-[#FFF7E6] p-4">
