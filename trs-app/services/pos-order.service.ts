@@ -38,8 +38,8 @@ import {
   publishOrderCreated,
 } from "@/services/realtimeEvents.service";
 import { publishRealtimeEventSafely } from "@/services/realtimePublisher.service";
-import type { ModifierGroupRecord, ResolvedModifier } from "@/services/pos-order.types";
-import { money, wholeRupee, normalizeAdjustments, resolveModifiers, validateRequiredGroups } from "@/services/pos-order.utils";
+import type { AdjustmentsInput, ModifierInput, ResolvedModifier } from "@/services/pos-order.types";
+import { money, wholeRupee, normalizeAdjustments, normalizeMenuLabel, resolveModifiers, validateRequiredGroups } from "@/services/pos-order.utils";
 
 type CreatePosOrderInput = {
   shiftId: string;
