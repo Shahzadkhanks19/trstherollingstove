@@ -1,9 +1,9 @@
-import type { KitchenTicket } from "@/components/admin/kds/kds.types";
+import type { FilterKey, KitchenTicket, TicketStatus } from "@/components/admin/kds/kds.types";
 
 export const SPECIAL_NOTE_PATTERN =
   /\b(jain|no onion|without onion|less spicy|extra crispy|birthday|allerg(?:y|ic|ies)|no garlic|gluten|nut)\b/i;
 
-const FILTERS: Array<{ key: FilterKey; label: string }> = [
+export const FILTERS: Array<{ key: FilterKey; label: string }> = [
   { key: "all", label: "All" },
   { key: "new", label: "New" },
   { key: "preparing", label: "Preparing" },
@@ -73,7 +73,7 @@ type BrowserWindowWithWebkitAudio = typeof window & {
 
 let notificationAudioContext: AudioContext | null = null;
 
-function getNotificationAudioContext() {
+export function getNotificationAudioContext() {
   if (notificationAudioContext) return notificationAudioContext;
 
   const AudioContextClass =
