@@ -10,11 +10,7 @@ import {
   faCheck,
   faFloppyDisk,
   faFolderTree,
-  faImage,
-  faIndianRupeeSign,
-  faPercent,
   faPlus,
-  faUpload,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -38,13 +34,15 @@ import {
   type VariantForm,
 } from "@/components/admin/menu/admin-menu.types";
 import { createNaanPortionVariants, createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
-import { Field, Toggle } from "@/components/admin/menu/AdminMenuUi";
+import { Field } from "@/components/admin/menu/AdminMenuUi";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
 import { AdminMenuEditorRelations } from "@/components/admin/menu/AdminMenuEditorRelations";
 import { AdminMenuComboBuilder } from "@/components/admin/menu/AdminMenuComboBuilder";
 import { AdminMenuEditorPublishing } from "@/components/admin/menu/AdminMenuEditorPublishing";
+import { AdminMenuEditorImage } from "@/components/admin/menu/AdminMenuEditorImage";
+import { AdminMenuBulkDiscountModal } from "@/components/admin/menu/AdminMenuBulkDiscountModal";
 import { AdminMenuCatalogList } from "@/components/admin/menu/AdminMenuCatalogList";
 
 export function AdminMenuClient({
@@ -1261,59 +1259,14 @@ export function AdminMenuClient({
                       {formError}
                     </div>
                   )}
-                  <div className="overflow-hidden rounded-[22px] border border-dashed border-[#d9cbc0] bg-white">
-                    <div className="grid min-h-48 place-items-center bg-[#fff3ec]">
-                      {form.imageUrl ? (
-                        <img
-                          src={form.imageUrl}
-                          alt="Menu item preview"
-                          className="h-48 w-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-center text-[#8c7f76]">
-                          <FontAwesomeIcon icon={faImage} className="h-9" />
-                          <p className="mt-2 text-xs font-bold">
-                            No menu image selected
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2 p-3">
-                      <input
-                        ref={imageInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/avif"
-                        className="hidden"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          if (file) void uploadItemImage(file);
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => imageInputRef.current?.click()}
-                        disabled={uploadingImage}
-                        className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-[#122b3c] px-4 text-xs font-black text-white disabled:opacity-50"
-                      >
-                        <FontAwesomeIcon icon={faUpload} />
-                        {uploadingImage ? "Uploading…" : "Upload from device"}
-                      </button>
-                      {form.imageUrl && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setForm((current) => ({ ...current, imageUrl: "" }))
-                          }
-                          className="h-10 rounded-xl border border-red-100 px-4 text-xs font-black text-red-600"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                    <p className="px-3 pb-3 text-[11px] font-semibold text-[#81746b]">
-                      JPG, PNG, WebP or AVIF · Maximum 5 MB
-                    </p>
-                  </div>
+                  <AdminMenuEditorImage
+                    imageUrl={form.imageUrl}
+                    inputRef={imageInputRef}
+                    uploading={uploadingImage}
+                    onUpload={(file) => void uploadItemImage(file)}
+                    onRemove={() => setForm((current) => ({ ...current, imageUrl: "" }))}
+                  />
+
                   <AdminMenuEditorBasics
                     form={form}
                     setForm={setForm}
@@ -1410,141 +1363,25 @@ export function AdminMenuClient({
           box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.08);
         }
       `}</style>
-      <AnimatePresence>
-        {bulkDiscountOpen && (
-          <>
-            <motion.button
-              type="button"
-              aria-label="Close bulk discount"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => {
-                if (!acting) setBulkDiscountOpen(false);
-              }}
-              className="fixed inset-0 z-[80] bg-[#071923]/55 backdrop-blur-sm"
-            />
-            <motion.section
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="bulk-discount-title"
-              initial={{ opacity: 0, y: 24, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 24, scale: 0.98 }}
-              className="fixed inset-x-4 top-1/2 z-[81] mx-auto w-auto max-w-lg -translate-y-1/2 rounded-[28px] border border-[#eadfd5] bg-[#fffdf9] p-5 shadow-2xl sm:p-6"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3
-                    id="bulk-discount-title"
-                    className="text-lg font-black text-[#122b3c]"
-                  >
-                    Apply menu-item discount
-                  </h3>
-                  <p className="mt-1 text-xs font-semibold leading-5 text-[#756960]">
-                    This will update {selected.length} selected item
-                    {selected.length === 1 ? "" : "s"}. Existing discounts are
-                    replaced using the stored original price, so repeated edits
-                    do not compound accidentally.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setBulkDiscountOpen(false)}
-                  disabled={acting}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#e5d9cf] bg-white text-[#122b3c]"
-                >
-                  <FontAwesomeIcon icon={faXmark} />
-                </button>
-              </div>
+      <AdminMenuBulkDiscountModal
+        open={bulkDiscountOpen}
+        acting={acting}
+        selectedCount={selected.length}
+        type={bulkDiscountType}
+        value={bulkDiscountValue}
+        error={bulkDiscountError}
+        onClose={() => setBulkDiscountOpen(false)}
+        onTypeChange={(value) => {
+          setBulkDiscountType(value);
+          setBulkDiscountError("");
+        }}
+        onValueChange={(value) => {
+          setBulkDiscountValue(value);
+          setBulkDiscountError("");
+        }}
+        onApply={() => void applyBulkDiscount("apply_discount")}
+      />
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <Field label="Discount type">
-                  <select
-                    value={bulkDiscountType}
-                    onChange={(event) => {
-                      setBulkDiscountType(
-                        event.target.value as "percentage" | "fixed",
-                      );
-                      setBulkDiscountError("");
-                    }}
-                    className="field"
-                  >
-                    <option value="percentage">Percentage discount</option>
-                    <option value="fixed">Fixed amount discount</option>
-                  </select>
-                </Field>
-                <Field
-                  label={
-                    bulkDiscountType === "percentage"
-                      ? "Discount percentage"
-                      : "Discount amount"
-                  }
-                >
-                  <div className="relative">
-                    <FontAwesomeIcon
-                      icon={
-                        bulkDiscountType === "percentage"
-                          ? faPercent
-                          : faIndianRupeeSign
-                      }
-                      className="absolute left-3 top-1/2 h-3 -translate-y-1/2 text-[#8c7f76]"
-                    />
-                    <input
-                      type="number"
-                      min="0.01"
-                      max={
-                        bulkDiscountType === "percentage" ? "99.99" : undefined
-                      }
-                      step="0.01"
-                      value={bulkDiscountValue}
-                      onChange={(event) => {
-                        setBulkDiscountValue(event.target.value);
-                        setBulkDiscountError("");
-                      }}
-                      placeholder={
-                        bulkDiscountType === "percentage" ? "20" : "50"
-                      }
-                      className="field price-field"
-                    />
-                  </div>
-                </Field>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-[11px] font-semibold leading-5 text-amber-900">
-                Percentage applies the same percent to every selected item and
-                every size. Fixed amount subtracts the same rupee amount from
-                each item or size. Combos are intentionally rejected because
-                their selling price belongs to the Combo Builder.
-              </div>
-              {bulkDiscountError && (
-                <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
-                  {bulkDiscountError}
-                </p>
-              )}
-
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setBulkDiscountOpen(false)}
-                  disabled={acting}
-                  className="h-11 rounded-2xl border border-[#e5d9cf] bg-white text-xs font-black text-[#122b3c]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void applyBulkDiscount("apply_discount")}
-                  disabled={acting}
-                  className="h-11 rounded-2xl bg-[#C8102E] text-xs font-black text-white disabled:opacity-60"
-                >
-                  {acting ? "Applying…" : "Apply discount"}
-                </button>
-              </div>
-            </motion.section>
-          </>
-        )}
-      </AnimatePresence>
       <CustomActionModal
         open={Boolean(itemToDelete)}
         title="Delete menu item?"
