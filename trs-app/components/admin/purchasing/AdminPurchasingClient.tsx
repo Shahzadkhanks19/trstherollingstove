@@ -9,10 +9,8 @@ import {
   faCheck,
   faChevronRight,
   faCircleExclamation,
-  faDownload,
   faPlus,
   faSearch,
-  faTrashCan,
   faTruckRampBox,
   faUserPlus,
   faXmark,
@@ -485,56 +483,6 @@ export function AdminPurchasingClient({
   );
 }
 
-function Drawer({
-  title,
-  eyebrow,
-  onClose,
-  children,
-}: {
-  title: string;
-  eyebrow: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <motion.div
-      className="fixed inset-0 z-[100] flex items-end justify-end bg-black/45 backdrop-blur-[2px] sm:items-stretch"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <motion.aside
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="flex h-[94dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-[#fffdf9] shadow-2xl sm:h-full sm:max-w-3xl sm:rounded-none"
-      >
-        <header className="flex items-start justify-between gap-4 border-b border-[#eee4dc] px-4 py-4 sm:px-6">
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#C8102E]">
-              {eyebrow}
-            </p>
-            <h2 className="mt-1 truncate text-xl font-black text-[#173044]">
-              {title}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#e4d9d0] bg-white text-[#173044]"
-          >
-            <FontAwesomeIcon icon={faXmark} />
-          </button>
-        </header>
-        {children}
-      </motion.aside>
-    </motion.div>
-  );
-}
 function SummaryCard({
   label,
   value,
