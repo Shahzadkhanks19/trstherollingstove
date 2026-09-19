@@ -6,3 +6,7 @@ export type ResolvedModifier = { groupId:Types.ObjectId; groupName:string; optio
 export type ModifierVariantPriceRecord = { variantLabel:string; price:number };
 export type ModifierOptionRecord = { _id:Types.ObjectId; name:string; price?:number; maxQuantity?:number; isActive:boolean; isAvailable:boolean; variantPrices?:ModifierVariantPriceRecord[] };
 export type ModifierGroupRecord = { _id:Types.ObjectId; name:string; minSelections?:number; maxSelections?:number; selectionType?:string; isRequired?:boolean; options:ModifierOptionRecord[] };
+
+export type ResolvedPosLine = { sourceType:"menu"|"pos"; menuItemId:Types.ObjectId|null; posItemId:Types.ObjectId|null; categoryId:Types.ObjectId|null; name:string; imageUrl:string; variantId:Types.ObjectId|null; variantName:string; baseUnitPrice:number; modifiers:ResolvedModifier[]; quantity:number; specialInstructions:string; lineUnitPrice:number; lineTotal:number; sendToKds:boolean; stationId:Types.ObjectId|null };
+export type KitchenOrderItemRecord = { _id:Types.ObjectId; menuItemId?:Types.ObjectId|null; posItemId?:Types.ObjectId|null; variantId?:Types.ObjectId|null };
+export type KitchenOrderRecord = { _id:Types.ObjectId; orderNumber:string; orderMode:"dine_in"|"takeaway"; tableNumber?:string; customerSnapshot?:{name:string;phone?:string;email?:string}|null; items:KitchenOrderItemRecord[]; orderTakerName?:string };
