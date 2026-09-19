@@ -1,0 +1,11 @@
+"use client";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleExclamation, faClockRotateLeft, faDownload, faPrint, faReceipt, faUtensils } from "@fortawesome/free-solid-svg-icons";
+import { PageHeader } from "@/components/admin/AdminPrimitives";
+
+export function AdminOrdersHeader({statusCounts,total,onExport}:{statusCounts:Record<string,number>;total:number;onExport:(format:"csv"|"xls")=>void}){
+ return <><PageHeader eyebrow="Order operations" title="Orders Management" description="Search, filter, review and progress dine-in and takeaway orders through the complete fulfilment workflow." action={<div className="flex flex-wrap gap-2"><ActionButton icon={faDownload} label="CSV" onClick={()=>onExport("csv")}/><ActionButton icon={faDownload} label="Excel" onClick={()=>onExport("xls")}/><ActionButton icon={faPrint} label="PDF" onClick={()=>window.print()}/></div>}/><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Total filtered" value={statusCounts.all??total} icon={faReceipt}/><Metric label="Pending" value={statusCounts.placed??0} icon={faClockRotateLeft}/><Metric label="Preparing" value={statusCounts.preparing??0} icon={faUtensils}/><Metric label="Ready" value={statusCounts.ready??0} icon={faCircleExclamation}/></div></>
+}
+function ActionButton({icon,label,onClick}:{icon:React.ComponentProps<typeof FontAwesomeIcon>["icon"];label:string;onClick:()=>void}){return <button onClick={onClick} className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#dacec4] bg-white px-4 text-[10px] font-black uppercase tracking-wider text-[#173044]"><FontAwesomeIcon icon={icon}/>{label}</button>}
+function Metric({label,value,icon}:{label:string;value:number;icon:React.ComponentProps<typeof FontAwesomeIcon>["icon"]}){return <div className="rounded-[22px] border border-[#e8ddd3] bg-[#fffdf9] p-5 shadow-[0_10px_32px_rgba(30,35,40,.055)]"><div className="flex items-start justify-between"><div><p className="text-[9px] font-black uppercase tracking-[.17em] text-[#8a7e75]">{label}</p><p className="mt-3 text-3xl font-black text-[#173044]">{value}</p></div><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fff0e8] text-[#C8102E]"><FontAwesomeIcon icon={icon}/></span></div></div>}
