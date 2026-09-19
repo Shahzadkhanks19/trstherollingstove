@@ -24,7 +24,7 @@ import type {
   AdminPaymentStatus,
 } from "@/types/adminOrders";
 
-import { dateTime, fetchAdminOrder, fetchAdminOrders, money, patchAdminOrderPayment, patchAdminOrderStatus, statusLabels, tabs, type SortField, type SortOrder } from "@/components/admin/orders/admin-orders.api";
+import { dateTime, fetchAdminOrder, fetchAdminOrders, patchAdminOrderPayment, patchAdminOrderStatus, statusLabels, tabs, type SortField, type SortOrder } from "@/components/admin/orders/admin-orders.api";
 import { OrderDrawer } from "@/components/admin/orders/OrderDrawer";
 import { DateField, FilterSelect, OrdersSkeleton, StatePanel } from "@/components/admin/orders/AdminOrdersUi";
 import { AdminOrdersList } from "@/components/admin/orders/AdminOrdersList";
