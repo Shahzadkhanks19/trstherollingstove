@@ -1,7 +1,5 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -34,7 +32,6 @@ import {
   type VariantForm,
 } from "@/components/admin/menu/admin-menu.types";
 import { createNaanPortionVariants, createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
-import { Field } from "@/components/admin/menu/AdminMenuUi";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
