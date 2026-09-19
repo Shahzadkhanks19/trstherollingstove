@@ -22,13 +22,11 @@ import { PageHeader } from "@/components/admin/AdminPrimitives";
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
 
 
-import { type ApiResponse, type InventoryItem, type PickupPerson, type PurchaseOrder, type Supplier, type VendorDraft, purchasingStatuses as statuses, type PurchasingStatus } from "@/components/admin/purchasing/admin-purchasing.types";
+import { type InventoryItem, type PickupPerson, type PurchaseOrder, type Supplier, purchasingStatuses as statuses, type PurchasingStatus } from "@/components/admin/purchasing/admin-purchasing.types";
 import { fetchPurchasingData, mutatePurchasing } from "@/components/admin/purchasing/admin-purchasing.api";
 import { CreateOrderDrawer } from "@/components/admin/purchasing/CreateOrderDrawer";
 import { CreateVendorDrawer } from "@/components/admin/purchasing/CreateVendorDrawer";
 
-const inputClass =
-  "h-11 w-full min-w-0 rounded-xl border border-[#e1d6cd] bg-white px-3 text-sm font-semibold text-[#173044] outline-none focus:border-[#C8102E]";
 
 export function AdminPurchasingClient({
   canManagePurchases,
@@ -763,39 +761,6 @@ function Info({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="mt-1 truncate text-xs font-black text-[#173044]">{value}</p>
-    </div>
-  );
-}
-function Field({
-  label,
-  children,
-  error,
-}: {
-  label: string;
-  children: React.ReactNode;
-  error?: string;
-}) {
-  return (
-    <label className="block min-w-0">
-      <span className="mb-2 block text-[10px] font-black uppercase tracking-wider text-[#756960]">
-        {label}
-      </span>
-      {children}
-      {error && (
-        <span className="mt-1 block text-xs font-semibold text-red-700">
-          {error}
-        </span>
-      )}
-    </label>
-  );
-}
-function ValidationError({ message }: { message: string }) {
-  return (
-    <div
-      role="alert"
-      className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700"
-    >
-      {message}
     </div>
   );
 }
