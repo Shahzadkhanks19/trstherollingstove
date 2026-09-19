@@ -373,8 +373,6 @@ export function MenuItemDetailsClient({ item }: { item: MenuItemDetails }) {
     }
   };
 
-  const gallery = item.media.length ? item.media : [];
-
   return (
     <main className="overflow-x-hidden bg-[#FFFDF9] text-[#172536]">
       <section className="border-b border-[#EDE3D8] py-5">
