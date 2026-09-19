@@ -1,0 +1,31 @@
+"use client";
+
+import type { Dispatch, SetStateAction } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import type { ItemForm, MenuItem } from "@/components/admin/menu/admin-menu.types";
+import { money } from "@/components/admin/menu/admin-menu.types";
+import { Field, Toggle } from "@/components/admin/menu/AdminMenuUi";
+import { localDateTimeInputValue } from "@/lib/validation/dateTime";
+
+export function AdminMenuComboBuilder({form,setForm,items,editingId,calculation}:{form:ItemForm;setForm:Dispatch<SetStateAction<ItemForm>>;items:MenuItem[];editingId:string|null;calculation:{originalPrice:number;savings:number;discount:number}}) {
+  const updateRow=(index:number,patch:Partial<ItemForm["comboComponents"][number]>)=>setForm(c=>({...c,comboComponents:c.comboComponents.map((row,i)=>i===index?{...row,...patch}:row)}));
+  return <section className="rounded-[22px] border border-[#eadfd5] bg-[#fff8f2] p-4">
+    <p className="text-sm font-black text-[#122b3c]">Combo Builder</p><p className="mt-1 text-xs leading-5 text-[#786b62]">Build one sellable combo product from two or more active menu items. Original price is recalculated by the server from current menu prices.</p>
+    <div className="mt-4 rounded-2xl border border-[#e5d9cf] bg-white p-4"><p className="text-xs font-black uppercase tracking-[.12em] text-[#C8102E]">Publishing & customer eligibility</p><p className="mt-1 text-xs leading-5 text-[#786b62]">Choose whether this combo appears on the Menu page, Offers page, Permanent Offers or Today&apos;s Hot Offers, and select the eligible loyalty tiers.</p></div>
+    <div className="mt-4 space-y-3">{form.comboComponents.map((entry,index)=>{const selected=items.find(i=>i._id===entry.menuItemId);return <div key={`${index}-${entry.menuItemId}`} className="grid gap-2 rounded-2xl border border-[#eadfd5] bg-white p-3 sm:grid-cols-[1fr_1fr_110px_auto]">
+      <Field label="Menu Item"><select value={entry.menuItemId} onChange={e=>updateRow(index,{menuItemId:e.target.value,variantId:""})} className="field"><option value="">Select item</option>{items.filter(i=>i._id!==editingId).map(i=><option key={i._id} value={i._id}>{i.name}</option>)}</select></Field>
+      <Field label="Variant">{selected?.variants?.filter(v=>v.isActive).length?<select value={entry.variantId} onChange={e=>updateRow(index,{variantId:e.target.value})} className="field"><option value="">Select variant</option>{selected.variants.filter(v=>v.isActive).map(v=><option key={v._id??v.name} value={v._id}>{v.name} · {money.format(v.price)}</option>)}</select>:<div className="field flex items-center text-[#81746b]">No variant</div>}</Field>
+      <Field label="Quantity"><input type="number" min="1" max="50" value={entry.quantity} onChange={e=>updateRow(index,{quantity:e.target.value})} className="field"/></Field>
+      <button type="button" aria-label="Remove combo item" disabled={form.comboComponents.length<=2} onClick={()=>setForm(c=>({...c,comboComponents:c.comboComponents.filter((_,i)=>i!==index)}))} className="mt-5 h-11 rounded-xl border border-red-200 px-3 text-red-700 disabled:opacity-40"><FontAwesomeIcon icon={faTrash}/></button>
+    </div>})}</div>
+    <button type="button" onClick={()=>setForm(c=>({...c,comboComponents:[...c.comboComponents,{menuItemId:"",variantId:"",quantity:"1"}]}))} className="mt-3 rounded-xl border border-[#e5d9cf] bg-white px-4 py-2 text-xs font-black"><FontAwesomeIcon icon={faPlus} className="mr-2"/>Add another item</button>
+    <div className="mt-4 grid gap-3 sm:grid-cols-4">{[["Original price",money.format(calculation.originalPrice),""],["Combo price",money.format(Number(form.basePrice)||0),"text-[#C8102E]"],["Savings",money.format(calculation.savings),"text-emerald-700"],["Discount",`${calculation.discount.toFixed(1)}%`,""]].map(([label,value,cls])=><div key={label} className="rounded-xl bg-white p-3"><span className="text-[10px] font-black uppercase text-slate-500">{label}</span><strong className={`mt-1 block ${cls}`}>{value}</strong></div>)}</div>
+    <div className="mt-4 grid gap-3 sm:grid-cols-2"><Toggle label="Publish combo on Offers page" checked={form.publishComboOnOffersPage} onChange={v=>setForm(c=>({...c,publishComboOnOffersPage:v}))}/><Toggle label="Show combo on Menu page" checked={form.publishComboOnMenuPage} onChange={v=>setForm(c=>({...c,publishComboOnMenuPage:v}))}/></div>
+    {form.publishComboOnOffersPage&&<div className="mt-4 grid gap-3 sm:grid-cols-2"><Field label="Offers page placement"><select value={form.comboOffersPageSection==="todays"?"todays":form.comboOfferType} onChange={e=>{const p=e.target.value;setForm(c=>({...c,comboOfferType:p==="limited"?"limited":"permanent",comboOffersPageSection:p==="todays"?"todays":"permanent",comboOfferStartsAt:p==="permanent"?"":c.comboOfferStartsAt||localDateTimeInputValue(),comboOfferExpiresAt:p==="limited"?c.comboOfferExpiresAt:""}))}} className="field"><option value="permanent">Permanent Offers</option><option value="todays">Today&apos;s Hot Offers (24 hours)</option><option value="limited">Limited Time Offer</option></select></Field>
+      {(form.comboOfferType==="limited"||form.comboOffersPageSection==="todays")&&<Field label="Offer starts"><input type="datetime-local" value={form.comboOfferStartsAt??""} onChange={e=>setForm(c=>({...c,comboOfferStartsAt:e.target.value}))} className="field"/></Field>}
+      {form.comboOfferType==="limited"&&form.comboOffersPageSection!=="todays"&&<Field label="Offer expires"><input type="datetime-local" value={form.comboOfferExpiresAt??""} onChange={e=>setForm(c=>({...c,comboOfferExpiresAt:e.target.value}))} className="field"/></Field>}
+    </div>}
+    <div className="mt-4"><p className="mb-2 text-[10px] font-black uppercase text-slate-500">Eligible loyalty tiers</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{(["bronze","silver","gold","platinum"] as const).map(t=><label key={t} className="flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-xs font-black capitalize"><input type="checkbox" checked={form.eligibleTierKeys.includes(t)} onChange={e=>setForm(c=>({...c,eligibleTierKeys:e.target.checked?[...c.eligibleTierKeys,t]:c.eligibleTierKeys.filter(k=>k!==t)}))} className="accent-[#C8102E]"/>{t}</label>)}</div></div>
+  </section>;
+}
