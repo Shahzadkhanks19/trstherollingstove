@@ -15,31 +15,27 @@ import {
   thinCrustGroupId,
   thinCrustOptionId,
 } from "@/lib/menu-special-config";
-import { InventoryItem } from "@/models/InventoryItem";
 import { InternalConsumptionAudit } from "@/models/InternalConsumptionAudit";
-import { InventoryMovement } from "@/models/InventoryMovement";
 import { Invoice } from "@/models/Invoice";
 import { MenuItem } from "@/models/MenuItem";
-import { MenuItemRecipe } from "@/models/MenuItemRecipe";
 import { ModifierGroup } from "@/models/ModifierGroup";
 import { Order } from "@/models/Order";
 import { POSCashMovement } from "@/models/POSCashMovement";
 import { POSItem } from "@/models/POSItem";
-import { POSItemRecipe } from "@/models/POSItemRecipe";
 import { POSShift } from "@/models/POSShift";
 import { StaffProfile } from "@/models/StaffProfile";
 import { User } from "@/models/User";
 import { getOrCreateInvoice } from "@/services/invoice.service";
 import { getRoleWithPermissions } from "@/services/rbac.service";
-import { createKitchenTicketsFromOrder } from "@/services/kds.service";
 import {
   publishDashboardRefresh,
-  publishKdsQueueUpdated,
   publishOrderCreated,
 } from "@/services/realtimeEvents.service";
 import { publishRealtimeEventSafely } from "@/services/realtimePublisher.service";
-import type { AdjustmentsInput, ModifierInput, ResolvedModifier } from "@/services/pos-order.types";
+import type { AdjustmentsInput, ModifierInput, ResolvedModifier, ResolvedPosLine, KitchenOrderRecord } from "@/services/pos-order.types";
 import { money, wholeRupee, normalizeAdjustments, normalizeMenuLabel, resolveModifiers, validateRequiredGroups } from "@/services/pos-order.utils";
+import { assertPosInventoryAvailable, deductPosInventory } from "@/services/pos-order-inventory.service";
+import { createPosKitchenOutput } from "@/services/pos-order-kitchen.service";
 
 type CreatePosOrderInput = {
   shiftId: string;
@@ -90,46 +86,6 @@ type CreatePosOrderInput = {
     specialInstructions: string;
     modifiers: ModifierInput[];
   }>;
-};
-
-type ResolvedPosLine = {
-  sourceType: "menu" | "pos";
-  menuItemId: Types.ObjectId | null;
-  posItemId: Types.ObjectId | null;
-  categoryId: Types.ObjectId | null;
-  name: string;
-  imageUrl: string;
-  variantId: Types.ObjectId | null;
-  variantName: string;
-  baseUnitPrice: number;
-  modifiers: ResolvedModifier[];
-  quantity: number;
-  specialInstructions: string;
-  lineUnitPrice: number;
-  lineTotal: number;
-  sendToKds: boolean;
-  stationId: Types.ObjectId | null;
-};
-
-type KitchenOrderItemRecord = {
-  _id: Types.ObjectId;
-  menuItemId?: Types.ObjectId | null;
-  posItemId?: Types.ObjectId | null;
-  variantId?: Types.ObjectId | null;
-};
-
-type KitchenOrderRecord = {
-  _id: Types.ObjectId;
-  orderNumber: string;
-  orderMode: "dine_in" | "takeaway";
-  tableNumber?: string;
-  customerSnapshot?: {
-    name: string;
-    phone?: string;
-    email?: string;
-  } | null;
-  items: KitchenOrderItemRecord[];
-  orderTakerName?: string;
 };
 
 export async function createPosOrder(
@@ -716,7 +672,7 @@ export async function createPosOrder(
       ? money(Math.max(0, collected - collectionTarget))
       : 0;
 
-  await assertInventoryAvailable(orderLines);
+  await assertPosInventoryAvailable(orderLines);
 
   const now = new Date();
   const orderNumber = await nextOrderNumber();
@@ -882,8 +838,8 @@ export async function createPosOrder(
       );
     }
 
-    await deductInventory(orderLines, order._id, actorId);
-    await createKitchenOutput(order, orderLines, actorId);
+    await deductPosInventory(orderLines, order._id, actorId);
+    await createPosKitchenOutput(order, orderLines, actorId);
     const invoice = await getOrCreateInvoice(String(order._id), actorId);
 
     publishOrderCreated({
@@ -927,159 +883,6 @@ export async function createPosOrder(
     );
     throw error;
   }
-}
-
-async function assertInventoryAvailable(lines: ResolvedPosLine[]) {
-  const requirements = await inventoryRequirements(lines);
-  if (!requirements.size) return;
-  const stocks = await InventoryItem.find({
-    _id: { $in: [...requirements.keys()].map((id) => new Types.ObjectId(id)) },
-  })
-    .select("name currentStock")
-    .lean();
-  const stockMap = new Map(stocks.map((item) => [String(item._id), item]));
-  for (const [id, quantity] of requirements) {
-    const stock = stockMap.get(id);
-    if (!stock || stock.currentStock < quantity)
-      throw new AppError(
-        `Insufficient inventory for ${stock?.name ?? "an ingredient"}.`,
-        409,
-      );
-  }
-}
-
-async function inventoryRequirements(lines: ResolvedPosLine[]) {
-  const menuIds = lines
-    .filter((line) => line.menuItemId)
-    .map((line) => line.menuItemId);
-  const posIds = lines
-    .filter((line) => line.posItemId)
-    .map((line) => line.posItemId);
-  const [menuRecipes, posRecipes] = await Promise.all([
-    MenuItemRecipe.find({
-      menuItemId: { $in: menuIds },
-      isActive: true,
-    }).lean(),
-    POSItemRecipe.find({ posItemId: { $in: posIds }, isActive: true }).lean(),
-  ]);
-  const menuRecipeMap = new Map(
-    menuRecipes.map((recipe) => [String(recipe.menuItemId), recipe]),
-  );
-  const posRecipeMap = new Map(
-    posRecipes.map((recipe) => [String(recipe.posItemId), recipe]),
-  );
-  const requirements = new Map<string, number>();
-  for (const line of lines) {
-    const recipe =
-      line.sourceType === "menu"
-        ? menuRecipeMap.get(String(line.menuItemId))
-        : posRecipeMap.get(String(line.posItemId));
-    if (!recipe) continue;
-    for (const ingredient of recipe.ingredients) {
-      const quantity =
-        (Number(ingredient.quantity) * line.quantity) /
-        Number(recipe.yieldQuantity || 1);
-      const key = String(ingredient.inventoryItemId);
-      requirements.set(key, (requirements.get(key) ?? 0) + quantity);
-    }
-  }
-  return requirements;
-}
-
-async function deductInventory(
-  lines: ResolvedPosLine[],
-  orderId: Types.ObjectId,
-  actorId: string,
-) {
-  const requirements = await inventoryRequirements(lines);
-  for (const [inventoryItemId, quantity] of requirements) {
-    const stockItem = await InventoryItem.findOneAndUpdate(
-      { _id: inventoryItemId, currentStock: { $gte: quantity } },
-      { $inc: { currentStock: -quantity } },
-      { returnDocument: "before" },
-    );
-    if (!stockItem)
-      throw new AppError(
-        "Inventory changed while the sale was being completed. Please retry.",
-        409,
-      );
-    await InventoryMovement.create({
-      inventoryItemId: stockItem._id,
-      type: "sale",
-      quantity,
-      stockBefore: stockItem.currentStock,
-      stockAfter: stockItem.currentStock - quantity,
-      unitCost: stockItem.averageUnitCost,
-      totalCost: money(stockItem.averageUnitCost * quantity),
-      referenceType: "order",
-      referenceId: orderId,
-      reason: "POS sale inventory deduction",
-      performedBy: new Types.ObjectId(actorId),
-    });
-  }
-}
-
-async function createKitchenOutput(
-  order: KitchenOrderRecord,
-  lines: ResolvedPosLine[],
-  actorId: string,
-) {
-  if (lines.length === 0) return;
-
-  await createKitchenTicketsFromOrder({
-    orderId: String(order._id),
-    orderNumber: order.orderNumber,
-    source: "pos",
-    actorId,
-    fulfilmentType: order.orderMode === "dine_in" ? "dine_in" : "pickup",
-    tableLabel: order.tableNumber,
-    customerName: order.customerSnapshot?.name ?? "Walk-in Customer",
-    customerPhone: order.customerSnapshot?.phone ?? "",
-    customerEmail: order.customerSnapshot?.email ?? "",
-    orderTakerName:
-      (order as KitchenOrderRecord & { orderTakerName?: string })
-        .orderTakerName ?? "",
-    items: lines.map((line) => {
-      const orderItem = order.items.find((item) =>
-        line.sourceType === "menu"
-          ? String(item.menuItemId) === String(line.menuItemId) &&
-            String(item.variantId ?? "") === String(line.variantId ?? "")
-          : String(item.posItemId) === String(line.posItemId),
-      );
-
-      if (!orderItem?._id) {
-        throw new AppError("Unable to map a kitchen item to the order.", 500);
-      }
-
-      const kitchenItemId =
-        line.sourceType === "menu" ? line.menuItemId : line.posItemId;
-
-      if (!kitchenItemId) {
-        throw new AppError("Kitchen item identifier is missing.", 500);
-      }
-
-      return {
-        orderItemId: String(orderItem._id),
-        menuItemId: String(kitchenItemId),
-        categoryId:
-          line.sourceType === "menu" && line.categoryId
-            ? String(line.categoryId)
-            : null,
-        name: line.name,
-        variantName: line.variantName ?? "",
-        quantity: line.quantity,
-        notes: line.specialInstructions,
-        modifiers: line.modifiers.map((modifier) => ({
-          name: modifier.groupName,
-          value: `${modifier.optionName}${
-            modifier.quantity > 1 ? ` ×${modifier.quantity}` : ""
-          }`,
-        })),
-      };
-    }),
-  });
-
-  publishKdsQueueUpdated("pos.order_created");
 }
 
 export async function markInvoicePrinted(invoiceId: string, actorId: string) {
