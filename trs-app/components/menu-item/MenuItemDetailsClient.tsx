@@ -8,6 +8,8 @@ import {
   faCartPlus,
   faCircleInfo,
   faFire,
+  faMinus,
+  faPlus,
   faStar,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
