@@ -1,21 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowLeft,
   faBell,
-  faCompress,
-  faExpand,
-  faLayerGroup,
-  faMagnifyingGlass,
   faRotate,
   faTriangleExclamation,
-  faUtensils,
-  faVolumeHigh,
-  faVolumeXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
@@ -29,6 +20,7 @@ import {
 import type { ApiResponse, FilterKey, GroupedItem, KitchenTicket, RealtimeStatus, TicketStatus } from "@/components/admin/kds/kds.types";
 import { buildDetails, FILTERS, getNotificationAudioContext, isNewStatus, playNotificationTone, unlockNotificationAudio } from "@/components/admin/kds/kds.utils";
 import { TicketCard } from "@/components/admin/kds/KdsTicketCard";
+import { KdsControls, KdsHeader } from "@/components/admin/kds/KdsToolbar";
 
 export function KitchenDisplayClient({ userName }: { userName: string }) {
   const [tickets, setTickets] = useState<KitchenTicket[]>([]);
@@ -396,188 +388,28 @@ export function KitchenDisplayClient({ userName }: { userName: string }) {
 
   return (
     <div className="fixed inset-0 z-[120] flex flex-col overflow-hidden bg-[#0f1720] text-white">
-      <header className="border-b border-white/10 bg-[#111d27] px-4 py-3 sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <Link
-              href="/admin/dashboard"
-              aria-label="Return to admin dashboard"
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/5 text-white outline-none hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/20"
-            >
-              <FontAwesomeIcon icon={faArrowLeft} />
-            </Link>
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#C8102E] text-xl">
-              <FontAwesomeIcon icon={faUtensils} />
-            </span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="truncate text-xl font-black sm:text-2xl">
-                  Kitchen Display System
-                </h1>
-                <span
-                  className={`hidden rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider sm:inline ${
-                    realtimeStatus === "connected"
-                      ? "bg-emerald-500/15 text-emerald-300"
-                      : realtimeStatus === "connecting" ||
-                          realtimeStatus === "reconnecting"
-                        ? "bg-amber-500/15 text-amber-300"
-                        : "bg-red-500/15 text-red-300"
-                  }`}
-                >
-                  {realtimeStatus === "connected"
-                    ? "Live"
-                    : realtimeStatus === "connecting"
-                      ? "Connecting"
-                      : realtimeStatus === "reconnecting"
-                        ? "Reconnecting"
-                        : realtimeStatus === "unavailable"
-                          ? "Not configured"
-                          : "Offline"}
-                </span>
-              </div>
-              <p className="truncate text-xs font-bold text-white/55">
-                {userName} · Real-time kitchen updates
-              </p>
-            </div>
-          </div>
+      <KdsHeader
+        userName={userName}
+        realtimeStatus={realtimeStatus}
+        soundEnabled={soundEnabled}
+        soundUnlocked={soundUnlocked}
+        soundMessage={soundMessage}
+        refreshing={refreshing}
+        onToggleSound={() => { if (!soundUnlocked || !soundEnabled) void enableSound(); else disableSound(); }}
+        onTestSound={() => void playNotificationTone()}
+        onRefresh={() => void loadTickets(true)}
+        onFullscreen={() => void toggleFullscreen()}
+      />
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              aria-pressed={soundEnabled && soundUnlocked}
-              onClick={() => {
-                if (!soundUnlocked || !soundEnabled) {
-                  void enableSound();
-                  return;
-                }
-
-                disableSound();
-              }}
-              className={`min-h-11 rounded-xl border px-4 text-xs font-black outline-none transition focus-visible:ring-4 focus-visible:ring-white/20 ${
-                soundEnabled && soundUnlocked
-                  ? "border-emerald-300/30 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20"
-                  : "border-amber-300/30 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20"
-              }`}
-            >
-              <FontAwesomeIcon
-                icon={
-                  soundEnabled && soundUnlocked ? faVolumeHigh : faVolumeXmark
-                }
-                className="mr-2"
-              />
-              {soundEnabled && soundUnlocked ? "Sound On" : "Enable Sound"}
-            </button>
-            {soundEnabled && soundUnlocked ? (
-              <button
-                type="button"
-                onClick={() => void playNotificationTone()}
-                className="min-h-11 rounded-xl border border-white/15 bg-white/5 px-4 text-xs font-black outline-none hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/20"
-              >
-                Test Sound
-              </button>
-            ) : null}
-            <button
-              type="button"
-              disabled={refreshing}
-              onClick={() => void loadTickets(true)}
-              className="min-h-11 rounded-xl border border-white/15 bg-white/5 px-4 text-xs font-black outline-none hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/20 disabled:opacity-60"
-            >
-              <FontAwesomeIcon
-                icon={faRotate}
-                className={`mr-2 ${refreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </button>
-            <button
-              type="button"
-              onClick={() => void toggleFullscreen()}
-              className="min-h-11 rounded-xl bg-[#C8102E] px-4 text-xs font-black outline-none hover:bg-[#a50e27] focus-visible:ring-4 focus-visible:ring-red-300/30"
-            >
-              <FontAwesomeIcon
-                icon={
-                  typeof document !== "undefined" && document.fullscreenElement
-                    ? faCompress
-                    : faExpand
-                }
-                className="mr-2"
-              />
-              Fullscreen
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {soundMessage ? (
-        <p
-          role="status"
-          className={`border-b px-4 py-3 text-xs font-bold sm:px-6 ${
-            soundEnabled && soundUnlocked
-              ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-100"
-              : "border-amber-300/20 bg-amber-400/10 text-amber-100"
-          }`}
-        >
-          {soundMessage}
-        </p>
-      ) : null}
-
-      <section className="border-b border-white/10 bg-[#0f1720] px-4 py-3 sm:px-6">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {FILTERS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                aria-pressed={filter === item.key}
-                onClick={() => setFilter(item.key)}
-                className={`min-h-12 shrink-0 rounded-2xl px-4 text-sm font-black outline-none focus-visible:ring-4 focus-visible:ring-white/20 ${
-                  filter === item.key
-                    ? "bg-white text-[#173044]"
-                    : "border border-white/15 bg-white/5 text-white hover:bg-white/10"
-                }`}
-              >
-                {item.label}
-                <span
-                  className={`ml-2 rounded-full px-2 py-0.5 text-[11px] ${filter === item.key ? "bg-[#173044] text-white" : "bg-white/10"}`}
-                >
-                  {counts[item.key]}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <label className="relative block min-w-0 sm:w-80">
-              <span className="sr-only">
-                Search by order number or customer name
-              </span>
-              <FontAwesomeIcon
-                icon={faMagnifyingGlass}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/45"
-              />
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Order number or customer"
-                className="min-h-12 w-full rounded-2xl border border-white/15 bg-white/5 pl-11 pr-4 text-sm font-bold text-white outline-none placeholder:text-white/35 focus:border-white/40 focus:ring-4 focus:ring-white/10"
-              />
-            </label>
-            <button
-              type="button"
-              aria-pressed={groupedView}
-              onClick={() => setGroupedView((current) => !current)}
-              className={`min-h-12 rounded-2xl px-4 text-sm font-black outline-none focus-visible:ring-4 focus-visible:ring-white/20 ${
-                groupedView
-                  ? "bg-[#E8A53A] text-[#172b3a]"
-                  : "border border-white/15 bg-white/5"
-              }`}
-            >
-              <FontAwesomeIcon icon={faLayerGroup} className="mr-2" />
-              Group Items
-            </button>
-          </div>
-        </div>
-      </section>
-
+      <KdsControls
+        filter={filter}
+        counts={counts}
+        search={search}
+        groupedView={groupedView}
+        onFilter={setFilter}
+        onSearch={setSearch}
+        onToggleGrouped={() => setGroupedView((current) => !current)}
+      />
       {(error || actionError) && (
         <div
           role="alert"
