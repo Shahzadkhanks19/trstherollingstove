@@ -4,8 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowDown,
-  faArrowUp,
   faChevronLeft,
   faChevronRight,
   faCircleExclamation,
@@ -13,19 +11,15 @@ import {
   faDownload,
   faEye,
   faFilter,
-  faIndianRupeeSign,
   faPrint,
   faReceipt,
   faRotate,
   faSearch,
-  faTimes,
   faUtensils,
-  faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { PageHeader } from "@/components/admin/AdminPrimitives";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
-import { buildOrderInvoicePrintUrl } from "@/lib/pos/print-links";
 import type {
   AdminOrder,
   AdminOrderStatus,
@@ -33,9 +27,9 @@ import type {
   AdminPaymentStatus,
 } from "@/types/adminOrders";
 
-import { dateTime, fetchAdminOrder, fetchAdminOrders, money, nextStatuses, patchAdminOrderPayment, patchAdminOrderStatus, statusLabels, statusTone, tabs, type SortField, type SortOrder } from "@/components/admin/orders/admin-orders.api";
+import { dateTime, fetchAdminOrder, fetchAdminOrders, money, patchAdminOrderPayment, patchAdminOrderStatus, statusLabels, tabs, type SortField, type SortOrder } from "@/components/admin/orders/admin-orders.api";
 import { OrderDrawer } from "@/components/admin/orders/OrderDrawer";
-import { DateField, FilterSelect, OrdersSkeleton, SortableHead, StatePanel } from "@/components/admin/orders/AdminOrdersUi";
+import { DateField, FilterSelect, Info, OrdersSkeleton, PaymentPill, SortableHead, StatePanel, StatusPill } from "@/components/admin/orders/AdminOrdersUi";
 export function AdminOrdersClient({
   canManage,
   canManagePayments,
