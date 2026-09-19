@@ -23,95 +23,9 @@ import { CustomActionModal } from "@/components/admin/CustomActionModal";
 
 import { todayInputValue } from "@/lib/validation/dateTime";
 
-type ApiResponse<T> = { success: boolean; message: string; data: T };
+import { type ApiResponse, type DraftLine, type InventoryItem, type PickupPerson, type PurchaseOrder, type Supplier, type VendorDraft, purchasingStatuses as statuses, type PurchasingStatus } from "@/components/admin/purchasing/admin-purchasing.types";
+import { fetchPurchasingData, mutatePurchasing } from "@/components/admin/purchasing/admin-purchasing.api";
 
-type Supplier = {
-  _id: string;
-  name: string;
-  code: string;
-  contactPerson?: string;
-  phone?: string;
-  alternatePhone?: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  notes?: string;
-  isActive: boolean;
-};
-
-type InventoryItem = {
-  _id: string;
-  name: string;
-  sku: string;
-  unit: string;
-  currentStock: number;
-  isActive: boolean;
-};
-
-type PurchaseOrderItem = {
-  _id: string;
-  itemName: string;
-  sku: string;
-  unit: string;
-  orderedQuantity: number;
-  receivedQuantity: number;
-};
-
-type PickupPerson = {
-  _id: string;
-  name: string;
-  whatsappNumber: string;
-  isActive: boolean;
-};
-type WhatsAppDelivery = {
-  recipientType: "vendor" | "admin" | "pickup_person";
-  destination: string;
-  status: "queued" | "sent" | "failed" | "skipped";
-  failureReason?: string;
-};
-
-type PurchaseOrder = {
-  _id: string;
-  purchaseOrderNumber: string;
-  supplierId: Supplier;
-  status:
-    "draft" | "approved" | "partially_received" | "received" | "cancelled";
-  orderDate: string;
-  expectedDeliveryDate: string | null;
-  items: PurchaseOrderItem[];
-  notes: string;
-  fulfilmentType: "vendor_delivery" | "self_pickup";
-  pickupPersonName?: string;
-  whatsappDeliveries?: WhatsAppDelivery[];
-  cancellationReason?: string;
-};
-
-type DraftLine = { inventoryItemId: string; orderedQuantity: string };
-
-type VendorDraft = {
-  name: string;
-  code: string;
-  contactPerson: string;
-  phone: string;
-  alternatePhone: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  notes: string;
-};
-
-const statuses = [
-  "all",
-  "draft",
-  "approved",
-  "partially_received",
-  "received",
-  "cancelled",
-] as const;
 const inputClass =
   "h-11 w-full min-w-0 rounded-xl border border-[#e1d6cd] bg-white px-3 text-sm font-semibold text-[#173044] outline-none focus:border-[#C8102E]";
 
@@ -134,7 +48,7 @@ export function AdminPurchasingClient({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<(typeof statuses)[number]>("all");
+  const [status, setStatus] = useState<PurchasingStatus>("all");
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(
     null,
   );
@@ -150,53 +64,14 @@ export function AdminPurchasingClient({
   const [actionLoading, setActionLoading] = useState(false);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
-      const requests: Promise<Response>[] = [
-        fetch("/api/v1/admin/purchases/orders", { cache: "no-store" }),
-        fetch("/api/v1/admin/purchases/pickup-persons", { cache: "no-store" }),
-      ];
-      if (canReadSuppliers)
-        requests.push(fetch("/api/v1/admin/suppliers", { cache: "no-store" }));
-      if (canReadInventory)
-        requests.push(
-          fetch("/api/v1/admin/inventory/items", { cache: "no-store" }),
-        );
-
-      const responses = await Promise.all(requests);
-      const payloads = await Promise.all(
-        responses.map((response) => response.json()),
-      );
-      const failedIndex = responses.findIndex((response) => !response.ok);
-      if (failedIndex >= 0)
-        throw new Error(
-          payloads[failedIndex]?.message ?? "Unable to load purchasing data.",
-        );
-
-      setOrders((payloads[0] as ApiResponse<PurchaseOrder[]>).data);
-      setPickupPeople((payloads[1] as ApiResponse<PickupPerson[]>).data);
-      let cursor = 2;
-      if (canReadSuppliers) {
-        setSuppliers((payloads[cursor] as ApiResponse<Supplier[]>).data);
-        cursor += 1;
-      }
-      if (canReadInventory) {
-        setInventory(
-          (payloads[cursor] as ApiResponse<InventoryItem[]>).data.filter(
-            (item) => item.isActive,
-          ),
-        );
-      }
+      const data = await fetchPurchasingData(canReadSuppliers, canReadInventory);
+      setOrders(data.orders); setPickupPeople(data.pickupPeople);
+      setSuppliers(data.suppliers); setInventory(data.inventory);
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Unable to load purchasing data.",
-      );
-    } finally {
-      setLoading(false);
-    }
+      setError(caught instanceof Error ? caught.message : "Unable to load purchasing data.");
+    } finally { setLoading(false); }
   }, [canReadInventory, canReadSuppliers]);
 
   useEffect(() => {
@@ -234,13 +109,9 @@ export function AdminPurchasingClient({
   );
 
   async function mutate(url: string, options?: RequestInit) {
-    setError("");
-    setNotice("");
-    const response = await fetch(url, options);
-    const payload = (await response.json()) as ApiResponse<unknown>;
-    if (!response.ok) throw new Error(payload.message || "Request failed.");
-    setNotice(payload.message);
-    await loadData();
+    setError(""); setNotice("");
+    const payload = await mutatePurchasing(url, options);
+    setNotice(payload.message); await loadData();
   }
 
   function approve(order: PurchaseOrder) {
