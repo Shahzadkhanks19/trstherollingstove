@@ -27,6 +27,7 @@ import { createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory
 import { changeMenuCategory, changeVariant, createMenuItemForm, menuItemToForm } from "@/components/admin/menu/admin-menu-editor.utils";
 import { buildMenuItemPayload, validateMenuItemForm } from "@/components/admin/menu/admin-menu-save.utils";
 import { applyDiscountToForm, removeDiscountFromForm, validateDiscount } from "@/components/admin/menu/admin-menu-discount.utils";
+import { bulkDiscountMenuItems, bulkUpdateMenuItems, deleteMenuItem, patchMenuItem } from "@/components/admin/menu/admin-menu.api";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
@@ -409,99 +410,40 @@ export function AdminMenuClient({
   }
 
   async function patchItem(item: MenuItem, updates: Partial<MenuItem>) {
-    setActing(true);
-    setError("");
+    setActing(true); setError("");
     try {
-      const response = await fetch(`/api/v1/admin/menu/items/${item._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      });
-      const payload = (await response.json()) as ApiResponse<MenuItem>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to update menu item.");
-      setNotice(payload.message);
-      await loadItems();
+      const payload = await patchMenuItem(item._id, updates);
+      setNotice(payload.message); await loadItems();
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to update menu item.",
-      );
-    } finally {
-      setActing(false);
-    }
+      setError(requestError instanceof Error ? requestError.message : "Unable to update menu item.");
+    } finally { setActing(false); }
   }
 
   async function bulkAction(action: string) {
     if (!selected.length) return;
-    setActing(true);
-    setError("");
+    setActing(true); setError("");
     try {
-      const response = await fetch("/api/v1/admin/menu/items/bulk", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemIds: selected, action }),
-      });
-      const payload = (await response.json()) as ApiResponse<unknown>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to update selected items.");
-      setNotice(payload.message);
-      await loadItems();
+      const payload = await bulkUpdateMenuItems(selected, action);
+      setNotice(payload.message); await loadItems();
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to update selected items.",
-      );
-    } finally {
-      setActing(false);
-    }
+      setError(requestError instanceof Error ? requestError.message : "Unable to update selected items.");
+    } finally { setActing(false); }
   }
 
-  async function applyBulkDiscount(
-    action: "apply_discount" | "remove_discount",
-  ) {
+  async function applyBulkDiscount(action: "apply_discount" | "remove_discount") {
     if (!selected.length) return;
-
     const numericValue = Number(bulkDiscountValue);
     if (action === "apply_discount") {
       const validationError = validateDiscount(bulkDiscountType, bulkDiscountValue);
       if (validationError) { setBulkDiscountError(validationError); return; }
     }
-
-    setActing(true);
-    setError("");
-    setBulkDiscountError("");
+    setActing(true); setError(""); setBulkDiscountError("");
     try {
-      const response = await fetch("/api/v1/admin/menu/items/bulk", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          itemIds: selected,
-          action,
-          ...(action === "apply_discount"
-            ? { discountType: bulkDiscountType, discountValue: numericValue }
-            : {}),
-        }),
-      });
-      const payload = (await response.json()) as ApiResponse<unknown>;
-      if (!response.ok || !payload.success) {
-        throw new Error(payload.message || "Unable to update discounts.");
-      }
-      setNotice(payload.message);
-      setBulkDiscountOpen(false);
-      setBulkDiscountValue("");
-      await loadItems();
+      const payload = await bulkDiscountMenuItems(selected, action, bulkDiscountType, numericValue);
+      setNotice(payload.message); setBulkDiscountOpen(false); setBulkDiscountValue(""); await loadItems();
     } catch (requestError) {
-      setBulkDiscountError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to update discounts.",
-      );
-    } finally {
-      setActing(false);
-    }
+      setBulkDiscountError(requestError instanceof Error ? requestError.message : "Unable to update discounts.");
+    } finally { setActing(false); }
   }
 
   function applyDiscountToCurrentItem() {
@@ -521,25 +463,11 @@ export function AdminMenuClient({
     if (!itemToDelete) return;
     setActing(true);
     try {
-      const response = await fetch(
-        `/api/v1/admin/menu/items/${itemToDelete._id}`,
-        { method: "DELETE" },
-      );
-      const payload = (await response.json()) as ApiResponse<null>;
-      if (!response.ok || !payload.success)
-        throw new Error(payload.message || "Unable to delete menu item.");
-      setNotice(payload.message);
-      setItemToDelete(null);
-      await loadItems();
+      const payload = await deleteMenuItem(itemToDelete._id);
+      setNotice(payload.message); setItemToDelete(null); await loadItems();
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to delete menu item.",
-      );
-    } finally {
-      setActing(false);
-    }
+      setError(requestError instanceof Error ? requestError.message : "Unable to delete menu item.");
+    } finally { setActing(false); }
   }
 
   const comboCalculation = (() => {
