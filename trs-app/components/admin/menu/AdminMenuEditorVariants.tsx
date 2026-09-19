@@ -6,7 +6,7 @@ import { faIndianRupeeSign } from "@fortawesome/free-solid-svg-icons";
 import type { ItemForm, ModifierGroup, VariantForm } from "@/components/admin/menu/admin-menu.types";
 import { Field, Toggle } from "@/components/admin/menu/AdminMenuUi";
 import { createNaanPortionVariants } from "@/components/admin/menu/admin-menu.utils";
-import { isThinCrustExcludedPizza } from "@/lib/menu/special-menu-config";
+import { isThinCrustExcludedPizza } from "@/lib/menu-special-config";
 
 export function AdminMenuEditorVariants({form,setForm,isPizzaCategory,isNaanCategory,hasRequiredVariants,modifierGroups,combinationGroup,onResetPizza,onUpdateVariant,onSelectCombinationGroup,onUpdateCombinationPrice}:{form:ItemForm;setForm:Dispatch<SetStateAction<ItemForm>>;isPizzaCategory:boolean;isNaanCategory:boolean;hasRequiredVariants:boolean;modifierGroups:ModifierGroup[];combinationGroup?:ModifierGroup;onResetPizza:()=>void;onUpdateVariant:(index:number,updates:Partial<VariantForm>)=>void;onSelectCombinationGroup:(id:string)=>void;onUpdateCombinationPrice:(variant:string,optionId:string,value:string)=>void}) {
   return <>
