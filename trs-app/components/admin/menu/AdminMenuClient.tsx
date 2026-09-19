@@ -16,7 +16,6 @@ import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 
 import {
   emptyForm,
-  type ApiResponse,
   type Category,
   type ItemForm,
   type MenuItem,
@@ -24,10 +23,10 @@ import {
   type VariantForm,
 } from "@/components/admin/menu/admin-menu.types";
 import { createPizzaVariants, isComboCategory as categoryIsCombo, isNaanCategory as categoryIsNaan, isPizzaCategory as categoryIsPizza } from "@/components/admin/menu/admin-menu.utils";
-import { changeMenuCategory, changeVariant, createMenuItemForm, menuItemToForm } from "@/components/admin/menu/admin-menu-editor.utils";
+import { calculateComboPricing, changeCombinationPrice, changeMenuCategory, changeVariant, createMenuItemForm, menuItemToForm, selectCombinationPricingGroup } from "@/components/admin/menu/admin-menu-editor.utils";
 import { buildMenuItemPayload, validateMenuItemForm } from "@/components/admin/menu/admin-menu-save.utils";
 import { applyDiscountToForm, removeDiscountFromForm, validateDiscount } from "@/components/admin/menu/admin-menu-discount.utils";
-import { bulkDiscountMenuItems, bulkUpdateMenuItems, deleteMenuItem, fetchComboCatalogItems, fetchMenuCategories, fetchMenuItem, fetchMenuItems, fetchModifierGroups, patchMenuItem, uploadMenuImage } from "@/components/admin/menu/admin-menu.api";
+import { bulkDiscountMenuItems, bulkUpdateMenuItems, deleteMenuItem, fetchComboCatalogItems, fetchMenuCategories, fetchMenuItem, fetchMenuItems, fetchModifierGroups, patchMenuItem, saveMenuItem, uploadMenuImage } from "@/components/admin/menu/admin-menu.api";
 import { AdminMenuCatalogControls } from "@/components/admin/menu/AdminMenuCatalogControls";
 import { AdminMenuEditorBasics } from "@/components/admin/menu/AdminMenuEditorBasics";
 import { AdminMenuEditorVariants } from "@/components/admin/menu/AdminMenuEditorVariants";
@@ -232,61 +231,11 @@ export function AdminMenuClient({
   );
 
   function selectCombinationGroup(groupId: string) {
-    const group = modifierGroups.find((entry) => entry._id === groupId);
-    const entries = group
-      ? form.variants.flatMap((variant) =>
-          group.options
-            .filter(
-              (option) =>
-                option._id && option.isActive && option.isAvailable !== false,
-            )
-            .map((option) => {
-              const existing = form.combinationPricing.entries.find(
-                (entry) =>
-                  entry.variantLabel === variant.name &&
-                  entry.optionId === option._id,
-              );
-              return (
-                existing ?? {
-                  variantLabel: variant.name,
-                  optionId: option._id as string,
-                  optionName: option.name,
-                  price: "",
-                }
-              );
-            }),
-        )
-      : [];
-    setForm((current) => ({
-      ...current,
-      modifierGroupIds:
-        groupId && !current.modifierGroupIds.includes(groupId)
-          ? [...current.modifierGroupIds, groupId]
-          : current.modifierGroupIds,
-      combinationPricing: {
-        enabled: Boolean(groupId),
-        modifierGroupId: groupId,
-        entries,
-      },
-    }));
+    setForm((current) => selectCombinationPricingGroup(current, groupId, modifierGroups));
   }
 
-  function updateCombinationPrice(
-    variantLabel: string,
-    optionId: string,
-    price: string,
-  ) {
-    setForm((current) => ({
-      ...current,
-      combinationPricing: {
-        ...current.combinationPricing,
-        entries: current.combinationPricing.entries.map((entry) =>
-          entry.variantLabel === variantLabel && entry.optionId === optionId
-            ? { ...entry, price }
-            : entry,
-        ),
-      },
-    }));
+  function updateCombinationPrice(variantLabel: string, optionId: string, price: string) {
+    setForm((current) => changeCombinationPrice(current, variantLabel, optionId, price));
   }
 
   async function saveItem(event: React.FormEvent) {
@@ -297,13 +246,7 @@ export function AdminMenuClient({
     if (validationError) { setFormError(validationError); return; }
     setActing(true);
     try {
-      const response = await fetch(editingId ? `/api/v1/admin/menu/items/${editingId}` : "/api/v1/admin/menu/items", {
-        method: editingId ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildMenuItemPayload(context)),
-      });
-      const payload = (await response.json()) as ApiResponse<MenuItem>;
-      if (!response.ok || !payload.success) throw new Error(payload.message || "Unable to save menu item.");
+      await saveMenuItem(editingId, buildMenuItemPayload(context));
       setEditorOpen(false);
       setNotice(editingId ? "Menu item updated." : "Menu item created.");
       await loadItems();
@@ -373,27 +316,9 @@ export function AdminMenuClient({
     } finally { setActing(false); }
   }
 
-  const comboCalculation = (() => {
-    if (!isComboCategory) return { originalPrice: 0, savings: 0, discount: 0 };
-    const originalPrice = form.comboComponents.reduce((sum, entry) => {
-      const item = comboCatalogItems.find(
-        (candidate) => candidate._id === entry.menuItemId,
-      );
-      if (!item) return sum;
-      const variant = item.variants.find(
-        (candidate) => candidate._id === entry.variantId,
-      );
-      const price = variant?.price ?? item.basePrice;
-      return sum + price * Math.max(0, Number(entry.quantity) || 0);
-    }, 0);
-    const sellingPrice = Number(form.basePrice) || 0;
-    const savings = Math.max(0, originalPrice - sellingPrice);
-    return {
-      originalPrice,
-      savings,
-      discount: originalPrice > 0 ? (savings / originalPrice) * 100 : 0,
-    };
-  })();
+  const comboCalculation = isComboCategory
+    ? calculateComboPricing(form, comboCatalogItems)
+    : { originalPrice: 0, savings: 0, discount: 0 };
 
   return (
     <div className="min-w-0 overflow-x-hidden">
