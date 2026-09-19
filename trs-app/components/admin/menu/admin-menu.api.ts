@@ -65,3 +65,8 @@ export async function uploadMenuImage(file:File){
  const body=new FormData();body.append("file",file);
  return (await parse<{url:string}>(await fetch("/api/v1/admin/uploads/menu",{method:"POST",body}),"Image upload failed.")).data.url;
 }
+
+
+export async function saveMenuItem(itemId:string|null,body:unknown){
+ return parse<MenuItem>(await fetch(itemId?`/api/v1/admin/menu/items/${itemId}`:"/api/v1/admin/menu/items",{method:itemId?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),"Unable to save menu item.");
+}
