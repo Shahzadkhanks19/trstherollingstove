@@ -8,7 +8,7 @@ import {
 } from "react";
 import { AnimatePresence } from "framer-motion";
 
-import { emptyItem, emptyMovement, money, type InventoryItem, type InventoryMovement, type Summary, type ItemForm, type MovementForm } from "@/components/admin/inventory/admin-inventory.types";
+import { emptyItem, emptyMovement, money, type InventoryItem, type InventoryMovement, type Summary, type ItemForm, type MovementForm, type InventoryActionDialog } from "@/components/admin/inventory/admin-inventory.types";
 
 import { fetchInventoryData, saveInventoryItem, archiveInventoryItem, restoreInventoryItem, permanentlyDeleteInventoryItem, saveInventoryMovement } from "@/components/admin/inventory/admin-inventory.api";
 import { ItemDrawer } from "@/components/admin/inventory/ItemDrawer";
