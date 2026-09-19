@@ -2,17 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCircleExclamation,
-  faClockRotateLeft,
-  faDownload,
-  faPrint,
-  faReceipt,
-  faUtensils,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCircleExclamation, faReceipt } from "@fortawesome/free-solid-svg-icons";
 
-import { PageHeader } from "@/components/admin/AdminPrimitives";
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh";
 import type {
   AdminOrder,
@@ -26,6 +17,7 @@ import { OrderDrawer } from "@/components/admin/orders/OrderDrawer";
 import { OrdersSkeleton, StatePanel } from "@/components/admin/orders/AdminOrdersUi";
 import { AdminOrdersControls } from "@/components/admin/orders/AdminOrdersControls";
 import { AdminOrdersList } from "@/components/admin/orders/AdminOrdersList";
+import { AdminOrdersHeader } from "@/components/admin/orders/AdminOrdersHeader";
 export function AdminOrdersClient({
   canManage,
   canManagePayments,
@@ -265,53 +257,7 @@ export function AdminOrdersClient({
 
   return (
     <>
-      <PageHeader
-        eyebrow="Order operations"
-        title="Orders Management"
-        description="Search, filter, review and progress dine-in and takeaway orders through the complete fulfilment workflow."
-        action={
-          <div className="flex flex-wrap gap-2">
-            <ActionButton
-              icon={faDownload}
-              label="CSV"
-              onClick={() => exportRows("csv")}
-            />
-            <ActionButton
-              icon={faDownload}
-              label="Excel"
-              onClick={() => exportRows("xls")}
-            />
-            <ActionButton
-              icon={faPrint}
-              label="PDF"
-              onClick={() => window.print()}
-            />
-          </div>
-        }
-      />
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric
-          label="Total filtered"
-          value={statusCounts.all ?? pagination.total}
-          icon={faReceipt}
-        />
-        <Metric
-          label="Pending"
-          value={statusCounts.placed ?? 0}
-          icon={faClockRotateLeft}
-        />
-        <Metric
-          label="Preparing"
-          value={statusCounts.preparing ?? 0}
-          icon={faUtensils}
-        />
-        <Metric
-          label="Ready"
-          value={statusCounts.ready ?? 0}
-          icon={faCircleExclamation}
-        />
-      </div>
+      <AdminOrdersHeader statusCounts={statusCounts} total={pagination.total} onExport={exportRows} />
 
       <section className="mt-5 overflow-hidden rounded-[24px] border border-[#e8ddd3] bg-[#fffdf9] shadow-[0_10px_32px_rgba(30,35,40,.05)] print:shadow-none">
         <AdminOrdersControls
@@ -392,57 +338,3 @@ export function AdminOrdersClient({
   );
 }
 
-function ActionButton({
-  icon,
-  label,
-  onClick,
-}: {
-  icon: typeof faDownload;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#dacec4] bg-white px-4 text-[10px] font-black uppercase tracking-wider text-[#173044]"
-    >
-      <FontAwesomeIcon icon={icon} />
-      {label}
-    </button>
-  );
-}
-function Metric({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: number;
-  icon: typeof faReceipt;
-}) {
-  return (
-    <div className="rounded-[22px] border border-[#e8ddd3] bg-[#fffdf9] p-5 shadow-[0_10px_32px_rgba(30,35,40,.055)]">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[.17em] text-[#8a7e75]">
-            {label}
-          </p>
-          <p className="mt-3 text-3xl font-black text-[#173044]">{value}</p>
-        </div>
-        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fff0e8] text-[#C8102E]">
-          <FontAwesomeIcon icon={icon} />
-        </span>
-      </div>
-    </div>
-  );
-}
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
