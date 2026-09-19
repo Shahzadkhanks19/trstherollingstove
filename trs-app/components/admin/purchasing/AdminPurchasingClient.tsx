@@ -22,7 +22,7 @@ import { PageHeader } from "@/components/admin/AdminPrimitives";
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
 
 
-import { type ApiResponse, type PickupPerson, type PurchaseOrder, type Supplier, type VendorDraft, purchasingStatuses as statuses, type PurchasingStatus } from "@/components/admin/purchasing/admin-purchasing.types";
+import { type ApiResponse, type InventoryItem, type PickupPerson, type PurchaseOrder, type Supplier, type VendorDraft, purchasingStatuses as statuses, type PurchasingStatus } from "@/components/admin/purchasing/admin-purchasing.types";
 import { fetchPurchasingData, mutatePurchasing } from "@/components/admin/purchasing/admin-purchasing.api";
 import { CreateOrderDrawer } from "@/components/admin/purchasing/CreateOrderDrawer";
 
