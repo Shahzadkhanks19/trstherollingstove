@@ -32,7 +32,7 @@ import {
   publishOrderCreated,
 } from "@/services/realtimeEvents.service";
 import { publishRealtimeEventSafely } from "@/services/realtimePublisher.service";
-import type { AdjustmentsInput, ModifierInput, ResolvedModifier, ResolvedPosLine, KitchenOrderRecord } from "@/services/pos-order.types";
+import type { AdjustmentsInput, ModifierInput, ResolvedPosLine } from "@/services/pos-order.types";
 import { money, wholeRupee, normalizeAdjustments, normalizeMenuLabel, resolveModifiers, validateRequiredGroups } from "@/services/pos-order.utils";
 import { assertPosInventoryAvailable, deductPosInventory } from "@/services/pos-order-inventory.service";
 import { createPosKitchenOutput } from "@/services/pos-order-kitchen.service";
