@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { PosRunningOrderView, PosTableView } from "@/types/pos-operations";
 
-type ApiResponse<T> = { success: boolean; message: string; data: T };
 import {
   PosOperationsModal,
   type OperationDialog,
@@ -14,6 +13,8 @@ import { PosOperationsWorkspace } from "@/components/admin/pos/PosOperationsWork
 import {
   createPosTable,
   fetchPosOperationsData,
+  parseSplitLineQuantities,
+  runPosOperationMutation,
   sendRunningOrderToKitchen,
   settleRunningOrder,
   type CreatePosTableInput,
@@ -21,7 +22,6 @@ import {
 } from "@/components/admin/pos/pos-operations-api";
 import {
   flushPosMutationQueue,
-  posMutation,
   queuedPosMutationCount,
 } from "@/lib/pos/offline-queue";
 export function PosOperationsClient({ canManage }: { canManage: boolean }) {
@@ -100,17 +100,14 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
   ) {
     setMessage("");
     try {
-      const result = await posMutation(path, body);
+      const result = await runPosOperationMutation(path, body);
       if (result.queued) {
         setMessage(
           "Offline: action safely queued and will sync when connection returns.",
         );
         return;
       }
-      const response = result.response;
-      if (!response) throw new Error("No response received.");
-      const json = (await response.json()) as ApiResponse<unknown>;
-      if (!response.ok) throw new Error(json.message);
+
       setMessage(success);
       await load();
     } catch (error) {
@@ -154,21 +151,12 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
 
   async function split(raw: string) {
     if (!selected) return;
-    const lineQuantities: Record<string, number> = {};
-    for (const token of raw.split(",")) {
-      const [indexText, quantityText] = token.trim().split(":");
-      const line = selected.cart.lines[Number(indexText) - 1];
-      const quantity = Number(quantityText);
-      if (line && Number.isInteger(quantity) && quantity > 0)
-        lineQuantities[line.lineId] = quantity;
-    }
-    if (!Object.keys(lineQuantities).length)
-      throw new Error(
-        "Enter at least one valid line and quantity, for example 1:1.",
-      );
     await action(
       `/api/v1/pos/running-orders/${selected.id}/split`,
-      { lineQuantities, targetTableId: null },
+      {
+        lineQuantities: parseSplitLineQuantities(selected, raw),
+        targetTableId: null,
+      },
       "Order split into a new running ticket.",
     );
   }
