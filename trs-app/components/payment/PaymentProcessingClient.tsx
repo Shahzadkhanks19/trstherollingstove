@@ -20,29 +20,15 @@ import {
   PaymentOrderSummary,
   type PaymentStatusData,
 } from "@/components/payment/PaymentOrderSummary";
+import {
+  createPaymentOrder,
+  fetchPaymentStatus,
+  recordPaymentFailure,
+  verifyPayment,
+  type PaymentOrder,
+} from "@/components/payment/payment-api";
 
 const STORAGE_KEY = "trs.pendingPaymentOrderId";
-
-type ApiEnvelope<T> = { success: boolean; message: string; data: T };
-type Stage =
-  | "loading"
-  | "ready"
-  | "opening"
-  | "cancelled"
-  | "failed"
-  | "verifying"
-  | "unknown"
-  | "invalid";
-
-type PaymentOrder = {
-  key: string;
-  keyId?: string;
-  orderId: string;
-  providerOrderId?: string;
-  amount: number;
-  currency: string;
-  orderNumber: string;
-};
 
 type StatusData = PaymentStatusData;
 
@@ -90,23 +76,17 @@ export function PaymentProcessingClient() {
   const statusDataRef = useRef<StatusData | null>(null);
 
   const checkStatus = useCallback(async (orderId: string) => {
-    const response = await fetch(
-      `/api/v1/customer/payments/status?orderId=${encodeURIComponent(orderId)}`,
-      { cache: "no-store" },
-    );
-    const body = (await response.json()) as ApiEnvelope<StatusData>;
-    if (!response.ok)
-      throw new Error(body.message || "Unable to load payment status.");
-    setStatusData(body.data);
-    statusDataRef.current = body.data;
-    if (body.data.order.paymentStatus === "paid") {
+    const data = await fetchPaymentStatus(orderId);
+    setStatusData(data);
+    statusDataRef.current = data;
+    if (data.order.paymentStatus === "paid") {
       sessionStorage.removeItem(STORAGE_KEY);
       window.location.replace(
-        `/order-success?order=${encodeURIComponent(body.data.order.orderNumber)}`,
+        `/order-success?order=${encodeURIComponent(data.order.orderNumber)}`,
       );
-      return body.data;
+      return data;
     }
-    if (["cancelled", "rejected"].includes(body.data.order.status)) {
+    if (["cancelled", "rejected"].includes(data.order.status)) {
       throw new Error("This order can no longer be paid.");
     }
     return body.data;
@@ -117,19 +97,7 @@ export function PaymentProcessingClient() {
     setStage("verifying");
     setMessage("Confirming your payment securely");
     try {
-      const verifyResponse = await fetch("/api/v1/customer/payments/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId,
-          razorpayOrderId: response.razorpay_order_id,
-          razorpayPaymentId: response.razorpay_payment_id,
-          razorpaySignature: response.razorpay_signature,
-        }),
-      });
-      const body = (await verifyResponse.json()) as { message?: string };
-      if (!verifyResponse.ok)
-        throw new Error(body.message || "Payment verification failed.");
+      await verifyPayment(orderId, response);
       sessionStorage.removeItem(STORAGE_KEY);
       const orderNumber = statusDataRef.current?.order.orderNumber;
       window.location.replace(
@@ -161,17 +129,7 @@ export function PaymentProcessingClient() {
       if (!orderId || !razorpayOrderId) return;
 
       try {
-        await fetch("/api/v1/customer/payments/fail", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId,
-            razorpayOrderId,
-            code: response.error?.code,
-            description: response.error?.description,
-            reason: response.error?.reason,
-          }),
-        });
+        await recordPaymentFailure(orderId, razorpayOrderId, response);;
       } catch {
         // The webhook remains the authoritative asynchronous fallback.
       }
@@ -249,15 +207,9 @@ export function PaymentProcessingClient() {
         setMessage("Validating your order");
         await checkStatus(orderId);
         setMessage("Creating a secure payment session");
-        const response = await fetch("/api/v1/customer/payments/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId }),
-        });
-        const body = (await response.json()) as ApiEnvelope<PaymentOrder>;
-        if (!response.ok)
-          throw new Error(body.message || "Unable to create payment session.");
-        paymentOrderRef.current = body.data;
+        const paymentOrder = await createPaymentOrder(orderId);
+
+        paymentOrderRef.current = paymentOrder;
         setMessage("Connecting securely to Razorpay");
         await loadRazorpay();
         setStage("ready");
