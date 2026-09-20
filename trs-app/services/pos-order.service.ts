@@ -2,23 +2,15 @@ import { Types } from "mongoose";
 
 import { AppError } from "@/lib/errors/AppError";
 import { nextOrderNumber } from "@/lib/orders/order-number";
-import { Order } from "@/models/Order";
-import { POSCashMovement } from "@/models/POSCashMovement";
 import { POSShift } from "@/models/POSShift";
+import { finalizePosOrder } from "@/services/pos-order-finalization.service";
 import { User } from "@/models/User";
-import { getOrCreateInvoice } from "@/services/invoice.service";
-import {
-  publishDashboardRefresh,
-  publishOrderCreated,
-} from "@/services/realtimeEvents.service";
-import { publishRealtimeEventSafely } from "@/services/realtimePublisher.service";
 import type { CreatePosOrderInput } from "@/services/pos-order.types";
 import { money } from "@/services/pos-order.utils";
 import { resolvePosOrderPayment } from "@/services/pos-order-payment.service";
 import { createPersistedPosOrder } from "@/services/pos-order-persistence.service";
 import { markPosInvoicePrinted } from "@/services/pos-order-invoice.service";
-import { assertPosInventoryAvailable, deductPosInventory } from "@/services/pos-order-inventory.service";
-import { createPosKitchenOutput } from "@/services/pos-order-kitchen.service";
+import { assertPosInventoryAvailable } from "@/services/pos-order-inventory.service";
 import { validatePosInternalConsumption } from "@/services/pos-order-internal-consumption.service";
 import { resolvePosOrderLines } from "@/services/pos-order-lines.service";
 
@@ -89,69 +81,19 @@ export async function createPosOrder(
     orderNumber,
   });
 
-  try {
-    if (!isInternalOrder && cashPaid > 0) {
-      await POSCashMovement.create({
-        shiftId: shift._id,
-        type: "cash_sale",
-        amount: cashPaid,
-        reason: `Cash sale ${orderNumber}`,
-        referenceType: "order",
-        referenceId: order._id,
-        createdBy: new Types.ObjectId(actorId),
-      });
-      await POSShift.updateOne(
-        { _id: shift._id },
-        { $inc: { expectedCash: cashPaid } },
-      );
-    }
+  const invoice = await finalizePosOrder({
+    input,
+    actorId,
+    shiftId: shift._id,
+    order,
+    orderLines,
+    orderNumber,
+    grandTotal,
+    cashPaid,
+    isInternalOrder,
+  });
 
-    await deductPosInventory(orderLines, order._id, actorId);
-    await createPosKitchenOutput(order, orderLines, actorId);
-    const invoice = await getOrCreateInvoice(String(order._id), actorId);
-
-    publishOrderCreated({
-      orderId: String(order._id),
-      orderNumber,
-      customerId: order.customerId?.toString(),
-      status: order.status,
-      paymentStatus: order.paymentStatus,
-      grandTotal,
-      orderMode: order.orderMode,
-      actorId,
-    });
-    publishRealtimeEventSafely({
-      event: "pos.order_created",
-      entityId: String(order._id),
-      actorId,
-      data: {
-        orderId: String(order._id),
-        orderNumber,
-        grandTotal,
-        paymentMethod: isInternalOrder ? "not_required" : input.paymentMethod,
-        saleType: input.internalConsumption.saleType,
-      },
-      target: {
-        roleKeys: ["super_admin", "admin", "manager", "cashier", "kitchen"],
-      },
-    });
-    publishDashboardRefresh("pos.order_created", actorId);
-
-    return { order, invoice };
-  } catch (error) {
-    await Order.updateOne(
-      { _id: order._id },
-      {
-        $set: {
-          status: "cancelled",
-          cancelledAt: new Date(),
-          cancellationReason: "POS finalization failed after order creation.",
-        },
-      },
-    );
-    throw error;
-  }
+  return { order, invoice };
 }
-
 
 export { markPosInvoicePrinted as markInvoicePrinted };
