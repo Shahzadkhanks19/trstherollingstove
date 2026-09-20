@@ -35,6 +35,11 @@ import {
   reprintPosKot,
   routePosSalePrintJobs,
 } from "@/components/admin/pos/pos-billing-print";
+import {
+  resolvePosBillingPayment,
+  type PosBillingPaymentMethod,
+  type PosBillingTipMethod,
+} from "@/components/admin/pos/pos-billing-payment";
 
 type Props = {
   open: boolean;
@@ -54,7 +59,7 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
   const [registers, setRegisters] = useState<Register[]>([]);
   const [registerId, setRegisterId] = useState("");
   const [openingCash, setOpeningCash] = useState("0");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "upi" | "split">(
+  const [paymentMethod, setPaymentMethod] = useState<PosBillingPaymentMethod>(
     "cash",
   );
   const [splitCash, setSplitCash] = useState("");
@@ -62,7 +67,7 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
   const [waivedAmount, setWaivedAmount] = useState("");
   const [waivedReason, setWaivedReason] = useState("");
   const [tipAmount, setTipAmount] = useState("");
-  const [tipMethod, setTipMethod] = useState<"none" | "cash" | "upi">("none");
+  const [tipMethod, setTipMethod] = useState<PosBillingTipMethod>("none");
   const [orderTakerName, setOrderTakerName] = useState("");
   const [cashReceived, setCashReceived] = useState("");
   const [upiReference, setUpiReference] = useState("");
@@ -127,43 +132,28 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
   async function completeSale() {
     if (!shift) return;
     const isInternalOrder = cart.internalConsumption.saleType !== "customer";
-    const waiver = isInternalOrder ? 0 : Number(waivedAmount || 0);
-    const tip = isInternalOrder ? 0 : Number(tipAmount || 0);
-    const saleDue = Math.max(0, totals.grandTotal - waiver);
-    const onlineTip = tipMethod === "upi" ? tip : 0;
-    const payable = saleDue + onlineTip;
-    const received = paymentMethod === "cash" ? Number(cashReceived) : payable;
-    if (waiver > 0 && waivedReason.trim().length < 3) {
-      setMessage("Enter why the remaining balance is being waived.");
+    const payment = resolvePosBillingPayment({
+      isInternalOrder,
+      grandTotal: totals.grandTotal,
+      paymentMethod,
+      splitCash,
+      splitUpi,
+      waivedAmount,
+      waivedReason,
+      tipAmount,
+      tipMethod,
+      cashReceived,
+      upiConfirmed: upiConfirmOpen,
+    });
+    if (!payment.ok) {
+      if ("requiresUpiConfirmation" in payment) {
+        setUpiConfirmOpen(true);
+      } else {
+        setMessage(payment.message);
+      }
       return;
     }
-    if (tip > 0 && tipMethod === "none") {
-      setMessage("Select how the waiter tip was received.");
-      return;
-    }
-    if (
-      paymentMethod === "split" &&
-      Math.abs(Number(splitCash || 0) + Number(splitUpi || 0) - payable) > 0.01
-    ) {
-      setMessage(
-        "Cash and UPI must exactly equal the restaurant collection amount, including only UPI tips.",
-      );
-      return;
-    }
-    if (paymentMethod === "cash" && received < payable) {
-      setMessage(
-        "Cash received is less than the restaurant collection amount.",
-      );
-      return;
-    }
-    if (
-      (paymentMethod === "upi" ||
-        (paymentMethod === "split" && Number(splitUpi || 0) > 0)) &&
-      !upiConfirmOpen
-    ) {
-      setUpiConfirmOpen(true);
-      return;
-    }
+    const { received } = payment;
 
     setUpiConfirmOpen(false);
     const clientOperationId = crypto.randomUUID();
@@ -510,7 +500,7 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
                         value={tipMethod}
                         onChange={(e) =>
                           setTipMethod(
-                            e.currentTarget.value as "none" | "cash" | "upi",
+                            e.currentTarget.value as PosBillingTipMethod,
                           )
                         }
                         className="mt-1 h-11 w-full rounded-xl border px-3"
