@@ -13,9 +13,9 @@ import type { AdjustmentsInput } from "@/services/pos-order.types";
 
 type PosOrderCustomer = {
   _id: Types.ObjectId;
-  name?: string;
-  phone?: string;
-  email?: string;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
 } | null;
 
 type CreatePersistedPosOrderInput = {
