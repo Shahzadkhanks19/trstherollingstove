@@ -23,6 +23,10 @@ import {
   validateCheckoutCoupon,
 } from "@/components/checkout/checkout-api";
 import { calculateCheckoutPricing } from "@/components/checkout/checkout-pricing";
+import {
+  isCheckoutAcceptingOrders,
+  validateCheckoutSubmission,
+} from "@/components/checkout/checkout-validation";
 
 export function CheckoutPageClient() {
   const router = useRouter();
@@ -85,12 +89,7 @@ export function CheckoutPageClient() {
     total,
     coinsEarned,
   } = calculateCheckoutPricing(cart, couponDiscount, coins);
-  const accepting =
-    settings.orderingEnabled &&
-    settings.acceptingOrders &&
-    settings.storeStatus !== "closed" &&
-    settings.storeStatus !== "not_accepting_orders" &&
-    slots.length > 0;
+  const accepting = isCheckoutAcceptingOrders(settings, slots.length);
 
   const applyCoupon = async () => {
     if (hasNonStackableDiscount) {
@@ -123,31 +122,17 @@ export function CheckoutPageClient() {
 
   const startPayment = async () => {
     setMessage("");
-    if (!accepting) {
-      setMessage(settings.statusMessage || "TRS is not accepting orders now.");
-      return;
-    }
-    if (!selectedSlot) {
-      setMessage("Select a same-day order time.");
-      return;
-    }
-    if (!customer.name.trim()) {
-      setMessage("Enter your full name.");
-      return;
-    }
-    const phone = customer.phone.replace(/\D/g, "").slice(-10);
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      setMessage("Enter a valid 10-digit Indian mobile number.");
-      return;
-    }
-    if (!confirmed) {
-      setMessage(
-        "Confirm that you will collect or consume the order at the selected time.",
-      );
-      return;
-    }
-    if (!items.length) {
-      setMessage("Your cart is empty. Add a real menu item before checkout.");
+    const validationMessage = validateCheckoutSubmission({
+      accepting,
+      statusMessage: settings.statusMessage,
+      selectedSlot,
+      customerName: customer.name,
+      customerPhone: customer.phone,
+      confirmed,
+      itemCount: items.length,
+    });
+    if (validationMessage) {
+      setMessage(validationMessage);
       return;
     }
 
