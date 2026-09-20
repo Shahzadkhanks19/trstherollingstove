@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type PaymentStage } from "@/components/payment/PaymentActions";
 import { PaymentStatusPanel } from "@/components/payment/PaymentStatusPanel";
-import { PaymentActions, type PaymentStage } from "@/components/payment/PaymentActions";
-import { PaymentProgress } from "@/components/payment/PaymentProgress";
 import {
   PaymentOrderSummary,
   type PaymentStatusData,
