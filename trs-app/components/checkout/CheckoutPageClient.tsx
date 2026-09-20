@@ -11,15 +11,17 @@ import {
   type PublicOrderingSettings,
 } from "@/lib/checkout/timeSlots";
 import {
-  money,
   normaliseCart,
   type ApiEnvelope,
   type CartData,
-  type CheckoutOrder,
   type OrderMode,
 } from "@/components/checkout/checkout-utils";
 import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
+import {
+  createCheckoutOrder,
+  validateCheckoutCoupon,
+} from "@/components/checkout/checkout-api";
 
 export function CheckoutPageClient() {
   const router = useRouter();
@@ -123,23 +125,9 @@ export function CheckoutPageClient() {
     }
 
     try {
-      const response = await fetch("/api/v1/customer/rewards/validate-coupon", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-      const body = (await response.json()) as ApiEnvelope<{
-        discountAmount: number;
-        freeItem?: { name: string } | null;
-      }>;
-      if (!response.ok) throw new Error(body.message);
-
-      setCouponDiscount(body.data.discountAmount);
-      setMessage(
-        body.data.freeItem
-          ? `${body.data.freeItem.name} is free with this coupon.`
-          : `${code.toUpperCase()} applied. You saved ${money(body.data.discountAmount)}.`,
-      );
+      const result = await validateCheckoutCoupon(code);
+      setCouponDiscount(result.discountAmount);
+      setMessage(result.message);
     } catch (error) {
       setCouponDiscount(0);
       setMessage(
@@ -180,27 +168,15 @@ export function CheckoutPageClient() {
 
     try {
       setLoading(true);
-      const checkoutResponse = await fetch("/api/v1/customer/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderMode,
-          tableNumber: "",
-          requestedPickupAt: selectedSlot,
-          customerNote: note,
-          paymentMethod: "online",
-          couponCode: hasNonStackableDiscount
-            ? undefined
-            : coupon.trim() || undefined,
-          coinsToRedeem: hasNonStackableDiscount ? 0 : coinDiscount,
-        }),
+      const applicationOrderId = await createCheckoutOrder({
+        orderMode,
+        selectedSlot,
+        note,
+        couponCode: hasNonStackableDiscount
+          ? undefined
+          : coupon.trim() || undefined,
+        coinsToRedeem: hasNonStackableDiscount ? 0 : coinDiscount,
       });
-      const checkoutBody =
-        (await checkoutResponse.json()) as ApiEnvelope<CheckoutOrder>;
-      if (!checkoutResponse.ok) throw new Error(checkoutBody.message);
-
-      const applicationOrderId = checkoutBody.data.id ?? checkoutBody.data._id;
-      if (!applicationOrderId) throw new Error("Order ID was not returned.");
 
       sessionStorage.setItem("trs.pendingPaymentOrderId", applicationOrderId);
       router.push(`/payment?orderId=${encodeURIComponent(applicationOrderId)}`);
