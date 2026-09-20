@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { type PaymentStage } from "@/components/payment/PaymentActions";
 import { PaymentStatusPanel } from "@/components/payment/PaymentStatusPanel";
 import { loadRazorpay } from "@/components/payment/razorpay-loader";
+import { openRazorpayCheckout } from "@/components/payment/razorpay-checkout";
 import {
   PaymentOrderSummary,
   type PaymentStatusData,
@@ -98,52 +99,30 @@ export function PaymentProcessingClient() {
     const currentPaymentOrder = paymentOrderRef.current;
     const currentStatusData = statusDataRef.current;
     if (!currentPaymentOrder || !currentStatusData || busyRef.current) return;
-    if (!window.Razorpay) {
-      setStage("failed");
-      setMessage("Razorpay checkout is unavailable. Try loading it again.");
-      return;
-    }
+
     busyRef.current = true;
     setStage("opening");
     setMessage("Opening the secure payment window");
+
     try {
-      const checkout = new window.Razorpay({
-        key: currentPaymentOrder.key || currentPaymentOrder.keyId || "",
-        amount: currentPaymentOrder.amount,
-        currency: currentPaymentOrder.currency,
-        name: "The Rolling Stove",
-        description: `Payment for ${currentPaymentOrder.orderNumber}`,
-        order_id:
-          currentPaymentOrder.orderId ||
-          currentPaymentOrder.providerOrderId ||
-          "",
-        image: "/images/trs-logo.png",
-        prefill: {
-          name: currentStatusData.order.customerSnapshot.name,
-          email: currentStatusData.order.customerSnapshot.email,
-          contact: currentStatusData.order.customerSnapshot.phone,
+      openRazorpayCheckout({
+        paymentOrder: currentPaymentOrder,
+        statusData: currentStatusData,
+        onDismiss: () => {
+          busyRef.current = false;
+          setStage("cancelled");
+          setMessage("Your order has not been confirmed.");
         },
-        theme: { color: "#E3172F" },
-        modal: {
-          escape: true,
-          backdropclose: false,
-          ondismiss: () => {
-            busyRef.current = false;
-            setStage("cancelled");
-            setMessage("Your order has not been confirmed.");
-          },
+        onSuccess: verify,
+        onFailure: (response) => {
+          busyRef.current = false;
+          void recordFailure(response);
+          setStage("failed");
+          setMessage(
+            response.error?.description || "Your payment could not be completed.",
+          );
         },
-        handler: verify,
       });
-      checkout.on("payment.failed", (response) => {
-        busyRef.current = false;
-        void recordFailure(response);
-        setStage("failed");
-        setMessage(
-          response.error?.description || "Your payment could not be completed.",
-        );
-      });
-      checkout.open();
     } catch (error) {
       busyRef.current = false;
       setStage("failed");
