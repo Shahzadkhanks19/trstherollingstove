@@ -18,29 +18,18 @@ import {
   type Shift,
 } from "@/components/admin/pos/PosCashDrawerLedger";
 
-type ApiErrorDetail = { field?: string; path?: string; message?: string };
-type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-  errors?: ApiErrorDetail[];
-};
+import {
+  closeCashDrawerShift,
+  fetchCashDrawerData,
+  openCashDrawerShift,
+  recordCashDrawerMovement,
+} from "@/components/admin/pos/pos-cash-drawer-api";
 
 const money = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
   maximumFractionDigits: 0,
 });
-
-function apiErrorMessage<T>(response: ApiResponse<T>, fallback: string) {
-  const details = response.errors
-    ?.map(
-      (error) =>
-        `${error.field || error.path ? `${error.field || error.path}: ` : ""}${error.message || "Invalid value."}`,
-    )
-    .filter(Boolean);
-  return details?.length ? details.join(" · ") : response.message || fallback;
-}
 
 export function PosCashDrawerControl() {
   const [open, setOpen] = useState(false);
@@ -62,52 +51,11 @@ export function PosCashDrawerControl() {
   const [message, setMessage] = useState("");
 
   const loadDrawer = useCallback(async () => {
-    const [shiftResponse, registersResponse, historyResponse] =
-      await Promise.all([
-        fetch("/api/v1/pos/shifts/current?mine=true", {
-          cache: "no-store",
-          credentials: "include",
-        }),
-        fetch("/api/v1/admin/pos/registers", {
-          cache: "no-store",
-          credentials: "include",
-        }),
-        fetch("/api/v1/pos/shifts/history", {
-          cache: "no-store",
-          credentials: "include",
-        }),
-      ]);
-    const shiftJson = (await shiftResponse.json()) as ApiResponse<Shift | null>;
-    const registersJson = (await registersResponse.json()) as ApiResponse<
-      Register[]
-    >;
-    const historyJson = (await historyResponse.json()) as ApiResponse<Shift[]>;
-    if (!shiftResponse.ok)
-      throw new Error(
-        apiErrorMessage(shiftJson, "Unable to load the current cash drawer."),
-      );
-    if (!registersResponse.ok)
-      throw new Error(
-        apiErrorMessage(registersJson, "Unable to load POS registers."),
-      );
-    if (!historyResponse.ok)
-      throw new Error(
-        apiErrorMessage(historyJson, "Unable to load today's cash activity."),
-      );
-
-    const activeRegisters = registersJson.data.filter(
-      (register) => register.isActive,
-    );
-    const history = historyJson.data ?? [];
-    const activeShift = shiftJson.data
-      ? (history.find((item) => item._id === shiftJson.data?._id) ??
-        shiftJson.data)
-      : null;
-
-    setShift(activeShift);
-    setTodayShifts(history);
-    setRegisters(activeRegisters);
-    setRegisterId((current) => current || activeRegisters[0]?._id || "");
+    const data = await fetchCashDrawerData();
+    setShift(data.shift);
+    setTodayShifts(data.shifts);
+    setRegisters(data.registers);
+    setRegisterId((current) => current || data.registers[0]?._id || "");
   }, []);
 
   const closedToday = useMemo(
@@ -170,15 +118,7 @@ export function PosCashDrawerControl() {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch("/api/v1/pos/shifts/open", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ registerId, openingCash: amount }),
-      });
-      const json = (await response.json()) as ApiResponse<Shift>;
-      if (!response.ok)
-        throw new Error(apiErrorMessage(json, "Unable to open the POS shift."));
+      await openCashDrawerShift(registerId, amount);
       await loadDrawer();
       setMessage(`Shift opened with ${money.format(amount)}.`);
     } catch (error) {
@@ -206,26 +146,12 @@ export function PosCashDrawerControl() {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch(
-        `/api/v1/pos/shifts/${shift._id}/cash-movements`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            type: "cash_in",
-            amount,
-            reason: cashInReason.trim(),
-          }),
-        },
+      await recordCashDrawerMovement(
+        shift._id,
+        "cash_in",
+        amount,
+        cashInReason.trim(),
       );
-      const json = (await response.json()) as ApiResponse<{
-        expectedCash: number;
-      }>;
-      if (!response.ok)
-        throw new Error(
-          apiErrorMessage(json, "Unable to add cash to the drawer."),
-        );
       setCashToAdd("");
       setMessage(`${money.format(amount)} added to today's drawer.`);
       await loadDrawer();
@@ -259,26 +185,12 @@ export function PosCashDrawerControl() {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch(
-        `/api/v1/pos/shifts/${shift._id}/cash-movements`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            type: "cash_out",
-            amount,
-            reason: cashOutReason.trim(),
-          }),
-        },
+      await recordCashDrawerMovement(
+        shift._id,
+        "cash_out",
+        amount,
+        cashOutReason.trim(),
       );
-      const json = (await response.json()) as ApiResponse<{
-        expectedCash: number;
-      }>;
-      if (!response.ok)
-        throw new Error(
-          apiErrorMessage(json, "Unable to remove cash from the drawer."),
-        );
       setCashToRemove("");
       setCashOutReason("");
       setMessage(`${money.format(amount)} removed from today's drawer.`);
@@ -305,21 +217,11 @@ export function PosCashDrawerControl() {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch(`/api/v1/pos/shifts/${shift._id}/close`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          countedCash: counted,
-          closingNote: closingNote.trim(),
-          closeApprovalNote: closeApprovalNote.trim(),
-        }),
+      await closeCashDrawerShift(shift._id, {
+        countedCash: counted,
+        closingNote: closingNote.trim(),
+        closeApprovalNote: closeApprovalNote.trim(),
       });
-      const json = (await response.json()) as ApiResponse<Shift>;
-      if (!response.ok)
-        throw new Error(
-          apiErrorMessage(json, "Unable to close the register shift."),
-        );
       const difference = counted - Math.round(shift.expectedCash ?? 0);
       setCountedCash("");
       setClosingNote("");
