@@ -22,6 +22,7 @@ import {
   createCheckoutOrder,
   validateCheckoutCoupon,
 } from "@/components/checkout/checkout-api";
+import { calculateCheckoutPricing } from "@/components/checkout/checkout-pricing";
 
 export function CheckoutPageClient() {
   const router = useRouter();
@@ -75,31 +76,15 @@ export function CheckoutPageClient() {
 
   const slots = useMemo(() => generateSameDayOrderSlots(settings), [settings]);
   const items = useMemo(() => normaliseCart(cart), [cart]);
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.unitPrice * item.quantity,
-    0,
-  );
-  const hasNonStackableDiscount = items.some(
-    (item) => item.isCombo || item.isDiscountedItem,
-  );
-  const tax = cart?.taxTotal ?? 0;
-  const packaging = 0;
-  const applicableCouponDiscount = hasNonStackableDiscount ? 0 : couponDiscount;
-  const requestedCoins = hasNonStackableDiscount ? 0 : coins;
-  const coinDiscount = Math.min(
-    requestedCoins,
-    Math.floor(subtotal * 0.5),
-    150,
-  );
-  const total = Math.max(
-    subtotal + tax + packaging - applicableCouponDiscount - coinDiscount,
-    0,
-  );
-  const loyaltyEligibleAmount = Math.max(
-    0,
-    subtotal - applicableCouponDiscount,
-  );
-  const coinsEarned = Math.floor(loyaltyEligibleAmount / 100) * 5;
+  const {
+    subtotal,
+    hasNonStackableDiscount,
+    tax,
+    packaging,
+    coinDiscount,
+    total,
+    coinsEarned,
+  } = calculateCheckoutPricing(cart, couponDiscount, coins);
   const accepting =
     settings.orderingEnabled &&
     settings.acceptingOrders &&
