@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { Dispatch, FormEvent, SetStateAction } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFloppyDisk, faXmark } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -16,7 +16,7 @@ type Props = {
   form: ScheduleForm;
   reports: ReportOption[];
   saving: boolean;
-  onFormChange: (form: ScheduleForm) => void;
+  onFormChange: Dispatch<SetStateAction<ScheduleForm>>;
   onSubmit: (event: FormEvent) => void;
   onClose: () => void;
 };
