@@ -36,6 +36,7 @@ import {
   type ReportFormat,
   type ReportOption,
   type Schedule,
+  type ScheduleDetail,
   type ScheduleForm,
 } from "@/components/admin/report-builder/scheduled-reports.types";
 import {
