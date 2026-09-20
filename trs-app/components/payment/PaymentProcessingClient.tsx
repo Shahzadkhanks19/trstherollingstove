@@ -30,6 +30,16 @@ import {
 
 const STORAGE_KEY = "trs.pendingPaymentOrderId";
 
+type Stage =
+  | "loading"
+  | "ready"
+  | "opening"
+  | "cancelled"
+  | "failed"
+  | "verifying"
+  | "unknown"
+  | "invalid";
+
 type StatusData = PaymentStatusData;
 
 function loadRazorpay(): Promise<void> {
@@ -89,7 +99,7 @@ export function PaymentProcessingClient() {
     if (["cancelled", "rejected"].includes(data.order.status)) {
       throw new Error("This order can no longer be paid.");
     }
-    return body.data;
+    return data;
   }, []);
 
   const verify = useCallback(async (response: RazorpaySuccessResponse) => {
