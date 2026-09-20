@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCashRegister,
@@ -11,35 +10,14 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
-import { calculatePosCartTotals } from "@/lib/pos/cart";
-import { posCartActions } from "@/lib/pos/cart-store";
 import type { PosCartState } from "@/types/pos";
+import { usePosBilling } from "@/components/admin/pos/use-pos-billing";
+import type { PosBillingTipMethod } from "@/components/admin/pos/pos-billing-payment";
 import { CustomActionModal } from "@/components/admin/CustomActionModal";
 import {
-  DEFAULT_POS_PRINT_SETTINGS,
-  readPosPrintSettings,
-  type PosPrintSettings,
-} from "@/lib/pos/print-settings";
-import { queuePosSale } from "@/lib/pos/sale-offline-queue";
-import {
-  buildPosSalePayload,
-  createPosSale,
-  fetchPosBillingSetup,
-  openPosBillingShift,
-  type BillingRegister as Register,
-  type BillingShift as Shift,
-} from "@/components/admin/pos/pos-billing-api";
-import {
-  openPosSalePrintWindow,
   reprintPosInvoice,
   reprintPosKot,
-  routePosSalePrintJobs,
 } from "@/components/admin/pos/pos-billing-print";
-import {
-  resolvePosBillingPayment,
-  type PosBillingPaymentMethod,
-  type PosBillingTipMethod,
-} from "@/components/admin/pos/pos-billing-payment";
 
 type Props = {
   open: boolean;
@@ -48,61 +26,51 @@ type Props = {
   onCompleted: (message: string) => void;
 };
 
-const money = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
 export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
-  const totals = useMemo(() => calculatePosCartTotals(cart), [cart]);
-  const [shift, setShift] = useState<Shift | null>(null);
-  const [registers, setRegisters] = useState<Register[]>([]);
-  const [registerId, setRegisterId] = useState("");
-  const [openingCash, setOpeningCash] = useState("0");
-  const [paymentMethod, setPaymentMethod] = useState<PosBillingPaymentMethod>(
-    "cash",
-  );
-  const [splitCash, setSplitCash] = useState("");
-  const [splitUpi, setSplitUpi] = useState("");
-  const [waivedAmount, setWaivedAmount] = useState("");
-  const [waivedReason, setWaivedReason] = useState("");
-  const [tipAmount, setTipAmount] = useState("");
-  const [tipMethod, setTipMethod] = useState<PosBillingTipMethod>("none");
-  const [orderTakerName, setOrderTakerName] = useState("");
-  const [cashReceived, setCashReceived] = useState("");
-  const [upiReference, setUpiReference] = useState("");
-  const [tableNumber, setTableNumber] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [lastInvoiceId, setLastInvoiceId] = useState("");
-  const [upiConfirmOpen, setUpiConfirmOpen] = useState(false);
-  const [printSettings, setPrintSettings] = useState<PosPrintSettings>(
-    DEFAULT_POS_PRINT_SETTINGS,
-  );
+  const billing = usePosBilling({ open, cart, onClose, onCompleted });
+  const {
+    totals,
+    shift,
+    registers,
+    registerId,
+    setRegisterId,
+    openingCash,
+    setOpeningCash,
+    paymentMethod,
+    setPaymentMethod,
+    splitCash,
+    setSplitCash,
+    splitUpi,
+    setSplitUpi,
+    waivedAmount,
+    setWaivedAmount,
+    waivedReason,
+    setWaivedReason,
+    tipAmount,
+    setTipAmount,
+    tipMethod,
+    setTipMethod,
+    orderTakerName,
+    setOrderTakerName,
+    cashReceived,
+    setCashReceived,
+    upiReference,
+    setUpiReference,
+    tableNumber,
+    setTableNumber,
+    loading,
+    message,
+    lastInvoiceId,
+    upiConfirmOpen,
+    setUpiConfirmOpen,
+    printSettings,
+    openShift,
+    completeSale,
+  } = billing;
 
-  useEffect(() => {
-    if (!open) return;
-    const controller = new AbortController();
-    const timer = window.setTimeout(async () => {
-      setPrintSettings(readPosPrintSettings());
-      try {
-        const data = await fetchPosBillingSetup(controller.signal);
-        setShift(data.shift);
-        setRegisters(data.registers);
-        if (!registerId && data.registers[0]?._id) {
-          setRegisterId(data.registers[0]._id);
-        }
-        setCashReceived(String(totals.grandTotal));
-      } catch (error) {
-        if ((error as Error).name !== "AbortError")
-          setMessage(
-            error instanceof Error
-              ? error.message
-              : "Unable to load billing details.",
-          );
-      }
-    }, 0);
-    return () => {
+  if (!open) return null;
+
+  return () => {
       controller.abort();
       window.clearTimeout(timer);
     };
