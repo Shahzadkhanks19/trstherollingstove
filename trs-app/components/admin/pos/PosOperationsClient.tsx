@@ -10,14 +10,18 @@ import {
 } from "@/components/admin/pos/PosOperationsModal";
 import { PosOperationsWorkspace } from "@/components/admin/pos/PosOperationsWorkspace";
 import {
+  createPosTable,
+  fetchPosOperationsData,
+  sendRunningOrderToKitchen,
+  settleRunningOrder,
+  type CreatePosTableInput,
+  type PosSettlementInput,
+} from "@/components/admin/pos/pos-operations-api";
+import {
   flushPosMutationQueue,
   posMutation,
   queuedPosMutationCount,
 } from "@/lib/pos/offline-queue";
-import { readPosPrintSettings } from "@/lib/pos/print-settings";
-import { buildInvoicePrintUrl } from "@/lib/pos/print-links";
-
-type ApiResponse<T> = { success: boolean; message: string; data: T };
 export function PosOperationsClient({ canManage }: { canManage: boolean }) {
   const router = useRouter();
   const [tables, setTables] = useState<PosTableView[]>([]);
@@ -34,21 +38,10 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [tableResponse, orderResponse] = await Promise.all([
-        fetch("/api/v1/pos/tables", { cache: "no-store" }),
-        fetch("/api/v1/pos/running-orders", { cache: "no-store" }),
-      ]);
-      const tableJson = (await tableResponse.json()) as ApiResponse<
-        PosTableView[]
-      >;
-      const orderJson = (await orderResponse.json()) as ApiResponse<
-        PosRunningOrderView[]
-      >;
-      if (!tableResponse.ok) throw new Error(tableJson.message);
-      if (!orderResponse.ok) throw new Error(orderJson.message);
-      setTables(tableJson.data);
-      setOrders(orderJson.data);
-      setSelectedId((currentId) => currentId || orderJson.data[0]?.id || "");
+      const data = await fetchPosOperationsData();
+      setTables(data.tables);
+      setOrders(data.orders);
+      setSelectedId((currentId) => currentId || data.orders[0]?.id || "");
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -125,41 +118,9 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
 
   async function sendToKitchen() {
     if (!selected) return;
-    const printSettings = readPosPrintSettings();
     const printWindow = window.open("", "_blank");
     try {
-      const response = await fetch(
-        `/api/v1/pos/running-orders/${selected.id}`,
-        {
-          method: "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            cart: selected.cart,
-            guestCount: selected.guestCount,
-            sendToKitchen: true,
-          }),
-        },
-      );
-      const json = (await response.json()) as ApiResponse<{
-        kotRevision: { revision: number } | null;
-      }>;
-      if (!response.ok) throw new Error(json.message);
-      const revision =
-        json.data.kotRevision?.revision ?? selected.kitchenRevision;
-      const query = new URLSearchParams({
-        paper: printSettings.kotPaper,
-        copies: String(printSettings.kotCopies),
-        customer: String(printSettings.showCustomerOnKot),
-        prices: String(printSettings.showPricesOnKot),
-      });
-      if (revision > 0) query.set("revision", String(revision));
-      if (printWindow)
-        printWindow.location.href = `/api/v1/pos/running-orders/${selected.id}/kot?${query.toString()}`;
-      setMessage(
-        json.data.kotRevision
-          ? `Revision KOT #${revision} printed.`
-          : `Latest KOT #${revision} reprinted. No new kitchen changes detected.`,
-      );
+      setMessage(await sendRunningOrderToKitchen(selected, printWindow));
       await load();
     } catch (error) {
       printWindow?.close();
@@ -255,20 +216,7 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
     setSelectedId("");
   }
 
-  async function settle(input: {
-    paymentMethod: "cash" | "upi" | "split";
-    paymentBreakdown: Array<{
-      method: "cash" | "upi";
-      amount: number;
-      reference: string;
-    }>;
-    amountTendered: number;
-    upiReference: string;
-    tipAmount: number;
-    tipMethod: "none" | "cash" | "upi";
-    tipCollection: "none" | "waiter_direct" | "restaurant";
-    orderTakerName: string;
-  }) {
+  async function settle(input: PosSettlementInput) {
     if (!selected) return;
 
     // Open the print tab synchronously from the user's click so browsers do not
@@ -277,32 +225,7 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
     setMessage("Settling order...");
 
     try {
-      const response = await fetch(
-        `/api/v1/pos/running-orders/${selected.id}/settle`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(input),
-        },
-      );
-      const json = (await response.json()) as ApiResponse<{
-        invoice: { _id: string };
-        order: { orderNumber: string };
-      }>;
-      if (!response.ok) throw new Error(json.message);
-
-      if (printWindow) {
-        printWindow.opener = null;
-        printWindow.location.href = buildInvoicePrintUrl(json.data.invoice._id);
-        setMessage(
-          `${json.data.order.orderNumber} settled. Invoice opened for printing.`,
-        );
-      } else {
-        setMessage(
-          `${json.data.order.orderNumber} settled. Your browser blocked the invoice print tab; use Bill History to print it.`,
-        );
-      }
-
+      setMessage(await settleRunningOrder(selected.id, input, printWindow));
       setSelectedId("");
       await load();
     } catch (error) {
@@ -311,20 +234,9 @@ export function PosOperationsClient({ canManage }: { canManage: boolean }) {
     }
   }
 
-  async function createTable(input: {
-    name: string;
-    code: string;
-    section: string;
-    capacity: number;
-  }) {
+  async function createTable(input: CreatePosTableInput) {
     if (!canManage) return;
-    const response = await fetch("/api/v1/pos/tables", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...input, sortOrder: tables.length }),
-    });
-    const json = (await response.json()) as ApiResponse<unknown>;
-    if (!response.ok) throw new Error(json.message);
+    await createPosTable(input, tables.length);
     setMessage("Table created.");
     await load();
   }
