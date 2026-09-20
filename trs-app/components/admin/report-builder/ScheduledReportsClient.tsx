@@ -9,12 +9,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRotateRight,
-  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  PageHeader,
-  SectionCard,
-} from "@/components/admin/AdminPrimitives";
+import { PageHeader } from "@/components/admin/AdminPrimitives";
 
 import {
   initialScheduleForm as initialForm,
@@ -31,15 +27,12 @@ import {
   mutateScheduledReport,
 } from "@/components/admin/report-builder/scheduled-reports-api";
 import {
-  ScheduleFields,
-  scheduledReportInput as input,
-} from "@/components/admin/report-builder/ScheduleFields";
-import {
   ScheduledReportsList,
   type ScheduleAction,
 } from "@/components/admin/report-builder/ScheduledReportsList";
 import { ScheduledReportHistoryDrawer } from "@/components/admin/report-builder/ScheduledReportHistoryDrawer";
 import { ScheduledReportEditDialog } from "@/components/admin/report-builder/ScheduledReportEditDialog";
+import { ScheduledReportCreateForm } from "@/components/admin/report-builder/ScheduledReportCreateForm";
 
 export function ScheduledReportsClient() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -197,39 +190,13 @@ export function ScheduledReportsClient() {
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[.72fr_1.28fr]">
-        <SectionCard
-          title="Create schedule"
-          description="All times run in the selected IANA timezone."
-        >
-          <form className="grid gap-3" onSubmit={create}>
-            <label className="text-xs font-black">
-              Saved report
-              <select
-                required
-                value={form.reportId}
-                onChange={(event) =>
-                  setForm({ ...form, reportId: event.target.value })
-                }
-                className={`${input} mt-2`}
-              >
-                <option value="">Select report</option>
-                {reports.map((report) => (
-                  <option key={report._id} value={report._id}>
-                    {report.name} · {report.dataset}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <ScheduleFields form={form} setForm={setForm} />
-            <button
-              disabled={saving || !reports.length}
-              className="h-11 rounded-xl bg-[#C8102E] px-5 text-xs font-black text-white disabled:opacity-50"
-            >
-              <FontAwesomeIcon icon={faPlus} className="mr-2" />
-              Create schedule
-            </button>
-          </form>
-        </SectionCard>
+        <ScheduledReportCreateForm
+          form={form}
+          reports={reports}
+          saving={saving}
+          onFormChange={setForm}
+          onSubmit={create}
+        />
 
         <ScheduledReportsList
           schedules={schedules}
