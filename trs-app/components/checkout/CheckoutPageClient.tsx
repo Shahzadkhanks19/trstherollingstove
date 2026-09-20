@@ -6,7 +6,6 @@ import {
   faBagShopping,
   faCheck,
   faCircleExclamation,
-  faClock,
   faCreditCard,
   faEnvelope,
   faLock,
