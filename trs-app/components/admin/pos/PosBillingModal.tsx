@@ -21,16 +21,14 @@ import {
   type PosPrintSettings,
 } from "@/lib/pos/print-settings";
 import { queuePosSale } from "@/lib/pos/sale-offline-queue";
-
-type ApiErrorDetail = { field?: string; path?: string; message?: string };
-type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-  errors?: ApiErrorDetail[];
-};
-type Register = { _id: string; name: string; code: string; isActive: boolean };
-type Shift = { _id: string; expectedCash: number; registerId: Register };
+import {
+  buildPosSalePayload,
+  createPosSale,
+  fetchPosBillingSetup,
+  openPosBillingShift,
+  type BillingRegister as Register,
+  type BillingShift as Shift,
+} from "@/components/admin/pos/pos-billing-api";
 
 type Props = {
   open: boolean;
@@ -44,26 +42,6 @@ const money = new Intl.NumberFormat("en-IN", {
   currency: "INR",
   maximumFractionDigits: 0,
 });
-const mongoObjectIdPattern = /^[a-f\d]{24}$/i;
-
-function realObjectIdOrNull(value: string | null | undefined): string | null {
-  return value && mongoObjectIdPattern.test(value) ? value : null;
-}
-
-function apiErrorMessage<T>(
-  response: ApiResponse<T>,
-  fallback: string,
-): string {
-  const details = response.errors
-    ?.map((error) => {
-      const field = error.field || error.path;
-      return `${field ? `${field}: ` : ""}${error.message || "Invalid value."}`;
-    })
-    .filter(Boolean);
-
-  return details?.length ? details.join(" · ") : response.message || fallback;
-}
-
 export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
   const totals = useMemo(() => calculatePosCartTotals(cart), [cart]);
   const [shift, setShift] = useState<Shift | null>(null);
@@ -97,27 +75,12 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
     const timer = window.setTimeout(async () => {
       setPrintSettings(readPosPrintSettings());
       try {
-        const [shiftResponse, registerResponse] = await Promise.all([
-          fetch("/api/v1/pos/shifts/current?mine=true", {
-            cache: "no-store",
-            signal: controller.signal,
-          }),
-          fetch("/api/v1/admin/pos/registers", {
-            cache: "no-store",
-            signal: controller.signal,
-          }),
-        ]);
-        const shiftJson =
-          (await shiftResponse.json()) as ApiResponse<Shift | null>;
-        const registerJson = (await registerResponse.json()) as ApiResponse<
-          Register[]
-        >;
-        if (!shiftResponse.ok) throw new Error(shiftJson.message);
-        if (!registerResponse.ok) throw new Error(registerJson.message);
-        setShift(shiftJson.data);
-        setRegisters(registerJson.data.filter((register) => register.isActive));
-        if (!registerId && registerJson.data[0]?._id)
-          setRegisterId(registerJson.data[0]._id);
+        const data = await fetchPosBillingSetup(controller.signal);
+        setShift(data.shift);
+        setRegisters(data.registers);
+        if (!registerId && data.registers[0]?._id) {
+          setRegisterId(data.registers[0]._id);
+        }
         setCashReceived(String(totals.grandTotal));
       } catch (error) {
         if ((error as Error).name !== "AbortError")
@@ -140,18 +103,11 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch("/api/v1/pos/shifts/open", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          registerId,
-          openingCash: Number(openingCash || 0),
-        }),
-      });
-      const json = (await response.json()) as ApiResponse<Shift>;
-      if (!response.ok)
-        throw new Error(apiErrorMessage(json, "Unable to open shift."));
-      setShift(json.data);
+      const openedShift = await openPosBillingShift(
+        registerId,
+        Number(openingCash || 0),
+      );
+      setShift(openedShift);
       setMessage("Register shift opened.");
     } catch (error) {
       setMessage(
@@ -205,77 +161,22 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
 
     setUpiConfirmOpen(false);
     const clientOperationId = crypto.randomUUID();
-    const salePayload = {
-      clientOperationId,
+    const salePayload = buildPosSalePayload({
+      cart,
       shiftId: shift._id,
-      orderMode: cart.orderType,
-      internalConsumption: cart.internalConsumption,
-      tableNumber: tableNumber.trim(),
-      customerId: cart.customer.isWalkIn ? null : cart.customer.id,
-      customerName: cart.customer.name,
-      customerPhone: cart.customer.phone,
-      customerEmail: cart.customer.email,
-      customerNote: cart.orderNote,
-      paymentMethod: isInternalOrder ? "cash" : paymentMethod,
-      upiReference: paymentMethod === "upi" ? upiReference : "",
-      paymentBreakdown:
-        paymentMethod === "split"
-          ? [
-              ...(Number(splitCash || 0) > 0
-                ? [{ method: "cash", amount: Number(splitCash), reference: "" }]
-                : []),
-              ...(Number(splitUpi || 0) > 0
-                ? [
-                    {
-                      method: "upi",
-                      amount: Number(splitUpi),
-                      reference: upiReference,
-                    },
-                  ]
-                : []),
-            ]
-          : [],
-      waivedAmount: waiver,
+      paymentMethod,
+      splitCash,
+      splitUpi,
+      waivedAmount,
       waivedReason,
-      tipAmount: tip,
+      tipAmount,
       tipMethod,
-      tipCollection:
-        tip > 0
-          ? tipMethod === "upi"
-            ? "restaurant"
-            : "waiter_direct"
-          : "none",
       orderTakerName,
-      amountTendered: received,
-      adjustments: isInternalOrder
-        ? {
-            discountType: "none",
-            discountValue: 0,
-            discountReason: "",
-            packingCharge: 0,
-            serviceCharge: 0,
-            additionalCharge: 0,
-            additionalChargeLabel: "Additional charge",
-            taxRate: 0,
-            taxMode: "exclusive",
-          }
-        : cart.adjustments,
-      items: cart.lines.map((line) => ({
-        sourceType: line.source,
-        itemId: line.itemId,
-        variantId: realObjectIdOrNull(line.variantId),
-        quantity: line.quantity,
-        unitPrice: line.unitPrice,
-        specialInstructions: line.note,
-        modifiers: line.modifiers.map((modifier) => ({
-          groupId: modifier.groupId,
-          groupName: modifier.groupName,
-          optionId: modifier.optionId,
-          optionName: modifier.optionName,
-          quantity: modifier.quantity,
-        })),
-      })),
-    };
+      cashReceived: String(received),
+      upiReference,
+      tableNumber,
+      clientOperationId,
+    });
     const printWindow =
       printSettings.autoPrintKot || printSettings.autoPrintInvoice
         ? window.open("about:blank", "_blank")
@@ -283,18 +184,8 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch("/api/v1/pos/orders", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(salePayload),
-      });
-      const json = (await response.json()) as ApiResponse<{
-        order: { orderNumber: string; changeDue: number };
-        invoice: { _id: string };
-      }>;
-      if (!response.ok)
-        throw new Error(apiErrorMessage(json, "Unable to complete sale."));
-      setLastInvoiceId(json.data.invoice._id);
+      const sale = await createPosSale(salePayload);
+      setLastInvoiceId(sale.invoice._id);
       const kotParams = new URLSearchParams({
         paper: printSettings.kotPaper,
         copies: String(printSettings.kotCopies),
@@ -309,7 +200,7 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
       });
       if (printWindow) {
         printWindow.opener = null;
-        const invoicePrintUrl = `/api/v1/pos/bills/${json.data.invoice._id}/print?${invoiceParams.toString()}`;
+        const invoicePrintUrl = `/api/v1/pos/bills/${sale.invoice._id}/print?${invoiceParams.toString()}`;
 
         if (printSettings.autoPrintKot && printSettings.autoPrintInvoice) {
           kotParams.set("nextInvoice", "true");
@@ -320,16 +211,16 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
             String(printSettings.showTaxBreakup),
           );
           kotParams.set("invoiceQr", String(printSettings.showInvoiceQr));
-          printWindow.location.href = `/api/v1/pos/bills/${json.data.invoice._id}/kot?${kotParams.toString()}`;
+          printWindow.location.href = `/api/v1/pos/bills/${sale.invoice._id}/kot?${kotParams.toString()}`;
         } else if (printSettings.autoPrintKot) {
-          printWindow.location.href = `/api/v1/pos/bills/${json.data.invoice._id}/kot?${kotParams.toString()}`;
+          printWindow.location.href = `/api/v1/pos/bills/${sale.invoice._id}/kot?${kotParams.toString()}`;
         } else {
           printWindow.location.href = invoicePrintUrl;
         }
       }
       posCartActions.clear();
       onCompleted(
-        `${json.data.order.orderNumber} completed${paymentMethod === "cash" ? ` · Change ${money.format(json.data.order.changeDue)}` : ""}.`,
+        `${sale.order.orderNumber} completed${paymentMethod === "cash" ? ` · Change ${money.format(sale.order.changeDue)}` : ""}.`,
       );
       setMessage(
         "Sale completed. Configured print jobs were opened in sequence.",
