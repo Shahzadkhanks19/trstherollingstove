@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useState,
   type FormEvent,
 } from "react";
@@ -37,9 +36,13 @@ import {
   type ReportFormat,
   type ReportOption,
   type Schedule,
-  type ScheduleDetail,
   type ScheduleForm,
 } from "@/components/admin/report-builder/scheduled-reports.types";
+import {
+  fetchScheduledReportDetail,
+  fetchScheduledReports,
+  mutateScheduledReport,
+} from "@/components/admin/report-builder/scheduled-reports-api";
 
 const input =
   "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold outline-none focus:border-[#C8102E]";
@@ -253,21 +256,13 @@ export function ScheduledReportsClient() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  const endpoint = useMemo(
-    () =>
-      `/api/v1/admin/report-builder/schedules?includeArchived=${includeArchived}`,
-    [includeArchived],
-  );
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(endpoint, { cache: "no-store" });
-      const payload = await response.json();
-      if (!response.ok)
-        throw new Error(payload.message || "Unable to load scheduled reports.");
-      setSchedules(payload.data.schedules);
-      setReports(payload.data.reports);
+      const data = await fetchScheduledReports(includeArchived);
+      setSchedules(data.schedules);
+      setReports(data.reports);
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -277,7 +272,7 @@ export function ScheduledReportsClient() {
     } finally {
       setLoading(false);
     }
-  }, [endpoint]);
+  }, [includeArchived]);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -290,14 +285,7 @@ export function ScheduledReportsClient() {
     setDetailLoading(true);
     setError("");
     try {
-      const response = await fetch(
-        `/api/v1/admin/report-builder/schedules/${id}`,
-        { cache: "no-store" },
-      );
-      const payload = await response.json();
-      if (!response.ok)
-        throw new Error(payload.message || "Unable to load schedule history.");
-      setDetail(payload.data as ScheduleDetail);
+      setDetail(await fetchScheduledReportDetail(id));
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -314,10 +302,7 @@ export function ScheduledReportsClient() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(url, options);
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.message || "Request failed.");
-      setNotice(payload.message || "Request completed.");
+      setNotice(await mutateScheduledReport(url, options));
       await load();
       if (detailId) await loadDetail(detailId);
       return true;
