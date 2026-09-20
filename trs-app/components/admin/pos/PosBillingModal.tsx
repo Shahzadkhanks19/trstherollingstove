@@ -29,6 +29,12 @@ import {
   type BillingRegister as Register,
   type BillingShift as Shift,
 } from "@/components/admin/pos/pos-billing-api";
+import {
+  openPosSalePrintWindow,
+  reprintPosInvoice,
+  reprintPosKot,
+  routePosSalePrintJobs,
+} from "@/components/admin/pos/pos-billing-print";
 
 type Props = {
   open: boolean;
@@ -177,47 +183,13 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
       tableNumber,
       clientOperationId,
     });
-    const printWindow =
-      printSettings.autoPrintKot || printSettings.autoPrintInvoice
-        ? window.open("about:blank", "_blank")
-        : null;
+    const printWindow = openPosSalePrintWindow(printSettings);
     setLoading(true);
     setMessage("");
     try {
       const sale = await createPosSale(salePayload);
       setLastInvoiceId(sale.invoice._id);
-      const kotParams = new URLSearchParams({
-        paper: printSettings.kotPaper,
-        copies: String(printSettings.kotCopies),
-        customer: String(printSettings.showCustomerOnKot),
-        prices: String(printSettings.showPricesOnKot),
-      });
-      const invoiceParams = new URLSearchParams({
-        paper: printSettings.invoicePaper,
-        copies: String(printSettings.invoiceCopies),
-        taxBreakup: String(printSettings.showTaxBreakup),
-        qr: String(printSettings.showInvoiceQr),
-      });
-      if (printWindow) {
-        printWindow.opener = null;
-        const invoicePrintUrl = `/api/v1/pos/bills/${sale.invoice._id}/print?${invoiceParams.toString()}`;
-
-        if (printSettings.autoPrintKot && printSettings.autoPrintInvoice) {
-          kotParams.set("nextInvoice", "true");
-          kotParams.set("invoicePaper", printSettings.invoicePaper);
-          kotParams.set("invoiceCopies", String(printSettings.invoiceCopies));
-          kotParams.set(
-            "invoiceTaxBreakup",
-            String(printSettings.showTaxBreakup),
-          );
-          kotParams.set("invoiceQr", String(printSettings.showInvoiceQr));
-          printWindow.location.href = `/api/v1/pos/bills/${sale.invoice._id}/kot?${kotParams.toString()}`;
-        } else if (printSettings.autoPrintKot) {
-          printWindow.location.href = `/api/v1/pos/bills/${sale.invoice._id}/kot?${kotParams.toString()}`;
-        } else {
-          printWindow.location.href = invoicePrintUrl;
-        }
-      }
+      routePosSalePrintJobs(sale.invoice._id, printSettings, printWindow);
       posCartActions.clear();
       onCompleted(
         `${sale.order.orderNumber} completed${paymentMethod === "cash" ? ` · Change ${money.format(sale.order.changeDue)}` : ""}.`,
@@ -610,11 +582,7 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
                     <button
                       type="button"
                       onClick={() =>
-                        window.open(
-                          `/api/v1/pos/bills/${lastInvoiceId}/print?paper=${printSettings.invoicePaper}&copies=${printSettings.invoiceCopies}&taxBreakup=${printSettings.showTaxBreakup}&qr=${printSettings.showInvoiceQr}`,
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
+                        reprintPosInvoice(lastInvoiceId, printSettings)
                       }
                       className="h-11 rounded-xl border border-[#e5d9cf] bg-white text-xs font-black"
                     >
@@ -623,11 +591,7 @@ export function PosBillingModal({ open, cart, onClose, onCompleted }: Props) {
                     <button
                       type="button"
                       onClick={() =>
-                        window.open(
-                          `/api/v1/pos/bills/${lastInvoiceId}/kot?paper=${printSettings.kotPaper}&copies=${printSettings.kotCopies}&customer=${printSettings.showCustomerOnKot}&prices=${printSettings.showPricesOnKot}`,
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
+                        reprintPosKot(lastInvoiceId, printSettings)
                       }
                       className="h-11 rounded-xl border border-[#e5d9cf] bg-white text-xs font-black"
                     >
