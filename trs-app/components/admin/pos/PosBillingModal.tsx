@@ -19,6 +19,12 @@ import {
   reprintPosKot,
 } from "@/components/admin/pos/pos-billing-print";
 
+const money = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
 type Props = {
   open: boolean;
   cart: PosCartState;
