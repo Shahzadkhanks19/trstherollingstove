@@ -244,3 +244,5 @@ export function usePosCashDrawer() {
     closeShift,
   };
 }
+
+export type ReturnTypeOfPosCashDrawer = ReturnType<typeof usePosCashDrawer>;
