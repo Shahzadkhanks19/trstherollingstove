@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type PaymentStage } from "@/components/payment/PaymentActions";
 import { PaymentStatusPanel } from "@/components/payment/PaymentStatusPanel";
+import { loadRazorpay } from "@/components/payment/razorpay-loader";
 import {
   PaymentOrderSummary,
   type PaymentStatusData,
@@ -20,33 +21,6 @@ const STORAGE_KEY = "trs.pendingPaymentOrderId";
 type Stage = PaymentStage;
 
 type StatusData = PaymentStatusData;
-
-function loadRazorpay(): Promise<void> {
-  if (window.Razorpay) return Promise.resolve();
-  const existing = document.querySelector<HTMLScriptElement>(
-    'script[data-trs-razorpay="true"]',
-  );
-  if (existing) {
-    return new Promise((resolve, reject) => {
-      existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener(
-        "error",
-        () => reject(new Error("Razorpay checkout could not be loaded.")),
-        { once: true },
-      );
-    });
-  }
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    script.dataset.trsRazorpay = "true";
-    script.onload = () => resolve();
-    script.onerror = () =>
-      reject(new Error("Razorpay checkout could not be loaded."));
-    document.head.appendChild(script);
-  });
-}
 
 export function PaymentProcessingClient() {
   const [stage, setStage] = useState<Stage>("loading");
@@ -233,8 +207,6 @@ export function PaymentProcessingClient() {
 
     return () => window.clearTimeout(prepareTimer);
   }, [prepare]);
-
-
 
   return (
     <main className="min-h-screen bg-[#FFF9EF] px-4 py-8 text-[#171717] sm:py-12">
