@@ -3,7 +3,6 @@ import { Types } from "mongoose";
 import { AppError } from "@/lib/errors/AppError";
 import { nextOrderNumber } from "@/lib/orders/order-number";
 import { InternalConsumptionAudit } from "@/models/InternalConsumptionAudit";
-import { Invoice } from "@/models/Invoice";
 import { Order } from "@/models/Order";
 import { POSCashMovement } from "@/models/POSCashMovement";
 import { POSShift } from "@/models/POSShift";
@@ -17,6 +16,7 @@ import { publishRealtimeEventSafely } from "@/services/realtimePublisher.service
 import type { CreatePosOrderInput } from "@/services/pos-order.types";
 import { money } from "@/services/pos-order.utils";
 import { resolvePosOrderPayment } from "@/services/pos-order-payment.service";
+import { markPosInvoicePrinted } from "@/services/pos-order-invoice.service";
 import { assertPosInventoryAvailable, deductPosInventory } from "@/services/pos-order-inventory.service";
 import { createPosKitchenOutput } from "@/services/pos-order-kitchen.service";
 import { validatePosInternalConsumption } from "@/services/pos-order-internal-consumption.service";
@@ -286,47 +286,5 @@ export async function createPosOrder(
   }
 }
 
-export async function markInvoicePrinted(invoiceId: string, actorId: string) {
-  let invoice = await Invoice.findByIdAndUpdate(
-    invoiceId,
-    {
-      $inc: { printCount: 1 },
-      $set: {
-        lastPrintedAt: new Date(),
-        lastPrintedBy: new Types.ObjectId(actorId),
-      },
-    },
-    { returnDocument: "after" },
-  );
 
-  if (!invoice) {
-    throw new AppError("Bill not found.", 404);
-  }
-
-  if (
-    invoice.paymentMethod === "split" &&
-    (!invoice.paymentBreakdown || invoice.paymentBreakdown.length === 0)
-  ) {
-    const order = await Order.findById(invoice.orderId)
-      .select({ paymentBreakdown: 1 })
-      .lean();
-
-    const paymentBreakdown = (order?.paymentBreakdown ?? [])
-      .filter((part) => Number(part.amount) > 0)
-      .map((part) => ({
-        method: part.method,
-        amount: part.amount,
-      }));
-
-    if (paymentBreakdown.length > 0) {
-      invoice =
-        (await Invoice.findByIdAndUpdate(
-          invoiceId,
-          { $set: { paymentBreakdown } },
-          { returnDocument: "after" },
-        )) ?? invoice;
-    }
-  }
-
-  return invoice;
-}
+export { markPosInvoicePrinted as markInvoicePrinted };
