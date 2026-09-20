@@ -1,6 +1,7 @@
 import type { PosRunningOrderView, PosTableView } from "@/types/pos-operations";
 import { readPosPrintSettings } from "@/lib/pos/print-settings";
 import { buildInvoicePrintUrl } from "@/lib/pos/print-links";
+import { posMutation } from "@/lib/pos/offline-queue";
 
 type ApiResponse<T> = { success: boolean; message: string; data: T };
 
@@ -118,4 +119,45 @@ export async function createPosTable(
   const json = (await response.json()) as ApiResponse<unknown>;
 
   if (!response.ok) throw new Error(json.message);
+}
+
+export async function runPosOperationMutation(
+  path: string,
+  body: Record<string, unknown>,
+) {
+  const result = await posMutation(path, body);
+  if (result.queued) return { queued: true as const };
+
+  const response = result.response;
+  if (!response) throw new Error("No response received.");
+
+  const json = (await response.json()) as ApiResponse<unknown>;
+  if (!response.ok) throw new Error(json.message);
+
+  return { queued: false as const };
+}
+
+export function parseSplitLineQuantities(
+  order: PosRunningOrderView,
+  raw: string,
+) {
+  const lineQuantities: Record<string, number> = {};
+
+  for (const token of raw.split(",")) {
+    const [indexText, quantityText] = token.trim().split(":");
+    const line = order.cart.lines[Number(indexText) - 1];
+    const quantity = Number(quantityText);
+
+    if (line && Number.isInteger(quantity) && quantity > 0) {
+      lineQuantities[line.lineId] = quantity;
+    }
+  }
+
+  if (!Object.keys(lineQuantities).length) {
+    throw new Error(
+      "Enter at least one valid line and quantity, for example 1:1.",
+    );
+  }
+
+  return lineQuantities;
 }
