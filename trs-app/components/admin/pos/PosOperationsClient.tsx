@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { PosRunningOrderView, PosTableView } from "@/types/pos-operations";
+
+type ApiResponse<T> = { success: boolean; message: string; data: T };
 import {
   PosOperationsModal,
   type OperationDialog,
