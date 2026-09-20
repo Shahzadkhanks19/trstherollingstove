@@ -6,6 +6,12 @@ import { PaymentStatusPanel } from "@/components/payment/PaymentStatusPanel";
 import { loadRazorpay } from "@/components/payment/razorpay-loader";
 import { openRazorpayCheckout } from "@/components/payment/razorpay-checkout";
 import {
+  clearPendingPaymentOrderId,
+  redirectToOrderSuccess,
+  resolvePendingPaymentOrderId,
+  storePendingPaymentOrderId,
+} from "@/components/payment/payment-session";
+import {
   PaymentOrderSummary,
   type PaymentStatusData,
 } from "@/components/payment/PaymentOrderSummary";
@@ -16,8 +22,6 @@ import {
   verifyPayment,
   type PaymentOrder,
 } from "@/components/payment/payment-api";
-
-const STORAGE_KEY = "trs.pendingPaymentOrderId";
 
 type Stage = PaymentStage;
 
@@ -38,10 +42,8 @@ export function PaymentProcessingClient() {
     setStatusData(data);
     statusDataRef.current = data;
     if (data.order.paymentStatus === "paid") {
-      sessionStorage.removeItem(STORAGE_KEY);
-      window.location.replace(
-        `/order-success?order=${encodeURIComponent(data.order.orderNumber)}`,
-      );
+      clearPendingPaymentOrderId();
+      redirectToOrderSuccess(data.order.orderNumber);
       return data;
     }
     if (["cancelled", "rejected"].includes(data.order.status)) {
@@ -56,13 +58,8 @@ export function PaymentProcessingClient() {
     setMessage("Confirming your payment securely");
     try {
       await verifyPayment(orderId, response);
-      sessionStorage.removeItem(STORAGE_KEY);
-      const orderNumber = statusDataRef.current?.order.orderNumber;
-      window.location.replace(
-        orderNumber
-          ? `/order-success?order=${encodeURIComponent(orderNumber)}`
-          : "/order-success",
-      );
+      clearPendingPaymentOrderId();
+      redirectToOrderSuccess(statusDataRef.current?.order.orderNumber);
     } catch (error) {
       setStage("unknown");
       setMessage(
@@ -165,11 +162,8 @@ export function PaymentProcessingClient() {
   );
 
   useEffect(() => {
-    const queryId =
-      new URLSearchParams(window.location.search).get("orderId") ?? "";
-    const storedId = sessionStorage.getItem(STORAGE_KEY) ?? "";
-    const orderId = /^[a-f\d]{24}$/i.test(queryId) ? queryId : storedId;
-    if (!/^[a-f\d]{24}$/i.test(orderId)) {
+    const orderId = resolvePendingPaymentOrderId();
+    if (!orderId) {
       const invalidStateTimer = window.setTimeout(() => {
         setStage("invalid");
         setMessage("We could not find a valid pending payment.");
@@ -177,8 +171,9 @@ export function PaymentProcessingClient() {
 
       return () => window.clearTimeout(invalidStateTimer);
     }
+
     orderIdRef.current = orderId;
-    sessionStorage.setItem(STORAGE_KEY, orderId);
+    storePendingPaymentOrderId(orderId);
 
     const prepareTimer = window.setTimeout(() => {
       void prepare(true);
